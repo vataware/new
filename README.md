@@ -4,6 +4,8 @@ The community forum may be accessed through http://forums.vatsim.net/viewforum.p
 
 The code meeting will determine our coding language and framework.
 
-Thank you for your interest in the community development of vataware v2.
+Thank you for your interest in the community development of Vataware v2.
+
+We would like to request that at this time there are no direct pushes to master without coordination in the forums.
 
 ~Lead Developers~
