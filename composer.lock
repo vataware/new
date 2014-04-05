@@ -3,8 +3,52 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "f6006dc72ed0464451018ee300d4b047",
+    "hash": "7ce02fb42e1f2be2aa2c72bfa3d0a47d",
     "packages": [
+        {
+            "name": "bonroyage/messages",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bonroyage/messages.git",
+                "reference": "ba00c4c91f69a701633ba4daa64a5979cc9cf00c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bonroyage/messages/zipball/ba00c4c91f69a701633ba4daa64a5979cc9cf00c",
+                "reference": "ba00c4c91f69a701633ba4daa64a5979cc9cf00c",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/session": "4.*",
+                "illuminate/support": "4.*",
+                "php": ">=5.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "DeVosBurchart\\Messages": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Roy de Vos Burchart",
+                    "email": "roy.devosburchart@comayers.com",
+                    "homepage": "http://www.bonroyage.com"
+                }
+            ],
+            "description": "Messages function for Laravel with session flash storage.",
+            "keywords": [
+                "laravel",
+                "messages",
+                "status"
+            ],
+            "time": "2014-02-16 20:21:51"
+        },
         {
             "name": "classpreloader/classpreloader",
             "version": "1.0.2",
@@ -2131,9 +2175,9 @@
 
     ],
     "minimum-stability": "stable",
-    "stability-flags": [
-
-    ],
+    "stability-flags": {
+        "bonroyage/messages": 20
+    },
     "platform": [
 
     ],

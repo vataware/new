@@ -3,7 +3,8 @@
 	"description": "The new vataware.com",
 	"license": "GPL-2.0",
 	"require": {
-		"laravel/framework": "4.1.*"
+		"laravel/framework": "4.1.*",
+		"bonroyage/messages": "dev-master"
 	},
 	"require-dev": {
 		"barryvdh/laravel-debugbar": "1.*",

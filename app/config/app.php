@@ -107,6 +107,7 @@ return array(
 		'Illuminate\View\ViewServiceProvider',
 		'Illuminate\Workbench\WorkbenchServiceProvider',
 
+		'DeVosBurchart\Messages\MessagesServiceProvider',
 	),
 
 	/*
@@ -173,6 +174,7 @@ return array(
 		'Validator'       => 'Illuminate\Support\Facades\Validator',
 		'View'            => 'Illuminate\Support\Facades\View',
 
+		'Messages'        => 'DeVosBurchart\Messages\Facades\Messages',
 	),
 
 );
