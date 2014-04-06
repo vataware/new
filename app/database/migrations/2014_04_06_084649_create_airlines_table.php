@@ -11,7 +11,7 @@ class CreateAirlinesTable extends Migration {
 			$table->increments('id');
 			$table->string('icao', 10);
 			$table->string('name');
-			$table->string('radio');
+			$table->string('radio')->nullable();
 			$table->string('website')->nullable();
 			$table->timestamps();
 		});
