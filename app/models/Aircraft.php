@@ -6,4 +6,8 @@ class Aircraft extends Eloquent {
 	public $timestamps = true;
 	protected $softDelete = false;
 
+	function getNameAttribute() {
+		return $this->manufacturer . ' ' . $this->model;
+	}
+
 }

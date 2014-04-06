@@ -23,9 +23,9 @@ class CreateFlightsTable extends Migration {
 			$table->smallInteger('speed');
 			$table->tinyInteger('state')->index();
 			$table->string('aircraft_code', 20);
-			$table->integer('aircraft_id')->unsigned();
 			$table->datetime('departure_time');
 			$table->datetime('arrival_time');
+			$table->string('aircraft_id')->nullable()->default(null);
 			$table->decimal('last_lat', 10,6);
 			$table->decimal('last_lon', 10,6);
 			$table->timestamps();

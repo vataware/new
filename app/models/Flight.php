@@ -8,7 +8,7 @@ class Flight extends Eloquent {
 
 	public function aircraft()
 	{
-		return $this->belongsTo('Aircraft');
+		return $this->hasMany('Aircraft','code','aircraft_id');
 	}
 
 	public function departure()
