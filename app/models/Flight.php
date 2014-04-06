@@ -6,6 +6,7 @@ class Flight extends Eloquent {
 	public $timestamps = true;
 	protected $softDelete = false;
 	protected $dates = ['departure_time','arrival_time'];
+	protected $appends = ['duration'];
 
 	public function aircraft()
 	{
@@ -20,6 +21,14 @@ class Flight extends Eloquent {
 	public function arrival()
 	{
 		return $this->belongsTo('Airport', 'arrival_id');
+	}
+
+	public function getDurationAttribute()
+	{
+		$hours = $this->departure_time->diffInHours($this->arrival_time);
+		$minutes = $this->departure_time->diffInMinutes($this->arrival_time);
+		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
+		return $hours . ':' . $minutes;
 	}
 
 	public function departureCountry()
