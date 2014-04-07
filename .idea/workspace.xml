@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0b89aad9-2ca9-4e88-b6e9-279e201b1a9e" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bootstrap/css/bootstrap.css" afterPath="$PROJECT_DIR$/bootstrap/css/bootstrap.css" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bootstrap/index.html" afterPath="$PROJECT_DIR$/bootstrap/index.html" />
     </list>
     <ignored path="hayden_new.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -28,7 +28,7 @@
       <file leaf-file-name="index.html" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bootstrap/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="156" column="73" selection-start="7295" selection-end="7295" vertical-scroll-proportion="0.28805238" vertical-offset="2164" max-vertical-offset="2910">
+            <state line="6" column="55" selection-start="253" selection-end="253" vertical-scroll-proportion="0.14729951" vertical-offset="0" max-vertical-offset="2925">
               <folding>
                 <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#span#0;n#a#0;n#li#2;n#ul#0;n#div#1;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -296,7 +296,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/bootstrap/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="156" column="73" selection-start="7295" selection-end="7295" vertical-scroll-proportion="0.28805238" vertical-offset="2164" max-vertical-offset="2910">
+        <state line="6" column="55" selection-start="253" selection-end="253" vertical-scroll-proportion="0.14729951" vertical-offset="0" max-vertical-offset="2925">
           <folding>
             <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#span#0;n#a#0;n#li#2;n#ul#0;n#div#1;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
