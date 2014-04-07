@@ -52,6 +52,8 @@ class UpdateVatsimData extends Command {
 		$update->timestamp = $date;
 		$update->save();
 
+		$airports = Airport::lists('country_id','id');
+
 		$datas = $vatsim->getPilots()->toArray();
 		foreach($datas as $data) {
 			$date = Carbon::createFromFormat('YmdHis', $data['time_logon'], 'UTC');
@@ -63,7 +65,9 @@ class UpdateVatsimData extends Command {
 				$record->vatsim_id = $data['cid'];
 				$record->startdate = $date->toDateString();
 				$record->departure_id = $data['planned_depairport'];
+				$record->departure_country_id = array_key_exists($data['planned_depairport'], $airports) ? $airports[$data['planned_depairport']] : '';
 				$record->arrival_id = $data['planned_destairport'];
+				$record->arrival_country_id = array_key_exists($data['planned_destairport'], $airports) ? $airports[$data['planned_destairport']] : '';
 				$record->route = $data['planned_route'];
 				$record->remarks = $data['planned_remarks'];
 				$record->aircraft_code = $data['planned_aircraft'];
