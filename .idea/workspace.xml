@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="0b89aad9-2ca9-4e88-b6e9-279e201b1a9e" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bootstrap/index.html" afterPath="$PROJECT_DIR$/bootstrap/index.html" />
-    </list>
+    <list default="true" id="0b89aad9-2ca9-4e88-b6e9-279e201b1a9e" name="Default" comment="" />
     <ignored path="hayden_new.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
