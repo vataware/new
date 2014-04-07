@@ -67,6 +67,12 @@ class UpdateVatsimData extends Command {
 				$record->route = $data['planned_route'];
 				$record->remarks = $data['planned_remarks'];
 				$record->aircraft_code = $data['planned_aircraft'];
+				if(empty($data['planned_aircraft'])) {
+					$record->aircraft_id = null;
+				} else {
+					preg_match('/(?:.\/)?([^\/]+)(?:\/.)?/', $data['planned_aircraft'], $aircraft);
+					$record->aircraft_id = $aircraft[1];
+				}
 			}
 			
 			if($data['planned_actdeptime'] > 0 && $data['planned_actdeptime'] < 2400) {
