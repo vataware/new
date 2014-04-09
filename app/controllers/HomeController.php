@@ -2,22 +2,23 @@
 
 class HomeController extends BaseController {
 
-	/*
-	|--------------------------------------------------------------------------
-	| Default Home Controller
-	|--------------------------------------------------------------------------
-	|
-	| You may wish to use controllers instead of, or in addition to, Closure
-	| based routes. That's great! Here is an example controller method to
-	| get you started. To route to this controller, just add the route:
-	|
-	|	Route::get('/', 'HomeController@showWelcome');
-	|
-	*/
+	protected $layout = 'layouts.master';
 
-	public function showWelcome()
-	{
-		return View::make('hello');
+	public function index() {
+		$pilots = Cache::get('vatsim.pilots');
+		$atc = Cache::get('vatsim.atc');
+		$users = Cache::get('vatsim.users');
+		$year = Cache::get('vatsim.year');
+		$month = Cache::get('vatsim.month');
+		$day = Cache::get('vatsim.day');
+
+		$this->autoRender(compact('pilots','atc','users','year','month','day'));
+	}
+
+	public function flights() {
+		$flights = Flight::with('departureCountry','arrivalCountry','departure','arrival','pilot')->where('departure_time','!=','')->whereState(1)->orderBy('departure_time','desc')->orderBy('callsign')->paginate(25);
+		
+		$this->autoRender(compact('flights'), 'Flights');
 	}
 
 }
