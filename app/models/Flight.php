@@ -23,12 +23,18 @@ class Flight extends Eloquent {
 		return $this->belongsTo('Airport', 'arrival_id');
 	}
 
+	public function pilot()
+	{
+		return $this->belongsTo('Pilot','vatsim_id','vatsim_id');
+	}
+
 	public function getDurationAttribute()
 	{
+		if(is_null($this->departure_time) || is_null($this->arrival_time)) return 'Unknown';
 		$hours = $this->departure_time->diffInHours($this->arrival_time);
 		$minutes = $this->departure_time->diffInMinutes($this->arrival_time);
 		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
-		return $hours . ':' . $minutes;
+		return $hours . ':' . str_pad($minutes,2,'0',STR_PAD_LEFT);
 	}
 
 	public function departureCountry()
@@ -43,7 +49,7 @@ class Flight extends Eloquent {
 
 	public function airline()
 	{
-		return $this->belongsTo('Airline');
+		return $this->hasOne('Airline','icao','airline_id');
 	}
 
 	public function positions()

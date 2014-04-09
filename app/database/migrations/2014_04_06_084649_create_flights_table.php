@@ -11,7 +11,8 @@ class CreateFlightsTable extends Migration {
 			$table->increments('id');
 			$table->date('startdate');
 			$table->string('callsign', 10);
-			$table->integer('airline_id')->unsigned()->nullable();
+			$table->tinyInteger('callsign_type')->default(0);
+			$table->string('airline_id')->nullable();
 			$table->mediumInteger('vatsim_id')->index();
 			$table->string('departure_id',6);
 			$table->string('arrival_id',6);
@@ -23,7 +24,7 @@ class CreateFlightsTable extends Migration {
 			$table->smallInteger('speed');
 			$table->tinyInteger('state')->index();
 			$table->string('aircraft_code', 20);
-			$table->string('aircraft_id')->nullable()->default(null);
+			$table->string('aircraft_id', 20)->nullable()->default(null);
 			$table->datetime('departure_time')->nullable()->default(null);
 			$table->datetime('arrival_time')->nullable()->default(null);
 			$table->decimal('last_lat', 10,6);

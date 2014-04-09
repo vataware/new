@@ -43,6 +43,10 @@ class UpdateVatsimData extends Command {
 		$general = $vatsim->getGeneralInfo()->toArray();
 		$date = Carbon::createFromTimestampUTC($general['update']);
 
+		Cache::forever('vatsim.pilots', $vatsim->getPilots()->count());
+		Cache::forever('vatsim.atc', $vatsim->getControllers()->count());
+		Cache::forever('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
+
 		if(!is_null(Update::whereTimestamp($date)->first())) {
 			$this->info('This update is already in the database.');
 			return;
@@ -53,6 +57,13 @@ class UpdateVatsimData extends Command {
 		$update->save();
 
 		$airports = Airport::lists('country_id','id');
+
+		$registrations = Registration::get()->each(function($registration) {
+			$registration->prefix = str_replace('-', '', $registration->prefix);
+			if(!$registration->regex) $registration->prefix .= '.*';
+		});
+
+		$airlines = Airline::get();
 
 		$datas = $vatsim->getPilots()->toArray();
 		foreach($datas as $data) {
@@ -77,6 +88,31 @@ class UpdateVatsimData extends Command {
 					preg_match('/(?:.\/)?([^\/]+)(?:\/.)?/', $data['planned_aircraft'], $aircraft);
 					$record->aircraft_id = $aircraft[1];
 				}
+
+				$callsign = str_replace('-','',strtoupper($data['callsign']));
+
+				// Airline
+				$airline = $airlines->first(function($key, $airline) use ($callsign) {
+					return preg_match('/^' . $airline->icao . '[0-9]{1,5}[A-Z]{0,2}$/', $callsign);
+				});
+
+				if(!is_null($airline)) {
+					$record->airline_id = $airline->icao;
+					$record->callsign_type = 1;
+				} else {
+					// Private
+					$registration = $registrations->first(function($key, $registration) use ($callsign) {
+						return preg_match('/^' . $registration->prefix . '$/', $callsign);
+					});
+
+					if(is_null($registration)) {
+						$record->callsign_type = 0;
+
+					} else {
+						$record->callsign_type = 2;
+						$record->airline_id = $registration->country_id;
+					}
+				}
 			}
 			
 			if($data['planned_actdeptime'] > 0 && $data['planned_actdeptime'] < 2400) {
@@ -89,6 +125,7 @@ class UpdateVatsimData extends Command {
 			$record->speed = $data['groundspeed'];
 			$record->last_lat = $data['latitude'];
 			$record->last_lon = $data['longitude'];
+			$record->state = ($data['planned_hrsenroute'] > 0 || $data['planned_minenroute'] > 0) ? 1 : 0;
 			
 			$record->save();
 
@@ -112,6 +149,10 @@ class UpdateVatsimData extends Command {
 				$pilot->save();
 			}
 		}
+
+		Cache::forever('vatsim.year', number_format(Flight::where('startdate','LIKE',date('Y') . '%')->count()));
+		Cache::forever('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
+		Cache::forever('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
 	}
 
 	/**

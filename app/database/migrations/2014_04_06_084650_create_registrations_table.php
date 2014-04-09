@@ -9,8 +9,9 @@ class CreateRegistrationsTable extends Migration {
 	{
 		Schema::create('registrations', function(Blueprint $table) {
 			$table->increments('id');
-			$table->string('prefix', 5)->unique();
+			$table->string('prefix', 30)->unique();
 			$table->string('country_id',2);
+			$table->boolean('regex')->default(false);
 		});
 	}
 
