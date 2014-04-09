@@ -175,6 +175,7 @@ return array(
 		'View'            => 'Illuminate\Support\Facades\View',
 
 		'Messages'        => 'DeVosBurchart\Messages\Facades\Messages',
+		'Carbon'          => 'Carbon\Carbon',
 	),
 
 );
