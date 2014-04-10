@@ -36,7 +36,7 @@
 				<tr>
 					<th>Origin</th>
 					<td>
-						@if(!is_null($flight->arrival))
+						@if(!is_null($flight->departure))
 						{{ $flight->departure->id }} - {{ $flight->departure->name }}<br />
 						<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departureCountry->country }}
 						@else
