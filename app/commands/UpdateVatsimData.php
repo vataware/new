@@ -187,6 +187,7 @@ class UpdateVatsimData extends Command {
 			$record->speed = $data['planned_tascruise'];
 			$record->last_lat = $data['latitude'];
 			$record->last_lon = $data['longitude'];
+			$record->missing = false;
 			
 			$record->save();
 
