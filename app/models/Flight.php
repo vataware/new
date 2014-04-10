@@ -52,9 +52,74 @@ class Flight extends Eloquent {
 		return $this->hasOne('Airline','icao','airline_id');
 	}
 
+	public function privateCountry()
+	{
+		return $this->belongsTo('Country','airline_id');
+	}
+
 	public function positions()
 	{
-		return $this->hasMany('Position');
+		return $this->hasMany('Position')->orderBy('time','asc');
+	}
+
+	public function lastPosition()
+	{
+		return $this->hasOne('Position')->orderBy('time','desc');
+	}
+
+	public function getStatusAttribute() {
+		switch($this->state) {
+			case 0:
+				return 'Departing...';
+			case 1:
+			case 3:
+				return 'Airborne';
+			case 2:
+				return 'Arrived';
+			case 4:
+				return 'Preparing...';
+		}
+	}
+
+	public function getStatusIconAttribute() {
+		switch($this->state) {
+			case 0:
+			case 4:
+				return 'departing';
+			case 1:
+			case 3:
+				return 'airborne';
+			case 2:
+				return 'arrived';
+		}
+	}
+
+	public function getAltitudeAttribute($value) {
+		if(starts_with($value,'FL') || starts_with($value,'F')) {
+			return filter_var($value, FILTER_SANITIZE_NUMBER_INT)*100;
+		} elseif(strlen($value) <= 3) {
+			return $value*100;
+		} else {
+			return $value;
+		}
+	}
+
+	public function getTraveledTimeAttribute() {
+		if(is_null($this->departure_time)) return null;
+		$now = Carbon::now();
+		$hours = $now->diffInHours($this->departure_time);
+		$minutes = $now->diffInMinutes($this->departure_time);
+		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
+		return $hours . 'h ' . str_pad($minutes,2,'0',STR_PAD_LEFT) . 'm';
+	}
+
+	public function getTogoTimeAttribute() {
+		if(is_null($this->arrival_time)) return null;
+		$now = Carbon::now();
+		$hours = $now->diffInHours($this->arrival_time);
+		$minutes = $now->diffInMinutes($this->arrival_time);
+		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
+		return $hours . 'h ' . str_pad($minutes,2,'0',STR_PAD_LEFT) . 'm';
 	}
 
 }

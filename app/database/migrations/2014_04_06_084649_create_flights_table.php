@@ -22,7 +22,9 @@ class CreateFlightsTable extends Migration {
 			$table->text('remarks');
 			$table->string('altitude', 15);
 			$table->smallInteger('speed');
+			$table->char('flighttype',1)->default('I');
 			$table->tinyInteger('state')->index();
+			$table->boolean('missing')->default(false);
 			$table->string('aircraft_code', 20);
 			$table->string('aircraft_id', 20)->nullable()->default(null);
 			$table->datetime('departure_time')->nullable()->default(null);

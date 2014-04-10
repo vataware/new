@@ -21,4 +21,12 @@ class HomeController extends BaseController {
 		$this->autoRender(compact('flights'), 'Flights');
 	}
 
+	public function flight(Flight $flight) {
+		if($flight->missing) {
+			Messages::error('This flight has been missing for ' . Carbon::now()->diffInMinutes($flight->positions->last()->updated_at) . ' minutes. It will be deleted if it has been missing for 1 hour.')->one();
+		}
+
+		$this->autoRender(compact('flight'), $flight->callsign);
+	}
+
 }

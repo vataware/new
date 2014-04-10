@@ -17,6 +17,7 @@ class CreatePositionsTable extends Migration {
 			$table->smallInteger('ground_elevation');
 			$table->smallInteger('speed');
 			$table->smallInteger('heading');
+			$table->dateTime('time');
 			$table->timestamps();
 		});
 	}
