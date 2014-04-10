@@ -288,3 +288,39 @@ a:hover.tiles
 .homeStats .col-lg-1 {
 	width: 10.33333333%;
 }
+
+.navbar-vataware .navbar-nav > li > .dropdown-menu {
+	margin-top: 10px;
+	background-color: #138995;
+	border-radius: 13px;
+	min-width: 230px;
+	padding: 9px 9px 3px;
+}
+
+.navbar-vataware .dropdown-menu li {
+	background-color: #2b95a0;
+	border-radius: 5px;
+	margin-bottom: 6px;
+	color: white;
+}
+
+.navbar-vataware .dropdown-menu > li > a {
+	color: #ffffff !important;
+	padding: 10px;
+	border-radius: 5px;
+}
+
+.navbar-vataware .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+	color: #ffffff;
+	background-color: #1cb1c1;
+}
+
+.navbar-vataware .dropdown-menu:before {
+	right: 20px;
+	left: initial;
+}
+
+.navbar-vataware .dropdown-menu:after {
+	right: 20px;
+	left: initial;
+}
