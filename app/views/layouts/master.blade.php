@@ -8,6 +8,7 @@
 
 	<!-- Bootstrap -->
 	<link href="{{ asset('assets/stylesheets/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ asset('assets/stylesheets/jasny-bootstrap.min.css') }}" rel="stylesheet">
 	<link href="{{ asset('assets/stylesheets/bootstrap.mod.css') }}" rel="stylesheet">
 	<link href="{{ asset('assets/stylesheets/flightaware.css') }}" rel="stylesheet">
 
@@ -108,6 +109,7 @@
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 	<script src="{{ asset('assets/javascript/bootstrap.min.js') }}"></script>
+	<script src="{{ asset('assets/javascript/jasny-bootstrap.min.js') }}"></script>
 	@if(isset($javascripts) && count($javascripts) > 0)
 	@foreach($javascripts as $javascript)
 	<script src="{{ asset($javascript) }}"></script>

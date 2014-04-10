@@ -1,7 +1,7 @@
 @section('content')
 <div class="container">
 	<h2>Current Flights <small class="pull-right" style="margin-top: 10px;"><span class="hidden-inline-xs hidden-inline-sm">Showing flights </span>{{ $flights->getFrom() }} - {{ $flights->getTo() }} of {{ $flights->getTotal() }}</small></h2>
-	<table class="table table-striped" style="margin-top: 20px;">
+	<table class="table table-striped table-hover" style="margin-top: 20px;">
 		<thead>
 			<tr>
 				<th>Callsign</th>
@@ -12,10 +12,10 @@
 				<th>Duration</th>
 			</tr>
 		</thead>
-		<tbody>
+		<tbody class="rowlink" data-link="row">
 			@foreach($flights as $flight)
 			<tr>
-				<td>{{ $flight->callsign }}
+				<td><a href="{{ URL::route('flight', $flight->id) }}">{{ $flight->callsign }}</a>
 					@if($flight->callsign_type == 1)
 					<br /><img src="{{ asset('assets/images/airlines/' . $flight->airline_id . '.png') }}"></td>
 					@elseif($flight->callsign_type == 2)

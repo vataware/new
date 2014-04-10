@@ -30,9 +30,10 @@ class Flight extends Eloquent {
 
 	public function getDurationAttribute()
 	{
-		if(is_null($this->departure_time) || is_null($this->arrival_time)) return 'Unknown';
-		$hours = $this->departure_time->diffInHours($this->arrival_time);
-		$minutes = $this->departure_time->diffInMinutes($this->arrival_time);
+		if(is_null($this->departure_time)) return 'Unknown';
+		$time = ($this->state == 1 || $this->state == 3) ? Carbon::now() : $this->arrival_time;
+		$hours = $this->departure_time->diffInHours($time);
+		$minutes = $this->departure_time->diffInMinutes($time);
 		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
 		return $hours . ':' . str_pad($minutes,2,'0',STR_PAD_LEFT);
 	}

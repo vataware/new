@@ -18,6 +18,7 @@ class HomeController extends BaseController {
 	public function flights() {
 		$flights = Flight::with('departureCountry','arrivalCountry','departure','arrival','pilot')->where('departure_time','!=','')->whereState(1)->orderBy('departure_time','desc')->orderBy('callsign')->paginate(25);
 		
+		$this->javascript('assets/javascript/vataware.js');
 		$this->autoRender(compact('flights'), 'Flights');
 	}
 
