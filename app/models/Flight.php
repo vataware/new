@@ -183,4 +183,16 @@ class Flight extends Eloquent {
 		$this->attributes['airline_id'] = $registration;
 	}
 
+	function getNmAttribute() {
+		return $this->distance * 0.54;
+	}
+
+	function getHoursAttribute() {
+		return floor($this->duration/60);
+	}
+
+	function getMinutesAttribute() {
+		return str_pad(($this->duration - ($this->hours * 60)),2,'0',STR_PAD_LEFT);
+	}
+
 }

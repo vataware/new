@@ -5,17 +5,7 @@ class PilotController extends BaseController {
 	protected $layout = 'layouts.master';
 
 	function index() {
-		$pilots = Flight::with('pilot')->select(DB::raw('vatsim_id, COUNT(vatsim_id) AS aggregate, SUM(distance) as distance, SUM(duration) as duration'))->orderBy('aggregate','desc')->groupBy('vatsim_id')->take(50)->get();
-
-		$pilots = $pilots->each(function($pilot) {
-			$pilot->hours = floor($pilot->duration/60);
-			$pilot->minutes = str_pad(($pilot->duration - ($pilot->hours * 60)),2,'0',STR_PAD_LEFT);
-			$pilot->hours = number_format($pilot->hours);
-
-			$pilot->miles = number_format($pilot->distance * 0.54);
-
-			$pilot->name = $pilot->pilot->name;
-		});
+		$pilots = Flight::with('pilot')->select(DB::raw('vatsim_id, COUNT(vatsim_id) AS aggregate, SUM(distance) as distance, SUM(duration) as duration'))->orderBy('aggregate','desc')->groupBy('vatsim_id')->paginate(50);
 
 		$this->autoRender(compact('pilots'),'Pilots');
 	}

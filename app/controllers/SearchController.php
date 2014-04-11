@@ -7,6 +7,7 @@ class SearchController extends BaseController {
 	function index() {
 
 		$q = Input::get('q');
+		if(empty($q) || !Input::has('q')) return Redirect::home();
 
 		$pilots = Pilot::where('vatsim_id','=',$q)->orWhere('name','LIKE','%' . $q . '%')->get();
 		$flights = Flight::where('callsign','=',$q)->orderBy('departure_time','desc')->get();
