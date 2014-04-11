@@ -17,7 +17,7 @@
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-star"></i></small> Popular citypair</p>
 				</div>
 				<div class="col-md-4 col-sm-6 col-xs-12">
-					<h2>{{ number_format($flights->count()) }}</h2>
+					<h2>{{ number_format($flights->count() + ((!is_null($active)) ? 1 : 0)) }}</h2>
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-plane"></i></small> Flights</p>
 				</div>
 				<div class="col-md-4 col-sm-6 col-xs-12">
