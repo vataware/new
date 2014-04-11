@@ -15,19 +15,4 @@ class HomeController extends BaseController {
 		$this->autoRender(compact('pilots','atc','users','year','month','day'));
 	}
 
-	public function flights() {
-		$flights = Flight::with('departureCountry','arrivalCountry','departure','arrival','pilot')->where('departure_time','!=','')->whereState(1)->orderBy('departure_time','desc')->orderBy('callsign')->paginate(25);
-		
-		$this->javascript('assets/javascript/vataware.js');
-		$this->autoRender(compact('flights'), 'Flights');
-	}
-
-	public function flight(Flight $flight) {
-		if($flight->missing) {
-			Messages::error('This flight has been missing for ' . Carbon::now()->diffInMinutes($flight->positions->last()->updated_at) . ' minutes. It will be deleted if it has been missing for 1 hour.')->one();
-		}
-
-		$this->autoRender(compact('flight'), $flight->callsign);
-	}
-
 }

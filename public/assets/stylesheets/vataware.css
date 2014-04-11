@@ -324,3 +324,12 @@ a:hover.tiles
 	right: 20px;
 	left: initial;
 }
+
+.section-header {
+	padding-bottom: 5px;
+	border-bottom: 2px solid rgb(86, 125, 132);
+}
+
+.page-header {
+	border-bottom: 2px solid rgb(86, 125, 132);
+}

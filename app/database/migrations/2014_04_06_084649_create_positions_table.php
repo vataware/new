@@ -13,7 +13,7 @@ class CreatePositionsTable extends Migration {
 			$table->integer('update_id')->unsigned();
 			$table->decimal('lat', 10,6);
 			$table->decimal('lon', 10,6);
-			$table->smallInteger('altitude');
+			$table->mediumInteger('altitude');
 			$table->smallInteger('ground_elevation');
 			$table->smallInteger('speed');
 			$table->smallInteger('heading');

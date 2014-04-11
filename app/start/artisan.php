@@ -12,3 +12,4 @@
 */
 
 Artisan::add(new UpdateVatsimData);
+Artisan::add(new FixAirports);

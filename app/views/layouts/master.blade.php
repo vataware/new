@@ -10,7 +10,7 @@
 	<link href="{{ asset('assets/stylesheets/bootstrap.min.css') }}" rel="stylesheet">
 	<link href="{{ asset('assets/stylesheets/jasny-bootstrap.min.css') }}" rel="stylesheet">
 	<link href="{{ asset('assets/stylesheets/bootstrap.mod.css') }}" rel="stylesheet">
-	<link href="{{ asset('assets/stylesheets/flightaware.css') }}" rel="stylesheet">
+	<link href="{{ asset('assets/stylesheets/vataware.css') }}" rel="stylesheet">
 
 	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -83,7 +83,7 @@
 								<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Resources</a></li>
 							</ul>
 						</li>
-						<li><a href="#">Pilots</a></li>
+						<li><a href="{{ URL::route('pilot.index') }}">Pilots</a></li>
 						<li><a href="#">ATC</a></li>
 						<li><a href="#">Forum</a></li>
 					</ul>
@@ -110,6 +110,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 	<script src="{{ asset('assets/javascript/bootstrap.min.js') }}"></script>
 	<script src="{{ asset('assets/javascript/jasny-bootstrap.min.js') }}"></script>
+	<script src="{{ asset('assets/javascript/vataware.js') }}"></script>
 	@if(isset($javascripts) && count($javascripts) > 0)
 	@foreach($javascripts as $javascript)
 	<script src="{{ asset($javascript) }}"></script>

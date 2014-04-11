@@ -28,7 +28,7 @@ class Flight extends Eloquent {
 		return $this->belongsTo('Pilot','vatsim_id','vatsim_id');
 	}
 
-	public function getDurationAttribute()
+/*	public function getDurationAttribute()
 	{
 		if(is_null($this->departure_time)) return 'Unknown';
 		$time = ($this->state == 1 || $this->state == 3) ? Carbon::now() : $this->arrival_time;
@@ -36,7 +36,7 @@ class Flight extends Eloquent {
 		$minutes = $this->departure_time->diffInMinutes($time);
 		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
 		return $hours . ':' . str_pad($minutes,2,'0',STR_PAD_LEFT);
-	}
+	}*/
 
 	public function departureCountry()
 	{
@@ -121,6 +121,66 @@ class Flight extends Eloquent {
 		$minutes = $now->diffInMinutes($this->arrival_time);
 		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
 		return $hours . 'h ' . str_pad($minutes,2,'0',STR_PAD_LEFT) . 'm';
+	}
+
+	function setDeparture(Airport $airport) {
+		$this->attributes['departure_id'] = $airport->id;
+		$this->attributes['departure_country_id'] = $airport->country_id;
+	}
+
+	function setArrival(Airport $airport) {
+		$this->attributes['arrival_id'] = $airport->id;
+		$this->attributes['arrival_country_id'] = $airport->country_id;
+	}
+
+	function statePreparing() {
+		$this->attributes['state'] = 4;
+	}
+
+	function isPreparing() {
+		return ($this->state == 4);
+	}
+
+	function stateDeparting() {
+		$this->attributes['state'] = 0;
+	}
+
+	function isDeparting() {
+		return ($this->state == 0);
+	}
+
+	function stateAirborne() {
+		$this->attributes['state'] = 1;
+	}
+
+	function isAirborne() {
+		return ($this->state == 1);
+	}
+
+	function stateArriving() {
+		$this->attributes['state'] = 3;
+	}
+
+	function isArriving() {
+		return ($this->state == 3);
+	}
+
+	function stateArrived() {
+		$this->attributes['state'] = 2;
+	}
+
+	function isArrived() {
+		return ($this->state == 2);
+	}
+
+	function isAirline($airline) {
+		$this->attributes['callsign_type'] = 1;
+		$this->attributes['airline_id'] = $airline;
+	}
+
+	function isPrivate($registration) {
+		$this->attributes['callsign_type'] = 2;
+		$this->attributes['airline_id'] = $registration;
 	}
 
 }

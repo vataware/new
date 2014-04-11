@@ -10,7 +10,7 @@
 				</tr>
 				<tr>
 					<th>Pilot</th>
-					<td>{{ $flight->pilot->name }} ({{ $flight->vatsim_id }})</td>
+					<td><a href="{{ URL::route('pilot.show', $flight->vatsim_id) }}">{{ $flight->pilot->name }} ({{ $flight->vatsim_id }})</a></td>
 				</tr>
 				<tr>
 					<th>Operator</th>
@@ -18,7 +18,7 @@
 						@if($flight->callsign_type == 1)
 						<img src="{{ asset('assets/images/airlines/' . $flight->airline_id . '.png') }}">&nbsp;&nbsp;{{ $flight->airline->name }}
 						@elseif($flight->callsign_type == 2)
-						Private ({{ $flight->privateCountry->name }})
+						Private ({{ $flight->privateCountry->country }})
 						@else
 						Unknown
 						@endif
@@ -78,15 +78,15 @@
 				
 				<tr>
 					<th>Distance/Time traveled</th>
-					<td>{{ $flight->traveled_time }}</td>
+					<td>{{ number_format($flight->miles) }} nm / {{ $flight->traveled_time }}</td>
 				</tr>
 				@if($flight->state != 2)
 				<tr>
-					<th>Distance/Time to go</th>
+					<th><abbr title="Estimated Time to Destination">ETD</abbr></th>
 					<td>{{ $flight->togo_time }}</td>
 				</tr>
 				<tr>
-					<th>ETA</th>
+					<th><abbr title="Estimated Time of Arrival">ETA</abbr></th>
 					<td>{{ ($flight->arrival_time && !is_null($flight->arrival_time)) ? $flight->arrival_time->format('j M Y - H:i') : 'Unknown' }}</td>
 				</tr>
 				@elseif(!is_null($flight->arrival_time))
@@ -119,11 +119,11 @@
 					</tr>
 				</thead>
 				<tbody>
-				@foreach($flight->positions as $position)
+				@foreach($flight->positions->reverse() as $position)
 					<tr>
 						<td>{{ $position->time->format('j M Y - H:i') }}</td>
-						<td>{{ $position->latS }}<br />
-							{{ $position->lonS }}</td>
+						<td>{{ $position->lat }}<br />
+							{{ $position->lon }}</td>
 						<td>{{ $position->heading }}</td>
 						<td>{{ $position->altitude }}</td>
 						<td>{{ $position->speed }}</td>

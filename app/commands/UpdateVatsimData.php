@@ -39,6 +39,13 @@ class UpdateVatsimData extends Command {
 		parent::__construct();
 	}
 
+	protected $updateId;
+	protected $updateDate;
+	protected $vatsim = null;
+	protected $airports = null;
+	protected $airlines = null;
+	protected $registrations = null;
+
 	/**
 	 * Execute the console command.
 	 *
@@ -46,12 +53,11 @@ class UpdateVatsimData extends Command {
 	 */
 	public function fire()
 	{
-		$vatsim = new Vatsimphp\VatsimData();
-		$vatsim->setConfig('forceDataRefresh',true);
-		$vatsim->loadData();
-
+		Log::info('VATSIM UPDATE: START');
+		$vatsim = $this->loadVatsim();
+		Log::info('VATSIM UPDATE: FETCHED DATA');
 		$general = $vatsim->getGeneralInfo()->toArray();
-		$updateDate = Carbon::createFromTimestampUTC($general['update']);
+		$this->updateDate = $updateDate = Carbon::createFromTimestampUTC($general['update']);
 
 		Cache::forever('vatsim.pilots', $vatsim->getPilots()->count());
 		Cache::forever('vatsim.atc', $vatsim->getControllers()->count());
@@ -67,209 +73,126 @@ class UpdateVatsimData extends Command {
 		$update->timestamp = $updateDate;
 		$update->save();
 
-		$airports = Airport::lists('country_id','id');
+		$this->updateId = $update->id;
 
-		$registrations = Registration::get()->each(function($registration) {
-			$registration->prefix = str_replace('-', '', $registration->prefix);
-			if(!$registration->regex) $registration->prefix .= '.*';
-		});
-
-		$airlines = Airline::get();
-
-		$datas = $vatsim->getPilots()->toArray();
-		foreach($datas as $data) {
+		$datas = $this->getVatsimPilots();
+		foreach($datas as $data)
+		{
+			/* Skip flight if there are no coordinates */
 			if(empty($data['longitude']) || empty($data['latitude'])) continue;
 
 			$date = Carbon::createFromFormat('YmdHis', $data['time_logon'], 'UTC');
-			$record = Flight::whereCallsign($data['callsign'])->whereVatsimId($data['cid'])->whereStartdate($date->toDateString())->with('lastPosition')->first();
+			$record = Flight::whereCallsign($data['callsign'])->whereVatsimId($data['cid'])->with('lastPosition')->where('state','!=',2)->first();
 			
-			if(is_null($record)) {
+			if(is_null($record))
+			{
 				$record = new Flight;
-				$record->callsign = $data['callsign'];
+				
+				// Create entry for Pilot
+				$this->pilot($data);
+
 				$record->vatsim_id = $data['cid'];
 				$record->startdate = $date->toDateString();
-				if(empty($data['planned_depairport'])) {
-					$nearby = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $data['latitude'] . ")) + cos(radians(`lat`)) * cos(radians(" . $data['latitude'] . ")) * cos(radians(`lon`) - radians(" . $data['longitude'] . "))) * 6371 AS distance"))
-					->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $data['latitude'] . ")) + cos(radians(`lat`)) * cos(radians(" . $data['latitude'] . ")) * cos(radians(`lon`) - radians(" . $data['longitude'] . "))) * 6371 < 20")
-					->orderBy('distance','asc')
-					->first();
-					if(!is_null($nearby)) {
-						$record->departure_id = $nearby->id;
-						$record->departure_country_id = $nearby->country_id;
-					}
-				} else {
-					$record->departure_id = $data['planned_depairport'];
-					$record->departure_country_id = array_key_exists($data['planned_depairport'], $airports) ? $airports[$data['planned_depairport']] : '';
+
+				// If no departure airport is defined, check for airport in proximity.
+				if(empty($data['planned_depairport']))
+				{
+					$nearby = $this->proximity($data['latitude'], $data['longitude']);
+					if(!is_null($nearby)) $record->setDeparture($nearby);
 				}
+				else
+				{
+					$record->departure_id = $data['planned_depairport'];
+					$record->departure_country_id = $this->getAirports($data['planned_depairport']);
+				}
+
+				// Arrival airport
 				$record->arrival_id = $data['planned_destairport'];
-				$record->arrival_country_id = array_key_exists($data['planned_destairport'], $airports) ? $airports[$data['planned_destairport']] : '';
+				$record->arrival_country_id = $this->getAirports($data['planned_destairport']);
+
 				$record->route = $data['planned_route'];
 				$record->remarks = $data['planned_remarks'];
 				$record->flighttype = $data['planned_flighttype'];
-				$record->state = 4;
+				
+				// Aircraft codes
 				$record->aircraft_code = $data['planned_aircraft'];
-				if(empty($data['planned_aircraft'])) {
-					$record->aircraft_id = null;
-				} else {
-					preg_match('/(?:.\/)?([^\/]+)(?:\/.)?/', $data['planned_aircraft'], $aircraft);
-					$record->aircraft_id = $aircraft[1];
-				}
-
+				$record->aircraft_id = $this->extractAircraft($data['planned_aircraft']);
+				
+				// Callsign, airline/private registration
+				$record->callsign = $data['callsign'];
 				$callsign = str_replace('-','',strtoupper($data['callsign']));
-
-				// Airline
-				$airline = $airlines->first(function($key, $airline) use ($callsign) {
-					return preg_match('/^' . $airline->icao . '[0-9]{1,5}[A-Z]{0,2}$/', $callsign);
-				});
-
-				if(!is_null($airline)) {
-					$record->airline_id = $airline->icao;
-					$record->callsign_type = 1;
-				} else {
-					// Private
-					$registration = $registrations->first(function($key, $registration) use ($callsign) {
-						return preg_match('/^' . $registration->prefix . '$/', $callsign);
-					});
-
-					if(is_null($registration)) {
-						$record->callsign_type = 0;
-
-					} else {
-						$record->callsign_type = 2;
-						$record->airline_id = $registration->country_id;
-					}
+				if(!is_null($airline = $this->getAirlines($callsign))) { // Airline
+					$record->isAirline($airline->icao);
+				} elseif(!is_null($registration = $this->getRegistrations($callsign))) {
+					$record->isPrivate($registration->country_id);
 				}
-			} elseif($record->state == 1 || $record->state == 3) {
-				$nearby = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $data['latitude'] . ")) + cos(radians(`lat`)) * cos(radians(" . $data['latitude'] . ")) * cos(radians(`lon`) - radians(" . $data['longitude'] . "))) * 6371 AS distance"))
-				->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $data['latitude'] . ")) + cos(radians(`lat`)) * cos(radians(" . $data['latitude'] . ")) * cos(radians(`lon`) - radians(" . $data['longitude'] . "))) * 6371 < 20")
-				->orderBy('distance','asc')
-				->first();
-				if(!is_null($nearby) && (is_null($record->lastPosition) || $data['altitude'] <= $record->lastPosition->altitude+20)) {
-					// airport within 20km
-					if($data['altitude'] > ($nearby->elevation - 20) && $data['altitude'] < ($nearby->elevation + 20) && $data['groundspeed'] < 30) {
-						$record->state = ($record->state == 3) ? 2 : 3;
-						if($record->state == 2) {
-							$record->arrival_time = $updateDate;
-							if(empty($record->arrival_id)) {
-								$record->arrival_id = $nearby->id;
-								$record->arrival_country_id = $nearby->country_id;
-							}
-						}
-					} else {
-						$record->state = 1;
-					}
-				} else {
-					$record->state = 1;
+
+				// Set status as 'Preparing'
+				$record->statePreparing();
+			}
+			elseif($record->isAirborne())
+			{
+				$nearby = $this->proximity($data['latitude'], $data['longitude']);
+				if(!is_null($nearby) && $this->altitudeRange($data['altitude'], $nearby->elevation) && $data['groundspeed'] < 30) {
+					// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
+					$record->stateArriving();
 				}
-			} elseif($record->state == 4) {
-				if($data['longitude'] <> $record->last_lon ||
-				  $data['latitude'] <> $record->last_lat ||
-				  ($data['altitude'] <= $record->lastPosition->altitude + 10 && $data['altitude'] >= $record->lastPosition->altitude - 10) ||
-				  $data['groundspeed'] <> $record->lastPosition->speed) {
-					$record->state = 0;
+			}
+			elseif($record->isArriving())
+			{
+				$nearby = $this->proximity($data['latitude'], $data['longitude']);
+				if(!is_null($nearby) && $this->altitudeRange($data['altitude'], $nearby->elevation) && $data['groundspeed'] < 30) {
+					// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
+					$record->stateArrived();
+					$record->arrival_time = $updateDate;
+					$record->setArrival($nearby);
+				} else {
+					// Make sure flight is marked as Airborne
+					$record->stateAirborne();
+				}
+			}
+			elseif($record->isPreparing())
+			{
+				if($data['longitude'] <> $record->last_lon || $data['latitude'] <> $record->last_lat || !$this->altitudeRange($data['altitude'], $record->lastPosition->altitude, 10)) {
+					// Plane has moved (horizontally or vertically)
+					$record->stateDeparting();
 				}
 			}
 
-			if($record->state == 0 && ($data['planned_actdeptime'] > 0 || ($data['planned_deptime'] === "0" && $data['planned_actdeptime'] === "0")) && $data['altitude'] >= ($record->lastPosition->altitude + 50)) {
-				$record->state = 1;
-				if(is_null($record->departure_time)) {
-					$record->departure_time = $updateDate;
-				}
+			if($record->isDeparting() && $data['altitude'] >= ($record->lastPosition->altitude + 50)) {
+				// Flight is departing and altitude has increased by more than 50 ft
+				$record->stateAirborne();
+				$record->departure_time = $updateDate;
+				$record->arrival_time = Carbon::instance($updateDate)->addHours($data['planned_hrsenroute'])->addMinutes($data['planned_minenroute']);
 			}
 			
-			if($data['planned_actdeptime'] > 0 && $data['planned_actdeptime'] < 2400 && $record->state != 2) {
-				$time = Carbon::instance($date)->startOfDay()->addHours(substr($data['planned_actdeptime'],0,-2))->addMinutes(substr($data['planned_actdeptime'],-2));
-				$record->departure_time = $time;
-				$record->arrival_time = $time->addHours($data['planned_hrsenroute'])->addMinutes($data['planned_minenroute']);
-			}
-
+			// Constantly update filed altitude, speed from flight plan
 			$record->altitude = $data['planned_altitude'];
 			$record->speed = $data['planned_tascruise'];
+
+			// Update distance flown
+			if($record->last_lat != 0 && $record->last_lon != 0) $record->distance += acos(sin(deg2rad($record->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($record->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($record->last_lon) - deg2rad($data['longitude']))) * 6371;
+			
+			// Update latest coordinates
 			$record->last_lat = $data['latitude'];
 			$record->last_lon = $data['longitude'];
+
+			// Ensure flight is not marked as missing
 			$record->missing = false;
 			
 			$record->save();
 
-			$position = new Position;
-
-			$position->flight_id = $record->id;
-			$position->update_id = $update->id;
-			$position->lat = $data['latitude'];
-			$position->lon = $data['longitude'];
-			$position->altitude = $data['altitude'];
-			$position->speed = $data['groundspeed'];
-			$position->heading = $data['heading'];
-			// $position->ground_elevation = 
-			$position->time = $updateDate;
-
-			$position->save();
-
-			$pilot = Pilot::whereVatsimId($data['cid'])->first();
-			if(is_null($pilot)) {
-				$pilot = new Pilot;
-				$pilot->vatsim_id = $data['cid'];
-				$pilot->name = $data['realname'];
-				$pilot->save();
-			}
+			// Create position report
+			$this->positionReport($data, $record->id);
 		}
 
 		Cache::forever('vatsim.year', number_format(Flight::where('startdate','LIKE',date('Y') . '%')->count()));
 		Cache::forever('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
 		Cache::forever('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
-		Log::info('VATSIM Data updated');
+		
+		Log::info('VATSIM UPDATE: END');
 
-		// return;
-
-		$callsigns = array_pluck($datas, 'callsign');
-		$callsigns = array_combine($callsigns, $callsigns);
-		$flights = Flight::where('state','!=',2)->whereStartdate($date->toDateString())->with('lastPosition')->get();
-		foreach($flights as $flight) {
-			if(!in_array($flight->callsign, $callsigns)) {
-			$this->comment('Flight #' . $flight->id);
-			$this->info('--- State: ' . $flight->state);
-			// flight missing
-
-				if($flight->state == 1 || $flight->state == 3) {
-				// airborne or near arrival
-					$nearby = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $flight->last_lat . ")) + cos(radians(`lat`)) * cos(radians(" . $flight->last_lat . ")) * cos(radians(`lon`) - radians(" . $flight->last_lon . "))) * 6371 AS distance"))
-					->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $flight->last_lat . ")) + cos(radians(`lat`)) * cos(radians(" . $flight->last_lat . ")) * cos(radians(`lon`) - radians(" . $flight->last_lon . "))) * 6371 < 20")
-					->orderBy('distance','asc')
-					->first();
-					if(!is_null($nearby) && !is_null($flight->lastPosition)) {
-						// airport within 20km
-						$this->info('--- Nearby airport: ' . $nearby->id);
-						if($flight->lastPosition->altitude > ($nearby->elevation - 20) && $flight->lastPosition->altitude < ($nearby->elevation + 20) && $flight->lastPosition->groundspeed < 30) {
-							$this->error('--- Arrived');
-							$flight->state = 2;
-							if(empty($record->arrival_id)) {
-								$flight->arrival_id = $nearby->id;
-								$flight->arrival_country_id = $nearby->country_id;
-							}
-							$flight->arrival_time = $flight->lastPosition->time;
-							$flight->save();
-							continue;
-						}
-					}
-				}
-				if(!is_null($flight->lastPosition) && Carbon::now()->diffInHours($flight->lastPosition->updated_at) < 1) {
-					// flight has been missing for less than an hour
-					$this->info('--- Time: ' . Carbon::now()->diffInMinutes($flight->lastPosition->updated_at) . ' minutes');
-					$this->error('--- Marked as missing');
-					$flight->missing = true;
-					$flight->save();
-				} else {
-					// no record of last position
-					$this->error('--- Deleted');
-					$flight->delete();
-					continue;
-				}
-			} else {
-				unset($callsigns[$flight->callsign]);
-			}
-			$this->info('');
-		}
-		Log::info('Flights cleaned up');
+		$this->cleanUp($datas);		
 	}
 
 	/**
@@ -294,6 +217,135 @@ class UpdateVatsimData extends Command {
 		return array(
 			// array('example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null),
 		);
+	}
+
+	function getAirlines($callsign = null) {
+		if(is_null($this->airlines)) $this->airlines = Airline::get();
+
+		if(!is_null($callsign)) 
+			return $this->airlines->first(function($key, $airline) use ($callsign) {
+				return preg_match('/^' . $airline->icao . '[0-9]{1,5}[A-Z]{0,2}$/', $callsign);
+			});
+
+		return $this->airlines;
+	}
+
+	function getAirports($icao = null) {
+		if(is_null($this->airports)) $this->airports = Airport::lists('country_id','id');
+
+		if(!is_null($icao)) 
+			return array_key_exists($icao, $this->airports) ? $this->airports[$icao] : '';
+
+		return $this->airports;
+	}
+
+	function getRegistrations($callsign = null) {
+		if(is_null($this->registrations)) $this->registrations = Registration::get()->each(function($registration) {
+			$registration->prefix = str_replace('-', '', $registration->prefix);
+			if(!$registration->regex) $registration->prefix .= '.*';
+		});
+
+		if(!is_null($callsign)) 
+			return $this->registrations->first(function($key, $registration) use ($callsign) {
+				return preg_match('/^' . $registration->prefix . '$/', $callsign);
+			});
+
+		return $this->registrations;
+	}
+
+	function loadVatsim() {
+		if(!is_null($this->vatsim)) return $this->vatsim;
+
+		$vatsim = new Vatsimphp\VatsimData();
+		$vatsim->setConfig('forceDataRefresh',true);
+		$vatsim->loadData();
+
+		return $this->vatsim = $vatsim;
+	}
+
+	function getVatsimPilots() {
+		return $this->vatsim->getPilots()->toArray();
+	}
+
+	function positionReport($data, $flightId) {
+		$position = new Position;
+
+		$position->flight_id = $flightId;
+		
+		$position->lat = $data['latitude'];
+		$position->lon = $data['longitude'];
+		$position->altitude = $data['altitude'];
+		$position->speed = $data['groundspeed'];
+		$position->heading = $data['heading'];
+		// $position->ground_elevation = 
+		
+		$position->update_id = $this->updateId;
+		$position->time = $this->updateDate;
+
+		$position->save();
+	}
+
+	function pilot($data) {
+		$pilot = Pilot::whereVatsimId($data['cid'])->first();
+		if(is_null($pilot)) {
+			$pilot = new Pilot;
+			$pilot->vatsim_id = $data['cid'];
+			$pilot->name = $data['realname'];
+			$pilot->save();
+		}
+	}
+
+	function proximity($latitude, $longitude, $range = 20) {
+		return Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
+			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
+			->orderBy('distance','asc')
+			->first();
+	}
+
+	function extractAircraft($code) {
+		if(empty($code)) return '';
+
+		preg_match('/(?:.\/)?([^\/]+)(?:\/.)?/', $code, $aircraft);
+		return $aircraft[1];
+	}
+
+	function altitudeRange($altitude, $base, $range = 20) {
+		return ($altitude >= $base - $range && $altitude <= $base + $range);
+	}
+
+	function cleanUp($data) {
+		Log::info('VATSIM CLEAN: START');
+		$callsigns = array_pluck($data, 'callsign');
+		$callsigns = array_combine($callsigns, $callsigns);
+		$flights = Flight::where('state','!=',2)->with('lastPosition')->get();
+		foreach($flights as $flight) {
+			if(!in_array($flight->callsign, $callsigns)) {
+			// flight missing
+				if(Carbon::now()->diffInHours($flight->lastPosition->updated_at) >= 1) {
+					// no record of last position
+					$flight->delete();
+				} else {
+					// flight has been missing for less than an hour
+					$flight->missing = true;
+
+					if($flight->isAirborne() || $flight->isArriving()) {
+					// airborne or near arrival
+						$nearby = $this->proximity($flight->last_lat, $flight->last_lon);
+						if(!is_null($nearby) && $this->altitudeRange($flight->lastPosition->altitude, $nearby->elevation) && $flight->lastPosition->groundspeed < 30) {
+							// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
+							$flight->stateArrived();
+							$flight->arrival_time = $flight->lastPosition->time;
+							$flight->setArrival($nearby);
+						}
+					}
+
+					$flight->save();
+				}
+			} else {
+				unset($callsigns[$flight->callsign]);
+			}
+		}
+		Log::info('VATSIM CLEAN: END');
 	}
 
 }
