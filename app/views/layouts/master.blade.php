@@ -28,6 +28,8 @@
 </head>
 <body>
 	<div class="wrapper">
+		{{-- Temporarily hide leader navigation --}}
+		@if(false)
 		<div class="navbar navbar-default navbar-leader">
 			<div class="container">
 				<div class="navbar-header visible-xs">
@@ -57,6 +59,7 @@
 				</div>
 			</div>
 		</div>
+		@endif
 		<nav class="navbar navbar-vataware" role="navigation">
 			<div class="container">
 				<!-- Brand and toggle get grouped for better mobile display -->
@@ -74,6 +77,7 @@
 				<div class="collapse navbar-collapse" id="vataware-navbar-collapse">
 					<ul class="nav navbar-nav navbar-right">
 						<li><a href="{{ URL::route('home') }}" class="active">Home</a></li>
+						@if(false)
 						<li><a href="#">News</a></li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown" href="#" id="themes"><i class="fa fa-angle-down" style="color:#18bc9c;"></i> Services</a>
@@ -83,9 +87,10 @@
 								<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Resources</a></li>
 							</ul>
 						</li>
+						@endif
 						<li><a href="{{ URL::route('pilot.index') }}">Pilots</a></li>
-						<li><a href="#">ATC</a></li>
-						<li><a href="#">Forum</a></li>
+						{{-- <li><a href="#">ATC</a></li> --}}
+						<li><a href="http://forums.vatsim.net/viewforum.php?f=131" target="_blank">Forum</a></li>
 					</ul>
 				</div><!-- /.navbar-collapse -->
 			</div><!-- /.container-fluid -->

@@ -22,6 +22,8 @@ Route::get('pilot', ['as' => 'pilot.index', 'uses' => 'PilotController@index']);
 Route::get('pilot/{pilot}', ['as' => 'pilot.show', 'uses' => 'PilotController@show'])->where('pilot','[0-9]+');
 Route::get('pilot/{pilot}/flights', ['as' => 'pilot.flights', 'uses' => 'PilotController@flights'])->where('pilot','[0-9]+');
 
+Route::get('search', ['as' => 'search', 'uses' => 'SearchController@index']);
+
 Route::bind('flight',function($value, $route) {
 	$flight = Flight::with('aircraft','departure','arrival','pilot','departureCountry','arrivalCountry','airline','positions')->find($value);
 

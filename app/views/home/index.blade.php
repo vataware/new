@@ -4,26 +4,8 @@
 <div class="smallMapStats">
 PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; ATC ONLINE: <span style="color:#138995;">{{ $atc }}</span>
 </div>
-<div class="searchFieldContainer">
-	<div class="container">
-		<div class="col-lg-3" style="text-align: center;">
-			<img src="{{ asset('assets/images/separator.png') }}" class="searchSeparator" />
-			<div style="margin-top:10px;">
-			<small>who are you</small><br />
-			looking for?
-			</div>
-
-		</div>
-		<div class="col-lg-1" style="text-align:center; margin-top:10px;">
-			find<br />them!
-			</div>
-		<div class="col-lg-6">
-			<input type="text" placeholder="enter name, ID or callsign..." class="homeSearchBox">
-		</div>
-		<div class="col-lg-1">
-			<button type="button" class="btn btn-primary" style="margin-top: 26px; ">Search</button>
-		</div>
-	</div>
+<div style="margin-top: -5px;">
+@include('search.bar')
 </div>
 <div class="container"><br /><br />
 	<div class="col-lg-12 tiles" style="text-align: center;">
