@@ -105,6 +105,15 @@ class Flight extends Eloquent {
 		}
 	}
 
+	public function getTotalTimeAttribute() {
+		if(is_null($this->arrival_time)) return $this->traveled_time;
+
+		$hours = $this->arrival_time->diffInHours($this->departure_time);
+		$minutes = $this->arrival_time->diffInMinutes($this->departure_time);
+		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
+		return $hours . 'h ' . str_pad($minutes,2,'0',STR_PAD_LEFT) . 'm';
+	}
+
 	public function getTraveledTimeAttribute() {
 		if(is_null($this->departure_time)) return null;
 		$now = Carbon::now();

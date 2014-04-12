@@ -38,7 +38,7 @@
 					@if($flight->state > 1)
 					<br /><small>Arrive at: {{ $flight->arrival_time->format('H:i') }}</small></td>
 					@endif
-				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
+				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->total_time }}</td>
 			</tr>
 			@endforeach
 		</tbody>

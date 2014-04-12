@@ -74,7 +74,7 @@ class UpdateVatsimData extends Command {
 		$update->save();
 
 		$this->updateId = $update->id;
-
+		Log::info('VATSIM UPDATE: START PILOTS');
 		$datas = $this->getVatsimPilots();
 		foreach($datas as $data)
 		{
@@ -132,6 +132,8 @@ class UpdateVatsimData extends Command {
 			}
 			elseif($record->isAirborne())
 			{
+				$record->duration = $this->duration($record->departure_time, $updateDate);
+
 				$nearby = $this->proximity($data['latitude'], $data['longitude']);
 				if(!is_null($nearby) && $this->altitudeRange($data['altitude'], $nearby->elevation) && $data['groundspeed'] < 30) {
 					// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
@@ -140,6 +142,7 @@ class UpdateVatsimData extends Command {
 			}
 			elseif($record->isArriving())
 			{
+				$record->duration = $this->duration($record->departure_time, $updateDate);
 				$nearby = $this->proximity($data['latitude'], $data['longitude']);
 				if(!is_null($nearby) && $this->altitudeRange($data['altitude'], $nearby->elevation) && $data['groundspeed'] < 30) {
 					// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
@@ -186,13 +189,67 @@ class UpdateVatsimData extends Command {
 			$this->positionReport($data, $record->id);
 		}
 
+		$thisYear = Flight::where('startdate','LIKE',date('Y') . '%')->count();
+		$lastYear = Flight::where('startdate','LIKE',date('Y',strtotime('last year')) . '%')->count();
+
 		Cache::forever('vatsim.year', number_format(Flight::where('startdate','LIKE',date('Y') . '%')->count()));
 		Cache::forever('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
 		Cache::forever('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
-		
-		Log::info('VATSIM UPDATE: END');
 
-		$this->cleanUp($datas);		
+		if($lastYear == 0) {
+			Cache::forever('vatsim.change', '&infin;&nbsp;');
+			Cache::forever('vatsim.changeDirection', 'up');
+		} else {
+			$percentageChange = (($thisYear - $lastYear) / $lastYear * 100);
+			Cache::forever('vatsim.change', number_format(abs($percentageChange)));
+			Cache::forever('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
+		}
+		
+		Log::info('VATSIM UPDATE: END PILOTS');
+
+		$this->cleanUpPilots($datas);
+		// return;
+		Log::info('VATSIM UPDATE: BEGIN CONTROLLERS');
+		$datas = $this->getVatsimControllers();
+		foreach($datas as $data)
+		{
+			if(empty($data['callsign'])) continue;
+
+			$record = ATC::with('pilot')->whereCallsign($data['callsign'])->whereVatsimId($data['cid'])->whereNull('end')->first();
+
+			if(is_null($record)) {
+				$record = new ATC;
+				$record->vatsim_id = $data['cid'];
+				$record->callsign = $data['callsign'];
+				$record->start = $updateDate;
+				$record->facility_id = (ends_with($data['callsign'], '_ATIS')) ? 99 : $data['facilitytype'];
+				$record->rating_id = $data['rating'];
+				$record->visual_range = $data['visualrange'];
+				$record->lat = $data['latitude'];
+				$record->lon = $data['longitude'];
+				$record->frequency = $data['frequency'];
+				$record->facility_id = (ends_with($data['callsign'], '_ATIS')) ? 99 : $data['facilitytype'];
+
+				if($record->facility_id < 6) {
+					$nearby = $this->proximity($data['latitude'], $data['longitude']);
+					$record->airport_id = (is_null($nearby)) ? null : $nearby->id;
+				}
+
+				$this->pilot($data);
+			} else {
+				$record->duration = $this->duration($record->start, $updateDate);
+			}
+
+			$record->pilot->rating_id = $data['rating'];
+			$record->pilot->save();
+			
+			$record->missing = false;
+			$record->time = $updateDate;
+			$record->save();
+		}
+		Log::info('VATSIM UPDATE: END CONTROLLERS');
+
+		$this->cleanUpControllers($datas);
 	}
 
 	/**
@@ -217,6 +274,10 @@ class UpdateVatsimData extends Command {
 		return array(
 			// array('example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null),
 		);
+	}
+
+	function duration($start, $now) {
+		return $start->diffInMinutes($now);
 	}
 
 	function getAirlines($callsign = null) {
@@ -267,6 +328,10 @@ class UpdateVatsimData extends Command {
 		return $this->vatsim->getPilots()->toArray();
 	}
 
+	function getVatsimControllers() {
+		return $this->vatsim->getControllers()->toArray();
+	}
+
 	function positionReport($data, $flightId) {
 		$position = new Position;
 
@@ -313,8 +378,8 @@ class UpdateVatsimData extends Command {
 		return ($altitude >= $base - $range && $altitude <= $base + $range);
 	}
 
-	function cleanUp($data) {
-		Log::info('VATSIM CLEAN: START');
+	function cleanUpPilots($data) {
+		Log::info('VATSIM CLEAN: START PILOTS');
 		$callsigns = array_pluck($data, 'callsign');
 		$callsigns = array_combine($callsigns, $callsigns);
 		$flights = Flight::where('state','!=',2)->with('lastPosition')->get();
@@ -345,7 +410,30 @@ class UpdateVatsimData extends Command {
 				unset($callsigns[$flight->callsign]);
 			}
 		}
-		Log::info('VATSIM CLEAN: END');
+		Log::info('VATSIM CLEAN: END PILOTS');
+	}
+
+	function cleanUpControllers($data) {
+		Log::info('VATSIM CLEAN: START CONTROLLERS');
+		$callsigns = array_pluck($data, 'callsign');
+		$callsigns = array_combine($callsigns, $callsigns);
+		$controllers = ATC::whereNull('end')->get();
+		foreach($controllers as $controller) {
+			if(!in_array($controller->callsign, $callsigns)) {
+			// controller missing
+				if(Carbon::now()->diffInMinutes($controller->time) >= 5) {
+					// no record of last position
+					$controller->end = $controller->time;
+				} else {
+					// controller has been missing for less than an hour
+					$controller->missing = true;
+				}
+				$controller->save();
+			} else {
+				unset($callsigns[$controller->callsign]);
+			}
+		}
+		Log::info('VATSIM CLEAN: END CONTROLLERS');
 	}
 
 }

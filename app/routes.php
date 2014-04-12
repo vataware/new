@@ -22,6 +22,15 @@ Route::get('pilot', ['as' => 'pilot.index', 'uses' => 'PilotController@index']);
 Route::get('pilot/{pilot}', ['as' => 'pilot.show', 'uses' => 'PilotController@show'])->where('pilot','[0-9]+');
 Route::get('pilot/{pilot}/flights', ['as' => 'pilot.flights', 'uses' => 'PilotController@flights'])->where('pilot','[0-9]+');
 
+// ATC
+Route::get('atc', ['as' => 'atc.index', 'uses' => 'ATCController@index']);
+Route::get('atc/{atc}', ['as' => 'atc.show', 'uses' => 'ATCController@show'])->where('atc','[0-9]+');
+
+// Controllers
+Route::get('controller', ['as' => 'controller.index', 'uses' => 'ControllerController@index']);
+Route::get('controller/{pilot}', ['as' => 'controller.show', 'uses' => 'ControllerController@show'])->where('pilot','[0-9]+');
+// Route::get('controller/{pilot}/duties', ['as' => 'controller.duties', 'uses' => 'ControllerController@duties'])->where('pilot','[0-9]+');
+
 Route::get('search', ['as' => 'search', 'uses' => 'SearchController@index']);
 
 Route::bind('flight',function($value, $route) {
@@ -31,6 +40,16 @@ Route::bind('flight',function($value, $route) {
 		return App::abort(404);
 	} else {
 		return $flight;
+	}
+});
+
+Route::bind('atc',function($value, $route) {
+	$atc = ATC::with('pilot')->find($value);
+
+	if(is_null($atc)) {
+		return App::abort(404);
+	} else {
+		return $atc;
 	}
 });
 

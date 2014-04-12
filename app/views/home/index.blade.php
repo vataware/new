@@ -63,7 +63,7 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 					<small>Flights This Year</small>
 				</div>
 				<div class="col-lg-2" style="border-right:3px solid #ee592f;">
-					<h2>11%<sup><i style="color:#138995; font-size: 17px;" class="glyphicon glyphicon-arrow-up"></i> </sup></h2>
+					<h2>{{ $change }}%<sup><i style="color:#138995; font-size: 17px;" class="glyphicon glyphicon-arrow-{{ $changeArrow }}"></i> </sup></h2>
 					<small>Compared to last year</small>
 				</div>
 				<div class="col-lg-1" style="border-right:3px solid #398483;">

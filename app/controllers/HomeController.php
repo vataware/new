@@ -11,8 +11,10 @@ class HomeController extends BaseController {
 		$year = Cache::get('vatsim.year');
 		$month = Cache::get('vatsim.month');
 		$day = Cache::get('vatsim.day');
+		$change = Cache::get('vatsim.change');
+		$changeArrow = Cache::get('vatsim.changeDirection');
 
-		$this->autoRender(compact('pilots','atc','users','year','month','day'));
+		$this->autoRender(compact('pilots','atc','users','year','month','day','change','changeArrow'));
 	}
 
 }

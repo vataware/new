@@ -78,7 +78,7 @@
 				
 				<tr>
 					<th>Distance/Time traveled</th>
-					<td>{{ number_format($flight->miles) }} nm / {{ $flight->traveled_time }}</td>
+					<td>{{ number_format($flight->miles) }} nm / {{ ($flight->state != 2) ? $flight->traveled_time : $flight->total_time }}</td>
 				</tr>
 				@if($flight->state != 2)
 				<tr>

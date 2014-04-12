@@ -125,6 +125,7 @@
 			</div>
 		</div>
 		<div class="col-md-4">
+			<a href="{{ URL::route('controller.show', $pilot->vatsim_id) }}" class="btn btn-vataware btn-lg btn-block">Controller's profile</a>
 			@if(!is_null($active))
 			<h2 class="section-header">Active flight</h2>
 			<table class="table table-hover">

@@ -333,3 +333,106 @@ a:hover.tiles
 .page-header {
 	border-bottom: 2px solid rgb(86, 125, 132);
 }
+
+.atc-progress {
+	text-align: center;
+}
+
+.atc-progress ul {
+	list-style: none;
+	display: inline-table;
+	padding-left: 5px;
+}
+.atc-progress ul li {
+	display: inline-block;
+	float: left;
+	height: 50px;
+	line-height: 50px;
+	background: #22cbdc;
+	text-align: center;
+	padding: 0 20px 0 50px;
+	position: relative;
+	margin: 0 10px 0 0; 
+	
+	font-size: 20px;
+	text-decoration: none;
+	color: #fff;
+}
+
+.atc-progress ul li:before {
+	content: "";  
+	border-top: 25px solid transparent;
+	border-bottom: 26px solid transparent;
+	border-left: 25px solid white;
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.atc-progress ul li:after {
+	content: "";  
+	border-top: 25px solid transparent;
+	border-bottom: 26px solid transparent;
+	border-left: 25px solid #22cbdc;
+	position: absolute;
+	right: -25px;
+	top: 0;
+	z-index: 1;
+}
+
+.atc-progress ul li:first-child:before {
+	display: none; 
+}
+
+.atc-progress ul li:first-child {
+	padding-left: 30px;
+}
+
+.atc-progress ul li:last-child {
+	padding-right: 30px;
+	margin-right: 0;
+}
+
+.atc-progress ul li:last-child:after {
+	display: none; 
+}
+	
+.atc-progress ul li.controlled {
+	background: #138995;
+}
+
+.atc-progress ul li.controlled:after {
+	border-left-color: #138995;
+}
+
+.atc-progress-small .btn, .atc-progress-small .btn:hover {
+	border: 0;
+	border-radius: 0 !important;
+	cursor: auto;
+	background-color: #22cbdc;
+}
+
+.atc-progress-small .btn.controlled, .atc-progress-small .btn.controlled:hover {
+	background-color: #138995;
+}
+
+.atc-progress-small .btn-group-vertical {
+	border-top: 1px solid black;
+}
+
+.atc-progress-small .btn-group-vertical .btn {
+	border-bottom: 1px solid black;
+	margin-top: 0;
+}
+
+.btn-vataware {
+	border: none;
+	background-color: #138995;
+	color: white;
+}
+
+.btn-vataware:hover {
+	background-color: #138995;
+	color: white;
+	text-decoration: underline;
+}

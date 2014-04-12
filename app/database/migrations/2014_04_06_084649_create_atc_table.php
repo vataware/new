@@ -13,8 +13,16 @@ class CreateAtcTable extends Migration {
 			$table->string('callsign', 10);
 			$table->datetime('start');
 			$table->datetime('end')->nullable();
-			$table->smallInteger('facility')->unsigned();
-			$table->integer('rating_id')->unsigned();
+			$table->double('lat',10,6);
+			$table->double('lon',10,6);
+			$table->string('airport_id',6)->nullable()->default(null);
+			$table->smallInteger('visual_range');
+			$table->double('frequency',6,3);
+			$table->smallInteger('facility_id')->unsigned();
+			$table->smallInteger('rating_id')->unsigned();
+			$table->datetime('time');
+			$table->smallInteger('duration')->default(0);
+			$table->boolean('missing')->default(false);
 			$table->timestamps();
 		});
 	}

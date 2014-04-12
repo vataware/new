@@ -89,7 +89,7 @@
 						</li>
 						@endif
 						<li><a href="{{ URL::route('pilot.index') }}">Pilots</a></li>
-						{{-- <li><a href="#">ATC</a></li> --}}
+						<li><a href="{{ URL::route('atc.index') }}">ATC</a></li>
 						<li><a href="http://forums.vatsim.net/viewforum.php?f=131" target="_blank">Forum</a></li>
 					</ul>
 				</div><!-- /.navbar-collapse -->

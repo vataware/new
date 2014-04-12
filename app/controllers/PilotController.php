@@ -12,7 +12,7 @@ class PilotController extends BaseController {
 
 	function show(Pilot $pilot) {
 		$active = Flight::with('departure','departure.country','arrival','arrival.country')->whereVatsimId($pilot->vatsim_id)->whereIn('state',array(0,1,3,4))->first();
-		$flights = Flight::with('departure','departure.country','arrival','arrival.country')->whereVatsimId($pilot->vatsim_id)->whereState(2)->orderBy('arrival_time','desc')->get();
+		$flights = Flight::with('departure','departure.country','arrival','arrival.country')->whereVatsimId($pilot->vatsim_id)->whereState(2)->orderBy('arrival_time','desc')->take(15)->get();
 
 		$stats = new FlightStat(Flight::whereVatsimId($pilot->vatsim_id));
 			
