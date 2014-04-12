@@ -115,9 +115,11 @@ class FlightStat {
 			$airportId = @$origCounter[$airportId] + @$destCounter[$airportId];
 		}
 		arsort($counter);
-		$namesRaw = Airport::whereIn('id',array_keys($counter))->get();
-		foreach($namesRaw as $airport) {
-			$names[$airport->id] = $airport; 
+		if(count($counter) > 0) {
+			$namesRaw = Airport::whereIn('id',array_keys($counter))->get();
+			foreach($namesRaw as $airport) {
+				$names[$airport->id] = $airport; 
+			}
 		}
 		
 		foreach($counter as $key => $flights) {
