@@ -64,7 +64,7 @@ class FlightStat {
 			
 			foreach($counter as $key => $flights) {
 				if(count($result) < 5 && array_key_exists($key, $names))
-					$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => number_format($flights / $this->_total * 100, 1));
+					$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => ($this->_total == 0) ? 0 : number_format($flights / $this->_total * 100, 1));
 				else
 					$other += $flights;
 			}
@@ -72,8 +72,8 @@ class FlightStat {
 
 		$private = $this->query()->whereCallsignType(2)->count();
 		$unknown = $this->query()->whereCallsignType(0)->count();
-		$result['Private'] = array('count' => $private, 'percent' => number_format($private / $this->_total * 100,1));
-		$result['Other'] = array('count' => $other + $unknown, 'percent' => number_format(($other + $unknown) / $this->_total * 100,1));
+		$result['Private'] = array('count' => $private, 'percent' => ($this->_total == 0) ? 0 : number_format($private / $this->_total * 100,1));
+		$result['Other'] = array('count' => $other + $unknown, 'percent' => ($this->_total == 0) ? 0 : number_format(($other + $unknown) / $this->_total * 100,1));
 
 		return $result;
 	}
@@ -93,12 +93,12 @@ class FlightStat {
 
 		foreach($counter as $key => $flights) {
 			if(count($result) < 5 && array_key_exists($key, $names))
-				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => number_format($flights / $this->_total * 100, 1));
+				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => ($this->_total == 0) ? 0 : number_format($flights / $this->_total * 100, 1));
 			else
 				$other += $flights;
 		}
 
-		$result['Other'] = array('count' => $other, 'percent' => number_format($other / $this->_total * 100,1));
+		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / $this->_total * 100,1));
 
 		return $result;
 	}
@@ -122,12 +122,12 @@ class FlightStat {
 		
 		foreach($counter as $key => $flights) {
 			if(count($result) < 5 && array_key_exists($key, $names))
-				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => number_format($flights / ($this->_total * 2) * 100, 1));
+				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => ($this->_total == 0) ? 0 : number_format($flights / ($this->_total * 2) * 100, 1));
 			else
 				$other += $flights;
 		}
 
-		$result['Other'] = array('count' => $other, 'percent' => number_format($other / ($this->_total * 2) * 100,1));
+		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / ($this->_total * 2) * 100,1));
 
 		return $result;
 	}
