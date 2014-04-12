@@ -109,14 +109,6 @@ class UpdateVatsimData extends Command {
 				// Arrival airport
 				$record->arrival_id = $data['planned_destairport'];
 				$record->arrival_country_id = $this->getAirports($data['planned_destairport']);
-
-				$record->route = $data['planned_route'];
-				$record->remarks = $data['planned_remarks'];
-				$record->flighttype = $data['planned_flighttype'];
-				
-				// Aircraft codes
-				$record->aircraft_code = $data['planned_aircraft'];
-				$record->aircraft_id = $this->extractAircraft($data['planned_aircraft']);
 				
 				// Callsign, airline/private registration
 				$record->callsign = $data['callsign'];
@@ -168,6 +160,24 @@ class UpdateVatsimData extends Command {
 				$record->departure_time = $updateDate;
 				$record->arrival_time = Carbon::instance($updateDate)->addHours($data['planned_hrsenroute'])->addMinutes($data['planned_minenroute']);
 			}
+
+			if(empty($record->departure_id)) {
+				$record->departure_id = $data['planned_depairport'];
+				$record->departure_id = $this->getAirports($data['planned_depairport']);
+			}
+
+			if(empty($record->arrival_id)) {
+				$record->arrival_id = $data['planned_destairport'];
+				$record->arrival_country_id = $this->getAirports($data['planned_destairport']);
+			}
+
+			$record->route = $data['planned_route'];
+			$record->remarks = $data['planned_remarks'];
+			$record->flighttype = $data['planned_flighttype'];
+
+			// Aircraft codes
+			$record->aircraft_code = $data['planned_aircraft'];
+			$record->aircraft_id = $this->extractAircraft($data['planned_aircraft']);
 			
 			// Constantly update filed altitude, speed from flight plan
 			$record->altitude = $data['planned_altitude'];
