@@ -27,5 +27,6 @@
 		@endforeach
 		</tbody>
 	</table>
+	<div class="text-center">{{ $atc->links() }}</div>
 </div>
 @stop

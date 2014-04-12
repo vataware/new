@@ -24,5 +24,6 @@
 		@endforeach
 		</tbody>
 	</table>
+	<div class="text-center">{{ $pilots->links() }}</div>
 </div>
 @stop
