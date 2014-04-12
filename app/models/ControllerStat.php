@@ -43,7 +43,7 @@ class ControllerStat {
 			}
 		}
 
-		$result['Other'] = array('count' => $other, 'percent' => number_format($other / ($this->_total * 2) * 100,1));
+		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / ($this->_total * 2) * 100,1));
 
 		return $result;
 	}
@@ -63,7 +63,7 @@ class ControllerStat {
 			}
 		}
 
-		$result['Other'] = array('count' => $other, 'percent' => number_format($other / ($this->_total * 2) * 100,1));
+		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / ($this->_total * 2) * 100,1));
 
 		return $result;
 	}
