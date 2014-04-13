@@ -34,8 +34,8 @@ class Search {
 	}
 
 	function citypair($matches) {
-		$departure = $matches[1];
-		$arrival = $matches[2];
+		$departure = strtoupper($matches[1]);
+		$arrival = strtoupper($matches[2]);
 
 		if(!is_null(Airport::find($departure)) && !is_null(Airport::find($arrival))) {
 			return Redirect::route('citypair', array('departure' => $departure, 'arrival' => $arrival));

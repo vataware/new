@@ -19,7 +19,7 @@ class SearchController extends BaseController {
 			$search = new Search($q);
 
 			foreach($regex as $type => $pattern) {
-				if(preg_match('/^' . $pattern . '$/', $q, $matches) && ($match = $search->quick($type, $matches))) {
+				if(preg_match('/^' . $pattern . '$/i', $q, $matches) && ($match = $search->quick($type, $matches))) {
 					Messages::info('You were redirected here by a best guess of the search system. <a href="' . URL::route('search', array('q' => $q, 'guess' => 'no')) . '" class="alert-link">Return to search results.</a>');
 					return $match;
 				}
