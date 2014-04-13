@@ -19,7 +19,7 @@
 					@if($flight->callsign_type == 1)
 					<br /><img src="{{ asset('assets/images/airlines/' . $flight->airline_id . '.png') }}"></td>
 					@elseif($flight->callsign_type == 2)
-					<br /><img src="{{ asset('assets/images/flags/' . $flight->airline_id . '.png') }}"> <em>Private</em>
+					<br /><img src="{{ flag($flight->airline_id) }}"> <em>Private</em>
 					@else
 					<br />&nbsp;
 					@endif
@@ -28,7 +28,7 @@
 				<td>
 					@if($flight->departure_id)
 					@if($flight->departure_country_id)
-					<img src="{{ asset($flight->departure_country_id) }}">&nbsp;
+					<img src="{{ flag($flight->departure_country_id) }}">&nbsp;
 					@endif
 					{{ $flight->departure_id }} {{ $flight->departure->city or '' }}
 					@endif

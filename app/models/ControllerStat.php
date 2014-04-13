@@ -30,7 +30,7 @@ class ControllerStat {
 
 		$counter = $this->query()->select(DB::raw('airport_id, count(airport_id) as counter'))->groupBy('airport_id')->whereNotNull('airport_id')->orderBy('counter','DESC')->lists('counter','airport_id');
 		if(count($counter) > 0) {
-			$namesRaw = Airport::whereIn('id',array_keys($counter))->get();
+			$namesRaw = Airport::with('country')->whereIn('id',array_keys($counter))->get();
 			foreach($namesRaw as $airport) {
 				$names[$airport->id] = $airport; 
 			}

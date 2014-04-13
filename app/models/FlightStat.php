@@ -107,8 +107,8 @@ class FlightStat {
 		$other = 0;
 		$result = array();
 
-		$origCounter = $this->query()->with('country')->select(DB::raw('departure_id, count(departure_id) as counter'))->groupBy('departure_id')->where('departure_id','!=','')->orderBy('counter','DESC')->lists('counter','departure_id');
-		$destCounter = $this->query()->with('country')->select(DB::raw('arrival_id, count(arrival_id) as counter'))->groupBy('arrival_id')->where('arrival_id','!=','')->orderBy('counter','DESC')->lists('counter','arrival_id');
+		$origCounter = $this->query()->select(DB::raw('departure_id, count(departure_id) as counter'))->groupBy('departure_id')->where('departure_id','!=','')->orderBy('counter','DESC')->lists('counter','departure_id');
+		$destCounter = $this->query()->select(DB::raw('arrival_id, count(arrival_id) as counter'))->groupBy('arrival_id')->where('arrival_id','!=','')->orderBy('counter','DESC')->lists('counter','arrival_id');
 		$airportsId = array_unique(array_merge(array_keys($origCounter),array_keys($destCounter)));
 		$counter = array_combine($airportsId, $airportsId);
 		foreach($counter as &$airportId) {
@@ -116,7 +116,7 @@ class FlightStat {
 		}
 		arsort($counter);
 		if(count($counter) > 0) {
-			$namesRaw = Airport::whereIn('id',array_keys($counter))->get();
+			$namesRaw = Airport::with('country')->whereIn('id',array_keys($counter))->get();
 			foreach($namesRaw as $airport) {
 				$names[$airport->id] = $airport; 
 			}

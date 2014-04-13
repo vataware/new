@@ -15,7 +15,7 @@ class HomeController extends BaseController {
 		$changeArrow = Cache::get('vatsim.changeDirection');
 		$distance = Cache::get('vatsim.distance');
 
-		$flights = Flight::whereState(1)->whereMissing(0)->orderBy(DB::raw('RAND()'))->take(15)->get();
+		$flights = Flight::with('pilot','departure','arrival')->whereState(1)->whereMissing(0)->orderBy(DB::raw('RAND()'))->take(15)->get();
 
 		$this->autoRender(compact('pilots','atc','users','year','month','day','change','changeArrow','distance','flights'));
 	}
