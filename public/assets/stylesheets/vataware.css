@@ -37,7 +37,7 @@ body {
 
 .active
 {
-	color: #18bc9c !important;
+	color: rgb(60, 138, 151);
 }
 
 .dropdown-menu li
@@ -159,7 +159,7 @@ a:hover.tiles
 
 .homeStats small
 {
-	color:grey;
+	color:gray;
 }
 
 .homeStats h2
@@ -176,6 +176,7 @@ a:hover.tiles
 	font-size: 16px;
 	color:#999b9d;
 	text-align:center;
+	font-family: "Myriad Pro", Myriad, "DejaVu Sans Condensed", "Liberation Sans", "Nimbus Sans L", Tahoma, Geneva, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .footer > .container > .col-lg-12 > a
@@ -225,7 +226,7 @@ a:hover.tiles
 	height: 118px;
 	padding: 0px;
 	text-indent: -9999px;
-	background: url(../images/logo.png) no-repeat center 20px;
+	background: url(../images/logo_beta.png) no-repeat center 20px;
 	margin-left: -5px;
 	background-size: 100%;
 }
@@ -274,7 +275,12 @@ a:hover.tiles
 
 .navbar-vataware .navbar-nav > li > a {
 	color: #8692a0;
-	font-size:21px;
+	font-size:20px;
+	font-family: "Myriad Pro", Myriad, "DejaVu Sans Condensed", "Liberation Sans", "Nimbus Sans L", Tahoma, Geneva, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.navbar-vataware .navbar-nav > li > a.active {
+	color: rgb(60, 138, 151);
 }
 
 .navbar-vataware .navbar-toggle {
