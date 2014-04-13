@@ -224,7 +224,7 @@ class VatawareUpdateCommand extends Command {
 		$datas = $this->getVatsimControllers();
 		foreach($datas as $data)
 		{
-			if(empty($data['callsign'])) continue;
+			if(empty($data['callsign']) || empty($data['cid'])) continue;
 
 			$record = ATC::with('pilot')->whereCallsign($data['callsign'])->whereVatsimId($data['cid'])->whereNull('end')->first();
 

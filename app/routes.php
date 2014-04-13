@@ -36,7 +36,7 @@ Route::get('search', ['as' => 'search', 'uses' => 'SearchController@index']);
 Route::bind('flight',function($value, $route) {
 	$flight = Flight::with('aircraft','departure','arrival','pilot','departureCountry','arrivalCountry','airline','positions')->find($value);
 
-	if(is_null($flight) || $value === 0) {
+	if(is_null($flight) || $value == 0) {
 		return App::abort(404);
 	} else {
 		return $flight;
@@ -46,7 +46,7 @@ Route::bind('flight',function($value, $route) {
 Route::bind('atc',function($value, $route) {
 	$atc = ATC::with('pilot')->find($value);
 
-	if(is_null($atc) || $value === 0) {
+	if(is_null($atc) || $value == 0) {
 		return App::abort(404);
 	} else {
 		return $atc;
@@ -56,7 +56,7 @@ Route::bind('atc',function($value, $route) {
 Route::bind('pilot',function($value, $route) {
 	$pilot = Pilot::whereVatsimId($value)->first();
 
-	if(is_null($pilot) || $value === 0) {
+	if(is_null($pilot) || $value == 0) {
 		return App::abort(404);
 	} else {
 		return $pilot;

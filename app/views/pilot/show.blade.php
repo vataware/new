@@ -67,7 +67,7 @@
 						</thead>
 						@foreach($airlines as $airline => $counter)
 						<tr>
-							<td>{{ is_string($airline) ? '<em>' . $airline . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->location . ' (' . $counter['data']->icao . ')' . '">' . $counter['data']->name . '</span>' }}</td>
+							<td>{{ is_string($airline) ? '<em>' . $airline . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->location . ' (' . $counter['data']->icao . ')' . '"><img src="' . asset('assets/images/airlines/' . $counter['data']->icao . '.png') . '">&nbsp;' . $counter['data']->name . '</span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>
 						</tr>

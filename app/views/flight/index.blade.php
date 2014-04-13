@@ -26,19 +26,19 @@
 				<td>{{ $flight->aircraft_id }}</td>
 				<td>{{ $flight->pilot->name }}</td>
 				<td>
-					@if($flight->departure)
-					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id }} {{ $flight->departure->city }}
+					@if($flight->departure_id)
+					@if($flight->departure_country_id)
+					<img src="{{ asset($flight->departure_country_id) }}">&nbsp;
 					@endif
-					@if($flight->state > 1)
-					<br /><small>Depart at: {{ $flight->departure_time->format('H:i') }}</small>
+					{{ $flight->departure_id }} {{ $flight->departure->city or '' }}
 					@endif
 				</td>
 				<td>
-					@if($flight->arrival)
-					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id }} {{ $flight->arrival->city }}
+					@if($flight->arrival_id)
+					@if($flight->arrival_country_id)
+					<img src="{{ flag($flight->arrival_country_id) }}">&nbsp;
 					@endif
-					@if($flight->state > 1)
-					<br /><small>Arrive at: {{ $flight->arrival_time->format('H:i') }}</small></td>
+					{{ $flight->arrival_id }} {{ $flight->arrival->city or '' }}
 					@endif
 				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
 			</tr>
