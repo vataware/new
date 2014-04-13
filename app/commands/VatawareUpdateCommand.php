@@ -205,6 +205,7 @@ class VatawareUpdateCommand extends Command {
 		Cache::forever('vatsim.year', number_format(Flight::where('startdate','LIKE',date('Y') . '%')->count()));
 		Cache::forever('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
 		Cache::forever('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
+		Cache::forever('vatsim.distance', number_format(Flight::where('startdate','=',date('Y-m-d'))->sum('distance')));
 
 		if($lastYear == 0) {
 			Cache::forever('vatsim.change', '&infin;&nbsp;');

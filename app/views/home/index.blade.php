@@ -43,12 +43,12 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 	<div>
 		<h2 class="section-header">Statistics</h2>
 		<div class="well well-sm">
-			<div class="container homeStats">
-				<div class="col-lg-1" style="border-right:3px solid #2e7d7d; padding:0;">
+			<div class="row homeStats">
+				<div class="col-lg-2" style="border-right:3px solid #2e7d7d;">
 					<h2>{{ $users }}</h2>
 					<small>Users Online</small>
 				</div>
-				<div class="col-lg-2" style="border-right:3px solid #92c36f; width: 15.666667%;">
+				<div class="col-lg-2" style="border-right:3px solid #92c36f;">
 					<h2>{{ $day }}</h2>
 					<small>Flights Today</small>
 				</div>
@@ -64,13 +64,9 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 					<h2>{{ $change }}%<sup><i style="color:#138995; font-size: 17px;" class="glyphicon glyphicon-arrow-{{ $changeArrow }}"></i> </sup></h2>
 					<small>Compared to last year</small>
 				</div>
-				<div class="col-lg-1" style="border-right:3px solid #398483;">
-					<h2>{{ $pilots }}</h2>
-					<small>Pilots Online</small>
-				</div>
-				<div class="col-lg-1">
-					<h2>{{ $atc }}</h2>
-					<small>ATC Online</small>
+				<div class="col-lg-2">
+					<h2>{{ $distance }}</h2>
+					<small>Miles flown today</small>
 				</div>
 			</div>
 		</div>

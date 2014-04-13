@@ -13,10 +13,11 @@ class HomeController extends BaseController {
 		$day = Cache::get('vatsim.day');
 		$change = Cache::get('vatsim.change');
 		$changeArrow = Cache::get('vatsim.changeDirection');
+		$distance = Cache::get('vatsim.distance');
 
-		$flights = Flight::whereState(1)->orderBy(DB::raw('RAND()'))->take(15)->get();
+		$flights = Flight::whereState(1)->whereMissing(0)->orderBy(DB::raw('RAND()'))->take(15)->get();
 
-		$this->autoRender(compact('pilots','atc','users','year','month','day','change','changeArrow','flights'));
+		$this->autoRender(compact('pilots','atc','users','year','month','day','change','changeArrow','distance','flights'));
 	}
 
 }
