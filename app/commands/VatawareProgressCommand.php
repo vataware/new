@@ -47,11 +47,13 @@ class VatawareProgressCommand extends Command {
 	public function fire()
 	{
 		$this->line('Start');
-		$flights = Flight::whereState(2)->get();
+		$flights = Flight::whereState(2)->orderBy('id');
+		if(!is_null($this->option('start'))) $flights = $flights->where('id','>=',$this->option('start'));
+		$flights = $flights->get();
 		$this->line('Flights found: ' . $flights->count());
 
 		foreach($flights as $flight) {
-			$this->line($flight->callsign);
+			$this->line('#' . $flight->id . ' - ' . $flight->callsign);
 			if(!is_null($flight->departure_time) && !is_null($flight->arrival_time)) 
 				$flight->duration = $this->duration($flight->departure_time, $flight->arrival_time);
 
@@ -92,7 +94,7 @@ class VatawareProgressCommand extends Command {
 	protected function getOptions()
 	{
 		return array(
-			// array('example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null),
+			array('start', 's', InputOption::VALUE_OPTIONAL, 'Start from ID', null),
 		);
 	}
 
