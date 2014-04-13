@@ -13,7 +13,7 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class UpdateVatsimData extends Command {
+class VatawareUpdateCommand extends Command {
 
 	/**
 	 * The console command name.

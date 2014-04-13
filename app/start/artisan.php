@@ -11,5 +11,6 @@
 |
 */
 
-Artisan::add(new UpdateVatsimData);
-Artisan::add(new FixAirports);
+Artisan::add(new VatawareUpdateCommand);
+Artisan::add(new VatawareAirportsCommand);
+Artisan::add(new VatawareProgressCommand);

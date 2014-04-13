@@ -13,7 +13,7 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class FixAirports extends Command {
+class VatawareAirportsCommand extends Command {
 
 	/**
 	 * The console command name.
