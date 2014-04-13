@@ -108,7 +108,8 @@
 					<a href="#" style="color:white;"><i class="fa fa-facebook" style="margin-right: 10px;"></i></a><a href="#" style="color:white;"><i class="fa fa-twitter" style="margin-right: 10px;"></i></a><a href="#" style="color:white;"><i class="fa fa-rss" style="margin-right: 10px;"></i></a>
 				</div>
 				<a href="#" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="#">News</a> &nbsp;&bull;&nbsp; <a href="#">Services</a> &nbsp;&bull;&nbsp; <a href="#">Pilots</a> &nbsp;&bull;&nbsp; <a href="#">ATC</a> &nbsp;&bull;&nbsp; <a href="#">Forum</a> &nbsp;&bull;&nbsp; <a href="#">Contact</a><br />
-				<br />&copy; 2014 <a href="#" style="color:white; font-weight:bold;">vataware</a> All rights reserved.
+				<br />&copy; 2014 <a href="#" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
+				<small>version 1.0-{{ $build }}</small>
 			</div>
 		</div>
 	</div>
@@ -117,6 +118,16 @@
 	<script src="{{ asset('assets/javascript/bootstrap.min.js') }}"></script>
 	<script src="{{ asset('assets/javascript/jasny-bootstrap.min.js') }}"></script>
 	<script src="{{ asset('assets/javascript/vataware.js') }}"></script>
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-49973764-1', '15.126.229.52');
+	  ga('send', 'pageview');
+
+	</script>
 	@if(isset($javascripts) && count($javascripts) > 0)
 	@foreach($javascripts as $javascript)
 	<script src="{{ asset($javascript) }}"></script>

@@ -25,12 +25,18 @@
 					@endif
 				<td>{{ $flight->aircraft_id }}</td>
 				<td>{{ $flight->pilot->name }}</td>
-				<td><img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id or '' }} {{ $flight->departure->city or ''}}
+				<td>
+					@if($flight->departure)
+					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id }} {{ $flight->departure->city }}
+					@endif
 					@if($flight->state > 1)
 					<br /><small>Depart at: {{ $flight->departure_time->format('H:i') }}</small>
 					@endif
 				</td>
-				<td><img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id or '' }} {{ $flight->arrival->city or '' }}
+				<td>
+					@if($flight->arrival)
+					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id }} {{ $flight->arrival->city }}
+					@endif
 					@if($flight->state > 1)
 					<br /><small>Arrive at: {{ $flight->arrival_time->format('H:i') }}</small></td>
 					@endif

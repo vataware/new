@@ -132,8 +132,14 @@
 				<tbody class="rowlink" data-link="row">
 					<tr>
 						<td><a href="{{ URL::route('flight.show', $active->id) }}"><strong>{{ $active->callsign }}</strong></a><br /><em>{{ $active->status }}</em></td>
-						<td><img src="{{ asset('assets/images/flags/' . $active->departure_country_id . '.png') }}">&nbsp;{{ $active->departure_id }}<br />
-							<img src="{{ asset('assets/images/flags/' . $active->arrival_country_id . '.png') }}">&nbsp;{{ $active->arrival_id }}</td>
+						<td>
+							@if(!is_null($active->departure))
+							<img src="{{ asset('assets/images/flags/' . $active->departure_country_id . '.png') }}">&nbsp;{{ $active->departure_id }}
+							@endif<br />
+							@if(!is_null($active->arrival))
+							<img src="{{ asset('assets/images/flags/' . $active->arrival_country_id . '.png') }}">&nbsp;{{ $active->arrival_id }}
+							@endif
+						</td>
 						<td>{{ (is_null($active->departure)) ? 'Unknown' : (($active->departure->city) ? $active->departure->city . ', ' . strtoupper($active->departure->country_id) : $active->departure->country->country) }}<br />
 							{{ (is_null($active->arrival)) ? 'Unknown' : (($active->arrival->city) ? $active->arrival->city . ', ' . strtoupper($active->arrival->country_id) : $active->arrival->country->country) }}</td>
 					</tr>
