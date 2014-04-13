@@ -8,7 +8,7 @@
 			<div class="row">
 				<div class="col-md-4 col-sm-6 col-xs-12">
 					<h2>
-						@if($citypair->count() > 0)
+						@if($citypair->count() == 2)
 						<abbr title="{{ $citypair[0]->name }}, {{ (!empty($citypair[0]->city)) ? $citypair[0]->city . ', ' : '' }}{{ $citypair[0]->country->country }}">{{ $citypair[0]->id }}</abbr>-<abbr title="{{ $citypair[1]->name }}, {{ (!empty($citypair[1]->city)) ? $citypair[1]->city . ', ' : '' }}{{ $citypair[1]->country->country }}">{{ $citypair[1]->id }}</abbr>
 						@else
 						Unknown

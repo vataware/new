@@ -17,6 +17,8 @@ Route::get('', ['as' => 'home', 'uses' => 'HomeController@index']);
 Route::get('flight', ['as' => 'flight.index', 'uses' => 'FlightController@index']);
 Route::get('flight/{flight}', ['as' => 'flight.show', 'uses' => 'FlightController@show'])->where('flight','[0-9]+');
 
+Route::get('citypair/{departure}-{arrival}', ['as' => 'citypair', 'uses' => 'FlightController@citypair'])->where('departure','[A-Z0-9]{3,4}')->where('arrival','[A-Z0-9]{3,4}');
+
 // Pilots
 Route::get('pilot', ['as' => 'pilot.index', 'uses' => 'PilotController@index']);
 Route::get('pilot/{pilot}', ['as' => 'pilot.show', 'uses' => 'PilotController@show'])->where('pilot','[0-9]+');
@@ -30,6 +32,9 @@ Route::get('atc/{atc}', ['as' => 'atc.show', 'uses' => 'ATCController@show'])->w
 Route::get('controller', ['as' => 'controller.index', 'uses' => 'ControllerController@index']);
 Route::get('controller/{pilot}', ['as' => 'controller.show', 'uses' => 'ControllerController@show'])->where('pilot','[0-9]+');
 // Route::get('controller/{pilot}/duties', ['as' => 'controller.duties', 'uses' => 'ControllerController@duties'])->where('pilot','[0-9]+');
+
+Route::get('airport', ['as' => 'airport.index', 'uses' => 'AirportController@index']);
+Route::get('airport/{airport}', ['as' => 'airport.show', 'uses' => 'AirportController@show'])->where('airport','[A-Z0-9]{3,4}');
 
 Route::get('search', ['as' => 'search', 'uses' => 'SearchController@index']);
 
@@ -60,6 +65,16 @@ Route::bind('pilot',function($value, $route) {
 		return App::abort(404);
 	} else {
 		return $pilot;
+	}
+});
+
+Route::bind('airport',function($value, $route) {
+	$airport = Airport::find($value);
+
+	if(is_null($airport)) {
+		return App::abort(404);
+	} else {
+		return $airport;
 	}
 });
 
