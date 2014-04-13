@@ -8,7 +8,7 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 @include('search.bar')
 </div>
 <div class="container"><br /><br />
-	<div class="col-lg-12 tiles" style="text-align: center;">
+	<div class="tiles" style="text-align: center;">
 		<a href="#" class="tile" style="background-color:#138995;">
 			<div style="margin-top: 50px;">
 				<i class="fa fa-user" style="font-size:50px; margin-bottom: 15px;"></i><br />
@@ -40,10 +40,8 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 			</div>
 		</a>
 	</div>
-</div>
-<div class="container">
-	<div class="col-lg-12">
-		<h2>Statistics:</h2>
+	<div>
+		<h2 class="section-header">Statistics</h2>
 		<div class="well well-sm">
 			<div class="container homeStats">
 				<div class="col-lg-1" style="border-right:3px solid #2e7d7d; padding:0;">
@@ -77,6 +75,38 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 			</div>
 		</div>
 	</div>
+	<h2 class="section-header">Active flights</h2>
+	<table class="table table-striped table-hover" style="margin-top: 20px;">
+		<thead>
+			<tr>
+				<th>Callsign</th>
+				<th>Type</th>
+				<th>Pilot</th>
+				<th>From</th>
+				<th>To</th>
+				<th>Duration</th>
+			</tr>
+		</thead>
+		<tbody class="rowlink" data-link="row">
+			@foreach($flights as $flight)
+			<tr>
+				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a></td>
+				<td>{{ $flight->aircraft_id }}</td>
+				<td>{{ $flight->pilot->name }}</td>
+				<td>
+					@if($flight->departure)
+					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id }} {{ $flight->departure->city }}
+					@endif
+				</td>
+				<td>
+					@if($flight->arrival)
+					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id }} {{ $flight->arrival->city }}
+					@endif
+				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
+			</tr>
+			@endforeach
+		</tbody>
+	</table>
 </div>
 
 @stop
