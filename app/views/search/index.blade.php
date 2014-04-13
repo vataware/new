@@ -30,14 +30,8 @@
 				<td>{{ $flight->aircraft_id }}</td>
 				<td>{{ $flight->pilot->name }}</td>
 				<td><img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id or '' }} {{ $flight->departure->city or ''}}
-					@if($flight->state > 1)
-					<br /><small>Depart at: {{ $flight->departure_time->format('H:i') }}</small>
-					@endif
 				</td>
 				<td><img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id or '' }} {{ $flight->arrival->city or '' }}
-					@if($flight->state > 1)
-					<br /><small>Arrive at: {{ $flight->arrival_time->format('H:i') }}</small></td>
-					@endif
 				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->total_time }}</td>
 			</tr>
 			@endforeach

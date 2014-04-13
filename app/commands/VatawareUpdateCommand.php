@@ -64,8 +64,8 @@ class VatawareUpdateCommand extends Command {
 		Cache::forever('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
 
 		if(!is_null(Update::whereTimestamp($updateDate)->first())) {
-			Log::info('VATSIM Data not updated: already exists');
-			$this->info('This update is already in the database.');
+			Log::info('VATSIM Data not updated: already exists (' . $updateDate . ')');
+			$this->info('This update is already in the database. (' . $updateDate . ')');
 			return;
 		}
 
