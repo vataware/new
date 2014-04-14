@@ -21,7 +21,7 @@ class FlightStat {
 	}
 
 	function durations() {
-		$times = $this->query()->orderBy('duration')->get();
+		$times = $this->query()->orderBy('duration')->whereIn('state',array(2,3))->where('duration','>',0)->get();
 
 		$shortest = $times->first();
 		$shortest->hours = floor($shortest->duration/60);

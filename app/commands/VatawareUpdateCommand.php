@@ -68,6 +68,8 @@ class VatawareUpdateCommand extends Command {
 			return;
 		}
 
+		Log::info('vataware:update - importing data from ' . $updateDate);
+
 		$update = new Update;
 		$update->timestamp = $updateDate;
 		$update->save();
@@ -256,6 +258,7 @@ class VatawareUpdateCommand extends Command {
 							$flight->stateArrived();
 							$flight->arrival_time = $flight->lastPosition->time;
 							$flight->setArrival($nearby);
+							$flight->missing = false;
 						}
 					}
 
@@ -434,7 +437,7 @@ class VatawareUpdateCommand extends Command {
 			$controller = new ATC;
 			$controller->vatsim_id = $data['cid'];
 			$controller->callsign = $data['callsign'];
-			$controller->start = $updateDate;
+			$controller->start = Carbon::createFromFormat('YmdHis', $data['time_logon']);
 			$controller->facility_id = (ends_with($data['callsign'], '_ATIS')) ? 99 : $data['facilitytype'];
 			$controller->rating_id = $data['rating'];
 			$controller->visual_range = $data['visualrange'];
