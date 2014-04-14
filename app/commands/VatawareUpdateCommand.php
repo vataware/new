@@ -388,6 +388,8 @@ class VatawareUpdateCommand extends Command {
 			// Set status as 'Preparing'
 			$flight->statePreparing();
 			$flight->save();
+
+			$this->positionReport($data, $flight->id);
 		}
 
 		Log::info('vataware:update - finished processing pilots');
