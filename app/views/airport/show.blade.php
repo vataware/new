@@ -33,7 +33,7 @@
 					<h4 class="section-header">Departures</h4>
 					<table class="table table-striped table-hover">
 						<tbody class="rowlink" data-link="row">
-							@foreach($airport->departures()->with('pilot','arrival','arrival.country')->whereIn('state',array(0,4))->get() as $departure)
+							@foreach($departures as $departure)
 							<tr>
 								<td><a href="{{ URL::route('flight.show', $departure->id) }}">{{ $departure->callsign }}</a></td>
 								<td>
@@ -49,7 +49,7 @@
 					<h4 class="section-header">Arrivals</h4>
 					<table class="table table-striped table-hover">
 						<tbody class="rowlink" data-link="row">
-							@foreach($airport->arrivals()->with('pilot','departure','departure.country')->whereIn('state',array(0,4))->get() as $arrival)
+							@foreach($arrivals as $arrival)
 							<tr>
 								<td><a href="{{ URL::route('flight.show', $arrival->id) }}">{{ $arrival->callsign }}</a></td>
 								<td>

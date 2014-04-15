@@ -88,3 +88,8 @@ Route::get('pilot.cfm', function() {
 	if(!Input::has('id')) return Redirect::route('pilot.index');
 	return Redirect::route('pilot.show', array('pilot' => Input::get('id')), 301);
 });
+
+Route::get('airport.cfm', function() {
+	if(!Input::has('airport')) return Redirect::route('airport.index');
+	return Redirect::route('airport.show', array('airport' => Input::get('airport')), 301);
+});
