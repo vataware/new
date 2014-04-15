@@ -423,6 +423,7 @@ class VatawareUpdateCommand extends Command {
 				$controller->pilot->rating_id = $data['rating'];
 				$controller->pilot->save();
 
+				$controller->frequency = $data['frequency'];
 				$controller->duration = $this->duration($controller->start, $updateDate);
 				
 				$controller->missing = false;

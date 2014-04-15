@@ -5,7 +5,7 @@ class ATCController extends BaseController {
 	protected $layout = 'layouts.master';
 
 	function index() {
-		$atc = ATC::with('pilot','airport','airport.country')->orderBy('callsign')->whereNull('end')->paginate(25);
+		$atc = ATC::with('pilot','airport','airport.country')->orderBy('callsign')->whereNull('end')->whereNotIn('facility_id', array(0, 99))->paginate(25);
 		
 		$this->autoRender(compact('atc'), 'ATC');
 	}
