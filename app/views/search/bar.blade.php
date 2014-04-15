@@ -30,11 +30,11 @@
 				<th>Citypair</th>
 				<td>EGLL - KSFO<br />VHHH to RCTP</td>
 			</tr>
-			{{--<tr>
+			<tr>
 				<th>Flights</th>
 				<td>KLM897<br />VH-OEQ</td>
 			</tr>
-			<tr>
+			{{--<tr>
 				<th>ATC</th>
 				<td>EHAM_TWR</td>
 			</tr>--}}

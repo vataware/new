@@ -14,6 +14,7 @@ class SearchController extends BaseController {
 				'pilot' => '[0-9]+',
 				'airport' => '[A-Z0-9]{4}',
 				'citypair' => '([A-Z0-9]{3,4})(?:(?:\s?[-|>]\s?)|\sto\s)([A-Z0-9]{3,4})',
+				'callsign' => '.*'
 			);
 
 			$search = new Search($q);

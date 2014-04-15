@@ -44,4 +44,14 @@ class Search {
 		return false;
 	}
 
+	function callsign() {
+		$flight = Flight::whereCallsign($this->query)->whereIn('state', array(0, 1, 3, 4))->first();
+
+		if(!is_null($flight)) {
+			return Redirect::route('flight.show', $flight->id);
+		}
+
+		return false;
+	}
+
 }
