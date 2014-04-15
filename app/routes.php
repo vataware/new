@@ -91,5 +91,10 @@ Route::get('pilot.cfm', function() {
 
 Route::get('airport.cfm', function() {
 	if(!Input::has('airport')) return Redirect::route('airport.index');
-	return Redirect::route('airport.show', array('airport' => Input::get('airport')), 301);
+	return Redirect::route('airport.show', array('airport' => strtoupper(Input::get('airport'))), 301);
+});
+
+Route::get('citypair.cfm', function() {
+	if(!Input::has('from') || !Input::has('to')) return App::abort(404);
+	return Redirect::route('citypair', array('departure' => strtoupper(Input::get('from')), 'arrival' => strtoupper(Input::get('to'))), 301);
 });
