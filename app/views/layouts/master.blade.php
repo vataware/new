@@ -126,6 +126,7 @@
 	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
 	  ga('create', 'UA-49973764-1', '15.126.229.52');
+	  ga('require', 'displayfeatures');
 	  ga('send', 'pageview');
 
 	</script>

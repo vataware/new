@@ -23,6 +23,7 @@ function piechartData($data) {
 }
 
 function altitudeColour($altitude, $implode = false) {
+	if($altitude < 0) $altitude = 0;
 	$steps = $altitude / 40;
 	$stage = floor($steps / 255);
 	$remainder = $steps % 255;

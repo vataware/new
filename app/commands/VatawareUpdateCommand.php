@@ -212,6 +212,7 @@ class VatawareUpdateCommand extends Command {
 	}
 
 	function proximity($latitude, $longitude, $range = 20) {
+		if(empty($latitude) || empty($longitude)) return null;
 		return Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
 			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
 			->orderBy('distance','asc')
