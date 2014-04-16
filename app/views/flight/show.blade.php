@@ -155,14 +155,28 @@
 <script type="text/javascript">
 	function initialize() {
 		var map = new google.maps.Map(document.getElementById("map"));
+		var bounds = new google.maps.LatLngBounds();
 
 		@if(!is_null($flight->departure))
-		departureAirport = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->departure->lat }}, {{ $flight->departure->lon }}), map: map, icon: 'http://maps.google.com/mapfiles/marker_green.png' });
+		var departurePosition = new google.maps.LatLng({{ $flight->departure->lat }}, {{ $flight->departure->lon }});
+		var departureAirport = new google.maps.Marker({ position: departurePosition, map: map, icon: 'http://maps.google.com/mapfiles/marker_green.png' });
+		bounds.extend(departurePosition);
 		@endif
+
 		@if(!is_null($flight->arrival))
-		arrivalAirport = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->arrival->lat }}, {{ $flight->arrival->lon }}), map: map, icon: 'http://maps.google.com/mapfiles/marker.png' });
+		var arrivalPosition = new google.maps.LatLng({{ $flight->arrival->lat }}, {{ $flight->arrival->lon }});
+		var arrivalAirport = new google.maps.Marker({ position: arrivalPosition, map: map, icon: 'http://maps.google.com/mapfiles/marker.png' });
+		bounds.extend(arrivalPosition);
 		@endif
-		
+
+		@if(in_array($flight->state, [1, 3]))
+		var currentPosition = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->last_lat }}, {{ $flight->last_lon }}), map: map, icon: {
+				url: '{{ asset('assets/images/enroute/' . $flight->lastPosition->heading . '.png')}}',
+				origin: new google.maps.Point(0,0),
+			}
+		});
+		@endif
+
 		var flightPlanCoordinates = [{{ $flight->mapsPositions }}];
 		var flightPlanColours = [{{ $flight->mapsColours }}];
 
@@ -176,7 +190,7 @@
 			});
 		}
 
-		var bounds = new google.maps.LatLngBounds();
+		
 		for (var i = 0; i < flightPlanCoordinates.length; i++) {
 			bounds.extend(flightPlanCoordinates[i]);
 		}
