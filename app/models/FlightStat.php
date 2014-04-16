@@ -55,6 +55,7 @@ class FlightStat {
 		$other = 0;
 		$result = array();
 		$chart = array();
+		$names = array();
 
 		$counter = $this->query()->select(DB::raw('airline_id, count(airline_id) as counter'))->groupBy('airline_id')->orderBy('counter','DESC')->whereCallsignType(1)->lists('counter','airline_id');
 		if(count($counter) > 0) {
@@ -117,6 +118,7 @@ class FlightStat {
 		$other = 0;
 		$result = array();
 		$chart = array();
+		$names = array();		
 
 		$origCounter = $this->query()->select(DB::raw('departure_id, count(departure_id) as counter'))->groupBy('departure_id')->where('departure_id','!=','')->orderBy('counter','DESC')->lists('counter','departure_id');
 		$destCounter = $this->query()->select(DB::raw('arrival_id, count(arrival_id) as counter'))->groupBy('arrival_id')->where('arrival_id','!=','')->orderBy('counter','DESC')->lists('counter','arrival_id');
