@@ -11,6 +11,7 @@ class CreatePilotsTable extends Migration {
 			$table->increments('id');
 			$table->mediumInteger('vatsim_id');
 			$table->string('name');
+			$table->smallInteger('rating_id')->default(1);
 			$table->timestamps();
 		});
 	}
