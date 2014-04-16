@@ -53,8 +53,8 @@
 			</div>
 			<h2 class="section-header">Airline Information</h2>
 			<div class="row">
-				<div class="col-sm-4 col-xs-12 ">
-					[chart]
+				<div class="col-sm-4 col-xs-12">
+					<div id="chart-airlines"></div>
 				</div>
 				<div class="col-sm-8">
 					<table class="table table-striped table-condensed">
@@ -65,7 +65,7 @@
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
-						@foreach($airlines as $airline => $counter)
+						@foreach($airlines['table'] as $airline => $counter)
 						<tr>
 							<td>{{ is_string($airline) ? '<em>' . $airline . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->location . ' (' . $counter['data']->icao . ')' . '"><img src="' . asset('assets/images/airlines/' . $counter['data']->icao . '.png') . '">&nbsp;' . $counter['data']->name . '</span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
@@ -77,8 +77,8 @@
 			</div>
 			<h2 class="section-header">Airport Information</h2>
 			<div class="row">
-				<div class="col-sm-4 col-xs-12 ">
-					[Chart]
+				<div class="col-sm-4 col-xs-12">
+					<div id="chart-airports"></div>
 				</div>
 				<div class="col-sm-8">
 					<table class="table table-striped table-condensed">
@@ -89,7 +89,7 @@
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
-						@foreach($airports as $airport => $counter)
+						@foreach($airports['table'] as $airport => $counter)
 						<tr>
 							<td>{{ is_string($airport) ? '<em>' . $airport . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->name . ' (' . $counter['data']->id . ')' . '"><img src="' . flag($counter['data']->country_id) . '" /> ' . $counter['data']->icao . '<span class="hidden-inline-xs">&nbsp;&raquo; ' . (($counter['data']->city) ? $counter['data']->city . ', ' : '') . $counter['data']->country->country . '</span></span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
@@ -101,8 +101,8 @@
 			</div>
 			<h2 class="section-header">Aircraft Information</h2>
 			<div class="row">
-				<div class="col-sm-4 col-xs-12 ">
-					[Chart]
+				<div class="col-sm-4 col-xs-12">
+					<div id="chart-aircraft"></div>
 				</div>
 				<div class="col-sm-8">
 					<table class="table table-striped table-condensed">
@@ -113,7 +113,7 @@
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
-						@foreach($aircraft as $airplane => $counter)
+						@foreach($aircraft['table'] as $airplane => $counter)
 						<tr>
 							{{ is_string($airplane) ? '<td colspan="2"><em>' . $airplane . '</em>' : '<td><strong>' . $counter['data'][0]->code . '</strong></td><td> ' . implode('<br />', array_pluck($counter['data'],'name')) }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
@@ -169,4 +169,30 @@
 	</div>
 </div>
 
+@stop
+@section('javascript')
+<script type="text/javascript">
+	$(function() {  
+		var data = [
+			{{ $airlines['chart'] }}
+		];
+	
+		var placeholder = $('#chart-airlines').css({'width':'100%' , 'min-height':'220px'});
+		createPieChart(placeholder, data);
+
+		var data = [
+			{{ $airports['chart'] }}
+		];
+	
+		var placeholder = $('#chart-airports').css({'width':'100%' , 'min-height':'220px'});
+		createPieChart(placeholder, data);
+
+		var data = [
+			{{ $aircraft['chart'] }}
+		];
+	
+		var placeholder = $('#chart-aircraft').css({'width':'100%' , 'min-height':'220px'});
+		createPieChart(placeholder, data);
+	});
+</script>
 @stop

@@ -29,6 +29,8 @@ class PilotController extends BaseController {
 		$airports = $stats->topAirports();
 		$aircraft = $stats->topAircraft();
 
+		$this->javascript('assets/javascript/jquery.flot.min.js');
+		$this->javascript('assets/javascript/jquery.flot.pie.min.js');
 		$this->autoRender(compact('pilot', 'flights', 'active', 'distances', 'airlines', 'aircraft', 'airports', 'longest', 'shortest', 'citypair', 'hours', 'minutes'), $pilot->name);
 	}
 

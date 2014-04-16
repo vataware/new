@@ -133,5 +133,6 @@
 	<script src="{{ asset($javascript) }}"></script>
 	@endforeach
 	@endif
+	@yield('javascript')
 </body>
 </html>

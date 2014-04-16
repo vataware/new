@@ -19,6 +19,8 @@ class ControllerController extends BaseController {
 		$airports = $stat->topAirports();
 		$facilities = $stat->topFacilities();
 
+		$this->javascript('assets/javascript/jquery.flot.min.js');
+		$this->javascript('assets/javascript/jquery.flot.pie.min.js');
 		$this->autoRender(compact('pilot', 'duties', 'actives', 'airport', 'airports', 'longest', 'hours', 'minutes', 'facilities'), $pilot->name);
 	}
 

@@ -22,7 +22,7 @@
 			<h2 class="section-header">Airport Information</h2>
 			<div class="row">
 				<div class="col-sm-4 col-xs-12 ">
-					[Chart]
+					<div id="chart-airports"></div>
 				</div>
 				<div class="col-sm-8">
 					<table class="table table-striped table-condensed">
@@ -33,7 +33,7 @@
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
-						@foreach($airports as $airport => $counter)
+						@foreach($airports['table'] as $airport => $counter)
 						<tr>
 							<td>{{ is_string($airport) ? '<em>' . $airport . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->name . ' (' . $counter['data']->id . ')' . '"><img src="' . flag($counter['data']->country_id) . '" /> ' . $counter['data']->icao . '<span class="hidden-inline-xs">&nbsp;&raquo; ' . (($counter['data']->city) ? $counter['data']->city . ', ' : '') . $counter['data']->country->country . '</span></span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
@@ -46,7 +46,7 @@
 			<h2 class="section-header">Facility Information</h2>
 			<div class="row">
 				<div class="col-sm-4 col-xs-12 ">
-					[Chart]
+					<div id="chart-facilities"></div>
 				</div>
 				<div class="col-sm-8">
 					<table class="table table-striped table-condensed">
@@ -57,7 +57,7 @@
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
-						@foreach($facilities as $facility => $counter)
+						@foreach($facilities['table'] as $facility => $counter)
 						<tr>
 							<td>{{ is_string($facility) ? '<em>' . $facility . '</em>' : $counter['data'] }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
@@ -100,4 +100,23 @@
 	</div>
 </div>
 
+@stop
+@section('javascript')
+<script type="text/javascript">
+	$(function() {  
+		var data = [
+			{{ $airports['chart'] }}
+		];
+	
+		var placeholder = $('#chart-airports').css({'width':'100%' , 'min-height':'220px'});
+		createPieChart(placeholder, data);
+
+		var data = [
+			{{ $facilities['chart'] }}
+		];
+	
+		var placeholder = $('#chart-facilities').css({'width':'100%' , 'min-height':'220px'});
+		createPieChart(placeholder, data);
+	});
+</script>
 @stop

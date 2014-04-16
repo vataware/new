@@ -54,6 +54,7 @@ class FlightStat {
 	function topAirlines() {
 		$other = 0;
 		$result = array();
+		$chart = array();
 
 		$counter = $this->query()->select(DB::raw('airline_id, count(airline_id) as counter'))->groupBy('airline_id')->orderBy('counter','DESC')->whereCallsignType(1)->lists('counter','airline_id');
 		if(count($counter) > 0) {
@@ -63,9 +64,11 @@ class FlightStat {
 			}
 			
 			foreach($counter as $key => $flights) {
-				if(count($result) < 5 && array_key_exists($key, $names))
-					$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => ($this->_total == 0) ? 0 : number_format($flights / $this->_total * 100, 1));
-				else
+				if(count($result) < 5 && array_key_exists($key, $names)) {
+					$percentage = ($this->_total == 0) ? 0 : number_format($flights / $this->_total * 100, 1);
+					$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => $percentage);
+					if($percentage > 0) $chart[] = [$names[$key]->icao, $percentage];
+				} else
 					$other += $flights;
 			}
 		}
@@ -73,39 +76,47 @@ class FlightStat {
 		$private = $this->query()->whereCallsignType(2)->count();
 		$unknown = $this->query()->whereCallsignType(0)->count();
 		$result['Private'] = array('count' => $private, 'percent' => ($this->_total == 0) ? 0 : number_format($private / $this->_total * 100,1));
+		if($result['Private']['percent'] > 0) $chart[] = ['Private', $result['Private']['percent']];
 		$result['Other'] = array('count' => $other + $unknown, 'percent' => ($this->_total == 0) ? 0 : number_format(($other + $unknown) / $this->_total * 100,1));
+		if($result['Other']['percent'] > 0) $chart[] = ['Other', $result['Other']['percent']];
 
-		return $result;
+		return array('table' => $result, 'chart' => piechartData($chart));
 	}
 
 	function topAircraft() {
 		$other = 0;
 		$result = array();
 		$names = array();
+		$chart = array();
 
-		$counter = $this->query()->select(DB::raw('aircraft_id, count(aircraft_id) as counter'))->groupBy('aircraft_id')->where('aircraft_id','!=','')->orderBy('counter','DESC')->lists('counter','aircraft_id');
+		$counter = $this->query()->select(DB::raw('aircraft_id, count(aircraft_id) as counter'))->groupBy('aircraft_id')->where('aircraft_id','!=','')->whereNotNull('aircraft_id')->orderBy('counter','DESC')->lists('counter','aircraft_id');
 		if(count($counter) > 0) {
 			$namesRaw = Aircraft::whereIn('code',array_keys($counter))->get();
 			foreach($namesRaw as $aircraft) {
 				$names[$aircraft->code][] = $aircraft; 
 			}
+			$other = $this->_total - array_sum($counter);
 		}
 
 		foreach($counter as $key => $flights) {
-			if(count($result) < 5 && array_key_exists($key, $names))
-				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => ($this->_total == 0) ? 0 : number_format($flights / $this->_total * 100, 1));
-			else
+			if(count($result) < 5 && array_key_exists($key, $names)) {
+				$percentage = ($this->_total == 0) ? 0 : number_format($flights / $this->_total * 100, 1);
+				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => $percentage);
+				if($percentage > 0) $chart[] = [$key, $percentage];
+			} else
 				$other += $flights;
 		}
 
 		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / $this->_total * 100,1));
+		if($result['Other']['percent'] > 0) $chart[] = ['Other', $result['Other']['percent']];
 
-		return $result;
+		return array('table' => $result, 'chart' => piechartData($chart));
 	}
 
 	function topAirports() {
 		$other = 0;
 		$result = array();
+		$chart = array();
 
 		$origCounter = $this->query()->select(DB::raw('departure_id, count(departure_id) as counter'))->groupBy('departure_id')->where('departure_id','!=','')->orderBy('counter','DESC')->lists('counter','departure_id');
 		$destCounter = $this->query()->select(DB::raw('arrival_id, count(arrival_id) as counter'))->groupBy('arrival_id')->where('arrival_id','!=','')->orderBy('counter','DESC')->lists('counter','arrival_id');
@@ -123,15 +134,18 @@ class FlightStat {
 		}
 		
 		foreach($counter as $key => $flights) {
-			if(count($result) < 5 && array_key_exists($key, $names))
-				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => ($this->_total == 0) ? 0 : number_format($flights / ($this->_total * 2) * 100, 1));
-			else
+			if(count($result) < 5 && array_key_exists($key, $names)) {
+				$percentage = ($this->_total == 0) ? 0 : number_format($flights / ($this->_total*2) * 100, 1);
+				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => $percentage);
+				if($percentage > 0) $chart[] = [$names[$key]->id, $percentage];
+			} else
 				$other += $flights;
 		}
 
 		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / ($this->_total * 2) * 100,1));
+		if($result['Other']['percent'] > 0) $chart[] = ['Other', $result['Other']['percent']];
 
-		return $result;
+		return array('table' => $result, 'chart' => piechartData($chart));
 	}
 
 	private function query() {
