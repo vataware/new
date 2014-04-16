@@ -172,7 +172,7 @@
 		@if(in_array($flight->state, [1, 3]))
 		var currentPosition = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->last_lat }}, {{ $flight->last_lon }}), map: map, icon: {
 				url: '{{ asset('assets/images/enroute/' . $flight->lastPosition->heading . '.png')}}',
-				origin: new google.maps.Point(0,0),
+				anchor: new google.maps.Point(23,23),
 			}
 		});
 		@endif
