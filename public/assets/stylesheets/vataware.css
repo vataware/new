@@ -442,3 +442,10 @@ a:hover.tiles
 	color: white;
 	text-decoration: underline;
 }
+
+.chart-label {
+	color: white;
+	text-align: center;
+	padding: 3px 5px;
+	font-size: 80%;
+}

@@ -59,6 +59,29 @@ class ATC extends Eloquent {
 		}
 	}
 
+	function getFacilityAbbrAttribute() {
+		switch($this->facility_id) {
+			case 0:
+				return 'OBS';
+			case 1:
+				return 'FSS';
+			case 2:
+				return 'DEL';
+			case 3:
+				return 'GND';
+			case 4:
+				return 'TWR';
+			case 5:
+				return 'APP/DEP';
+			case 6:
+				return 'CTR';
+			case 99:
+				return 'ATIS';
+			default:
+				return 'Unknown';
+		}
+	}
+
 	public function getDurationAttribute() {
 		$time = (is_null($this->end)) ? $this->time : $this->end;
 		$hours = $time->diffInHours($this->start);
