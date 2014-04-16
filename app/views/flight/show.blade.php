@@ -103,7 +103,7 @@
 		</div>
 	</div>
 	<hr />
-	<p>[Map here]</p>
+	<div id="map" style="height: 500px;"></div>
 	<hr />
 	<div class="row">
 		<div class="col-md-6">
@@ -150,4 +150,39 @@
 		</div>
 	</div>
 </div>
+@stop
+@section('javascript')
+<script type="text/javascript">
+	function initialize() {
+		var map = new google.maps.Map(document.getElementById("map"));
+
+		@if(!is_null($flight->departure))
+		departureAirport = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->departure->lat }}, {{ $flight->departure->lon }}), map: map, icon: 'http://maps.google.com/mapfiles/marker_green.png' });
+		@endif
+		@if(!is_null($flight->arrival))
+		arrivalAirport = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->arrival->lat }}, {{ $flight->arrival->lon }}), map: map, icon: 'http://maps.google.com/mapfiles/marker.png' });
+		@endif
+		
+		var flightPlanCoordinates = [{{ $flight->mapsPositions }}];
+		var flightPlanColours = [{{ $flight->mapsColours }}];
+
+		for (var i = 0; i < flightPlanCoordinates.length - 1; i++) {
+			var flightPath = new google.maps.Polyline({
+				path: [flightPlanCoordinates[i], flightPlanCoordinates[i+1]],
+				strokeColor: flightPlanColours[i],
+				strokeOpacity: 1.0,
+				strokeWeight: 3,
+				map: map
+			});
+		}
+
+		var bounds = new google.maps.LatLngBounds();
+		for (var i = 0; i < flightPlanCoordinates.length; i++) {
+			bounds.extend(flightPlanCoordinates[i]);
+		}
+		map.fitBounds(bounds);
+	}
+
+	google.maps.event.addDomListener(window, 'load', initialize);
+</script>
 @stop

@@ -117,6 +117,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 	<script src="{{ asset('assets/javascript/bootstrap.min.js') }}"></script>
 	<script src="{{ asset('assets/javascript/jasny-bootstrap.min.js') }}"></script>
+	<script src="{{ asset('https://maps.googleapis.com/maps/api/js?sensor=true') }}"></script>
 	<script src="{{ asset('assets/javascript/vataware.js') }}"></script>
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
