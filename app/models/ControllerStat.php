@@ -56,6 +56,7 @@ class ControllerStat {
 	function topFacilities() {
 		$other = 0;
 		$result = array();
+		$chart = array();
 
 		$counter = $this->query()->select(DB::raw('facility_id, count(facility_id) as counter'))->groupBy('facility_id')->whereNotIn('facility_id', array(99))->orderBy('counter','DESC')->get();
 		if($counter->count() > 0) {

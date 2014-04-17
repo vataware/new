@@ -20,4 +20,11 @@ class HomeController extends BaseController {
 		$this->autoRender(compact('pilots','atc','users','year','month','day','change','changeArrow','distance','flights'));
 	}
 
+	function team() {
+		$members = Team::orderBy('priority')->orderBy(DB::raw('RAND()'))->get();
+
+		$this->stylesheet('assets/stylesheets/team.css');
+		$this->autoRender(compact('members'), 'Team');
+	}
+
 }

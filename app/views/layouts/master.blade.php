@@ -107,8 +107,8 @@
 				<div class="pull-right" style="font-size:29px; position:absolute; right:0;">
 					<a href="#" style="color:white;"><i class="fa fa-facebook" style="margin-right: 10px;"></i></a><a href="#" style="color:white;"><i class="fa fa-twitter" style="margin-right: 10px;"></i></a><a href="#" style="color:white;"><i class="fa fa-rss" style="margin-right: 10px;"></i></a>
 				</div>
-				<a href="#" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="#">News</a> &nbsp;&bull;&nbsp; <a href="#">Services</a> &nbsp;&bull;&nbsp; <a href="#">Pilots</a> &nbsp;&bull;&nbsp; <a href="#">ATC</a> &nbsp;&bull;&nbsp; <a href="#">Forum</a> &nbsp;&bull;&nbsp; <a href="#">Contact</a><br />
-				<br />&copy; 2014 <a href="#" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
+				<a href="#" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="#">News</a> &nbsp;&bull;&nbsp; <a href="#">Services</a> &nbsp;&bull;&nbsp; <a href="#">Pilots</a> &nbsp;&bull;&nbsp; <a href="#">ATC</a> &nbsp;&bull;&nbsp; <a href="#">Forum</a> &nbsp;&bull;&nbsp; <a href="{{ URL::route('team') }}">Team</a> &nbsp;&bull;&nbsp; <a href="#">Contact</a><br />
+				<br />&copy; 2014 <a href="{{ URL::route('home') }}" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
 				<small>version 1.0-{{ $build }}</small>
 			</div>
 		</div>
@@ -117,6 +117,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 	<script src="{{ asset('assets/javascript/bootstrap.min.js') }}"></script>
 	<script src="{{ asset('assets/javascript/jasny-bootstrap.min.js') }}"></script>
+	<script src="{{ asset('https://maps.googleapis.com/maps/api/js?sensor=true') }}"></script>
 	<script src="{{ asset('assets/javascript/vataware.js') }}"></script>
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -125,6 +126,7 @@
 	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
 	  ga('create', 'UA-49973764-1', '15.126.229.52');
+	  ga('require', 'displayfeatures');
 	  ga('send', 'pageview');
 
 	</script>

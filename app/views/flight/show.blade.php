@@ -103,7 +103,7 @@
 		</div>
 	</div>
 	<hr />
-	<p>[Map here]</p>
+	<div id="map" style="height: 500px;"></div>
 	<hr />
 	<div class="row">
 		<div class="col-md-6">
@@ -150,4 +150,53 @@
 		</div>
 	</div>
 </div>
+@stop
+@section('javascript')
+<script type="text/javascript">
+	function initialize() {
+		var map = new google.maps.Map(document.getElementById("map"));
+		var bounds = new google.maps.LatLngBounds();
+
+		@if(!is_null($flight->departure))
+		var departurePosition = new google.maps.LatLng({{ $flight->departure->lat }}, {{ $flight->departure->lon }});
+		var departureAirport = new google.maps.Marker({ position: departurePosition, map: map, icon: 'http://maps.google.com/mapfiles/marker_green.png' });
+		bounds.extend(departurePosition);
+		@endif
+
+		@if(!is_null($flight->arrival))
+		var arrivalPosition = new google.maps.LatLng({{ $flight->arrival->lat }}, {{ $flight->arrival->lon }});
+		var arrivalAirport = new google.maps.Marker({ position: arrivalPosition, map: map, icon: 'http://maps.google.com/mapfiles/marker.png' });
+		bounds.extend(arrivalPosition);
+		@endif
+
+		@if(in_array($flight->state, [1, 3]))
+		var currentPosition = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->last_lat }}, {{ $flight->last_lon }}), map: map, icon: {
+				url: '{{ asset('assets/images/enroute/' . $flight->lastPosition->heading . '.png')}}',
+				anchor: new google.maps.Point(23,23),
+			}
+		});
+		@endif
+
+		var flightPlanCoordinates = [{{ $flight->mapsPositions }}];
+		var flightPlanColours = [{{ $flight->mapsColours }}];
+
+		for (var i = 0; i < flightPlanCoordinates.length - 1; i++) {
+			var flightPath = new google.maps.Polyline({
+				path: [flightPlanCoordinates[i], flightPlanCoordinates[i+1]],
+				strokeColor: flightPlanColours[i],
+				strokeOpacity: 1.0,
+				strokeWeight: 3,
+				map: map
+			});
+		}
+
+		
+		for (var i = 0; i < flightPlanCoordinates.length; i++) {
+			bounds.extend(flightPlanCoordinates[i]);
+		}
+		map.fitBounds(bounds);
+	}
+
+	google.maps.event.addDomListener(window, 'load', initialize);
+</script>
 @stop

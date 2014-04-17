@@ -12,6 +12,7 @@
 */
 
 Route::get('', ['as' => 'home', 'uses' => 'HomeController@index']);
+Route::get('team', ['as' => 'team', 'uses' => 'HomeController@team']);
 
 // Flights
 Route::get('flight', ['as' => 'flight.index', 'uses' => 'FlightController@index']);

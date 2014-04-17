@@ -21,3 +21,31 @@ function piechartData($data) {
 
 	return implode(",\n", $results);
 }
+
+function altitudeColour($altitude, $implode = false) {
+	if($altitude < 0) $altitude = 0;
+	$steps = $altitude / 40;
+	$stage = floor($steps / 255);
+	$remainder = $steps % 255;
+
+	switch($stage) {
+		case 0: // < 10200 ft
+			$rgb = [0, 255, $remainder];
+			break;
+		case 1: // 10200 - 20400 ft
+			$rgb = [0, 255-$remainder, 255];
+			break;
+		case 2: // 20400 - 30600 ft
+			$rgb = [$remainder, 0, 255];
+			break;
+		case 3: // 30600 - 40800 ft
+			$rgb = [255, 0, 255-$remainder];
+			break;
+		default: // 40800 - 51000 ft
+			$rgb = [255, 0, 0];
+			break;
+	}
+
+	if($implode) return implode($implode, $rgb);
+	return $rgb;
+}

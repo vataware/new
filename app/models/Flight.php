@@ -62,6 +62,26 @@ class Flight extends Eloquent {
 		return $this->hasMany('Position')->orderBy('time','asc');
 	}
 
+	public function getMapsPositionsAttribute() {
+		$positions = [];
+
+		foreach($this->positions as $position) {
+			$positions[] = 'new google.maps.LatLng(' . $position->lat . ', ' . $position->lon . ')';
+		}
+
+		return implode(",", $positions);
+	}
+
+	public function getMapsColoursAttribute() {
+		$positions = [];
+
+		foreach($this->positions as $position) {
+			$positions[] = '\'rgb(' . altitudeColour($position->altitude,', ') . ')\'';
+		}
+
+		return implode(",", $positions);
+	}
+
 	public function lastPosition()
 	{
 		return $this->hasOne('Position')->orderBy('time','desc');
