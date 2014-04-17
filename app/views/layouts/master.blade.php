@@ -125,7 +125,8 @@
 	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-	  ga('create', 'UA-49973764-1', '15.126.229.52');
+	  ga('create', 'UA-49973764-1', 'vataware.com');
+	  ga('require', 'linkid', 'linkid.js');
 	  ga('require', 'displayfeatures');
 	  ga('send', 'pageview');
 

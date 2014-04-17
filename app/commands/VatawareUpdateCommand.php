@@ -325,7 +325,7 @@ class VatawareUpdateCommand extends Command {
 
 				if(empty($flight->departure_id)) {
 					$flight->departure_id = $data['planned_depairport'];
-					$flight->departure_id = $this->getAirports($data['planned_depairport']);
+					$flight->departure_country_id = $this->getAirports($data['planned_depairport']);
 				}
 
 				if(empty($flight->arrival_id)) {

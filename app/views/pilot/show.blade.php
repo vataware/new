@@ -8,10 +8,20 @@
 			<div class="row">
 				<div class="col-md-4 col-sm-6 col-xs-12">
 					<h2>
-						@if($citypair->count() == 2)
-						<abbr title="{{ $citypair[0]->name }}, {{ (!empty($citypair[0]->city)) ? $citypair[0]->city . ', ' : '' }}{{ $citypair[0]->country->country }}">{{ $citypair[0]->id }}</abbr>-<abbr title="{{ $citypair[1]->name }}, {{ (!empty($citypair[1]->city)) ? $citypair[1]->city . ', ' : '' }}{{ $citypair[1]->country->country }}">{{ $citypair[1]->id }}</abbr>
-						@else
-						Unknown
+						@if(isset($citypair['data'][0]))
+						<abbr title="{{ $citypair['data'][0]->name }}, {{ (!empty($citypair['data'][0]->city)) ? $citypair['data'][0]->city . ', ' : '' }}{{ $citypair['data'][0]->country->country }}">
+						@endif
+						{{ $citypair['code'][0] }}
+						@if(isset($citypair['data'][0]))
+						</abbr>
+						@endif
+						-
+						@if(isset($citypair['data'][1]))
+						<abbr title="{{ $citypair['data'][1]->name }}, {{ (!empty($citypair['data'][1]->city)) ? $citypair['data'][1]->city . ', ' : '' }}{{ $citypair['data'][1]->country->country }}">
+						@endif
+						{{ $citypair['code'][1] }}
+						@if(isset($citypair['data'][1]))
+						</abbr>
 						@endif
 					</h2>
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-star"></i></small> Popular citypair</p>

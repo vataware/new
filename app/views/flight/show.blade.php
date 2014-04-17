@@ -38,7 +38,7 @@
 					<td>
 						@if(!is_null($flight->departure))
 						{{ $flight->departure->id }} - {{ $flight->departure->name }}<br />
-						<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departureCountry->country }}
+						<img src="{{ flag($flight->departure->country_id) }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departure->country->country }}
 						@else
 						{{ $flight->departure_id }}
 						@endif
@@ -49,7 +49,7 @@
 					<td>
 						@if(!is_null($flight->arrival))
 						{{ $flight->arrival->id }} - {{ $flight->arrival->name }}<br />
-						<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrivalCountry->country }}
+						<img src="{{ flag($flight->arrival->country_id) }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrival->country->country }}
 						@else
 						{{ $flight->arrival_id }}
 						@endif

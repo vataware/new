@@ -46,9 +46,9 @@ class FlightStat {
 		$route = key($citypairsCounter);
 		$count = head($citypairsCounter);
 		$airports = explode('-', key($citypairsCounter));
-		$airports = Airport::with('country')->whereIn('id',$airports)->get();
+		$airportsData = Airport::with('country')->whereIn('id',$airports)->get();
 
-		return $airports;
+		return ['code' => $airports, 'data' => $airportsData];
 	}
 
 	function topAirlines() {
