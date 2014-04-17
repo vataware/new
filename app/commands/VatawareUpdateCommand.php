@@ -54,25 +54,34 @@ class VatawareUpdateCommand extends Command {
 	public function fire()
 	{
 		Log::info('vataware:update - start script');
+
+		if(Carbon::now()->lt(Cache::get('vatsim.nextupdate'))) {
+			Log::info('vataware:update - terminating execution - no new data yet (current time: ' . Carbon::now() . ', expeting at: ' . Cache::get('vatsim.nextupdate') . ')');
+			return;
+		}
+
 		$vatsim = $this->loadVatsim();
 		Log::info('vataware:update - fetched remote data');
 		$general = $vatsim->getGeneralInfo()->toArray();
 		$this->updateDate = $updateDate = Carbon::createFromTimestampUTC($general['update']);
-
-		Cache::forever('vatsim.pilots', $vatsim->getPilots()->count());
-		Cache::forever('vatsim.atc', $vatsim->getControllers()->count());
-		Cache::forever('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
 
 		if(!is_null(Update::whereTimestamp($updateDate)->first())) {
 			Log::info('vataware:update - terminating execution - data already exists (' . $updateDate . ')');
 			return;
 		}
 
+		Cache::forever('vatsim.pilots', $vatsim->getPilots()->count());
+		Cache::forever('vatsim.atc', $vatsim->getControllers()->count());
+		Cache::forever('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
+
 		Log::info('vataware:update - importing data from ' . $updateDate);
 
 		$update = new Update;
 		$update->timestamp = $updateDate;
 		$update->save();
+
+		$nextUpdate = Carbon::instance($updateDate)->addMinutes($general['reload']);
+		Cache::forever('vatsim.nextupdate', $nextUpdate);
 
 		$this->updateId = $update->id;
 		$datas = $this->getVatsimPilots();
@@ -199,14 +208,18 @@ class VatawareUpdateCommand extends Command {
 
 	function pilot($data, $rating = false) {
 		$pilot = Pilot::whereVatsimId($data['cid'])->first();
+
+		$it = new XmlIterator\XmlIterator('https://cert.vatsim.net/vatsimnet/idstatusint.php?cid=' . $data['cid'], 'user');
+		$official = iterator_to_array($it)[0];
+
 		if(is_null($pilot)) {
 			$pilot = new Pilot;
 			$pilot->vatsim_id = $data['cid'];
-			$pilot->name = $data['realname'];
-			$pilot->rating_id = $data['rating'];
+			$pilot->name = $official['name_first'] . ' ' . $official['name_last'];
+			$pilot->rating_id = $official['rating'];
 			$pilot->save();
 		} elseif($rating === true) {
-			$pilot->rating_id = $data['rating'];
+			$pilot->rating_id = $official['rating'];
 			$pilot->save();
 		}
 	}
@@ -333,12 +346,14 @@ class VatawareUpdateCommand extends Command {
 				$flight->speed = $data['planned_tascruise'];
 
 				// Update distance flown
-				if($flight->last_lat != 0 && $flight->last_lon != 0) $flight->distance += acos(sin(deg2rad($flight->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($flight->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($flight->last_lon) - deg2rad($data['longitude']))) * 6371;
+				if(!empty($data['latitude']) && !empty($data['longitude'])) {
+					// Update latest coordinates
+					$flight->last_lat = $data['latitude'];
+					$flight->last_lon = $data['longitude'];
+					
+					if($flight->last_lat != 0 && $flight->last_lon != 0) $flight->distance += acos(sin(deg2rad($flight->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($flight->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($flight->last_lon) - deg2rad($data['longitude']))) * 6371;
+				}
 				
-				// Update latest coordinates
-				$flight->last_lat = $data['latitude'];
-				$flight->last_lon = $data['longitude'];
-
 				// Ensure flight is not marked as missing
 				$flight->missing = false;
 				
@@ -349,6 +364,7 @@ class VatawareUpdateCommand extends Command {
 			}
 			unset($callsigns[$flight->callsign]);
 		}
+
 		Log::info('vataware:update - done processing existing flights');
 		Log::info('vataware:update - adding ' . count($callsigns) . ' flights to the database');
 		foreach($callsigns as $data) {
