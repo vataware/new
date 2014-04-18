@@ -80,14 +80,18 @@ Route::bind('airport',function($value, $route) {
 });
 
 // Redirect old urls
+Route::get('index.cfm', function() {
+	return Redirect::route('home', array(), 301);
+});
+
 Route::get('flight.cfm', function() {
 	if(!Input::has('id')) return Redirect::route('flight.index');
 	return Redirect::route('flight.show', array('flight' => Input::get('id')), 301);
 });
 
 Route::get('pilot.cfm', function() {
-	if(!Input::has('id')) return Redirect::route('pilot.index');
-	return Redirect::route('pilot.show', array('pilot' => Input::get('id')), 301);
+	if(!Input::has('cid')) return Redirect::route('pilot.index');
+	return Redirect::route('pilot.show', array('pilot' => Input::get('cid')), 301);
 });
 
 Route::get('airport.cfm', function() {
@@ -98,4 +102,21 @@ Route::get('airport.cfm', function() {
 Route::get('citypair.cfm', function() {
 	if(!Input::has('from') || !Input::has('to')) return App::abort(404);
 	return Redirect::route('citypair', array('departure' => strtoupper(Input::get('from')), 'arrival' => strtoupper(Input::get('to'))), 301);
+});
+
+Route::get('routes.cfm', function() {
+	if(!Input::has('from') || !Input::has('to')) return App::abort(404);
+	return Redirect::route('citypair', array('departure' => strtoupper(Input::get('from')), 'arrival' => strtoupper(Input::get('to'))), 301);
+});
+
+Route::get('pilotredir.cfm', function() {
+	if(!Input::has('cid')) return Redirect::route('pilot.index');
+
+	$latestFlight = Flight::whereVatsimId(Input::get('cid'))->orderBy('id','desc')->first();
+
+	// Redirect to pilot page is last flight cannot be found
+	if(is_null($latestFlight)) return Redirect::route('pilot.show', array('pilot' => Input::get('cid')));
+
+	// Redirect to flight page when flight is found
+	return Redirect::route('flight.show', array('flight' => $latestFlight->id));
 });

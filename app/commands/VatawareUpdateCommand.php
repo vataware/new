@@ -347,11 +347,11 @@ class VatawareUpdateCommand extends Command {
 
 				// Update distance flown
 				if(!empty($data['latitude']) && !empty($data['longitude'])) {
+					if($flight->last_lat != 0 && $flight->last_lon != 0) $flight->distance += acos(sin(deg2rad($flight->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($flight->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($flight->last_lon) - deg2rad($data['longitude']))) * 6371;
+				
 					// Update latest coordinates
 					$flight->last_lat = $data['latitude'];
 					$flight->last_lon = $data['longitude'];
-					
-					if($flight->last_lat != 0 && $flight->last_lon != 0) $flight->distance += acos(sin(deg2rad($flight->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($flight->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($flight->last_lon) - deg2rad($data['longitude']))) * 6371;
 				}
 				
 				// Ensure flight is not marked as missing
