@@ -161,14 +161,12 @@
 				<tbody class="rowlink" data-link="row">
 					@foreach($flights as $flight)
 					<tr>
-						<td><a href="{{ URL::route('flight.show', $flight->id) }}"><strong>{{ $flight->callsign }}</strong></a><br />{{ $flight->departure_time->format('d M') }}</td>
-						<td>
+						<td><a href="{{ URL::route('flight.show', $flight->id) }}"><strong>{{ $flight->callsign }}</strong></a>@if($flight->departure_time)<br />{{ $flight->departure_time->format('d M') }}@endif</td>
+						<td style="min-width: 90px;">
 							@unless(is_null($flight->departure))
-							<img src="{{ asset('assets/images/flags/' . $flight->departure->country_id . '.png') }}">&nbsp;
-							@endunless{{ $flight->departure_id }}<br />
+							<img src="{{ asset('assets/images/flags/' . $flight->departure->country_id . '.png') }}">&nbsp;@endunless{{ $flight->departure_id }}<br />
 							@unless(is_null($flight->arrival))
-							<img src="{{ asset('assets/images/flags/' . $flight->arrival->country_id . '.png') }}">&nbsp;
-							@endunless{{ $flight->arrival_id }}</td>
+							<img src="{{ asset('assets/images/flags/' . $flight->arrival->country_id . '.png') }}">&nbsp;@endunless{{ $flight->arrival_id }}</td>
 						<td>{{ (is_null($flight->departure)) ? 'Unknown' : (($flight->departure->city) ? $flight->departure->city . ', ' . strtoupper($flight->departure->country_id) : $flight->departure->country->country) }}<br />
 							{{ (is_null($flight->arrival)) ? 'Unknown' : (($flight->arrival->city) ? $flight->arrival->city . ', ' . strtoupper($flight->arrival->country_id) : $flight->arrival->country->country) }}</td>
 					</tr>
