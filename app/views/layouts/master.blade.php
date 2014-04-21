@@ -60,6 +60,11 @@
 			</div>
 		</div>
 		@endif
+		<div class="navbar navbar-default navbar-leader">
+			<div class="container">
+				<div style="color: white; text-align: center; margin-top: 10px;">Data from the past 7 years is in the process of being imported. Please have patience. Thank you for your understanding.</div>
+			</div>
+		</div>
 		<nav class="navbar navbar-vataware" role="navigation">
 			<div class="container">
 				<!-- Brand and toggle get grouped for better mobile display -->
