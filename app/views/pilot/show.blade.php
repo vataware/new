@@ -8,6 +8,7 @@
 			<div class="row">
 				<div class="col-md-4 col-sm-6 col-xs-12">
 					<h2>
+						@if(count($citypair['code']) == 2)
 						@if(isset($citypair['data'][0]))
 						<abbr title="{{ $citypair['data'][0]->name }}, {{ (!empty($citypair['data'][0]->city)) ? $citypair['data'][0]->city . ', ' : '' }}{{ $citypair['data'][0]->country->country }}">
 						@endif
@@ -22,6 +23,9 @@
 						{{ $citypair['code'][1] }}
 						@if(isset($citypair['data'][1]))
 						</abbr>
+						@endif
+						@else
+						Unknown
 						@endif
 					</h2>
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-star"></i></small> Popular citypair</p>

@@ -209,8 +209,10 @@ class VatawareUpdateCommand extends Command {
 	function pilot($data, $rating = false) {
 		$pilot = Pilot::whereVatsimId($data['cid'])->first();
 
-		$it = new XmlIterator\XmlIterator('https://cert.vatsim.net/vatsimnet/idstatusint.php?cid=' . $data['cid'], 'user');
-		$official = iterator_to_array($it)[0];
+		if(is_null($pilot) || $rating === true) {
+			$it = new XmlIterator\XmlIterator('https://cert.vatsim.net/vatsimnet/idstatusint.php?cid=' . $data['cid'], 'user');
+			$official = iterator_to_array($it)[0];
+		}
 
 		if(is_null($pilot)) {
 			$pilot = new Pilot;
