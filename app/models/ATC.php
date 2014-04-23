@@ -100,4 +100,9 @@ class ATC extends Eloquent {
 		return $this->belongsTo('Airport');
 	}
 
+	public function sector()
+	{
+		return $this->belongsTo('Sector','sector_id','code');
+	}
+
 }

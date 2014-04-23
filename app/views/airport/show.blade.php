@@ -30,7 +30,7 @@
 		<div class="col-md-9">
 			<div class="row">
 				<div class="col-md-6">
-					<h4 class="section-header">Departures</h4>
+					<h4 class="section-header">Outbound flights <img src="{{ asset('assets/images/flightstates/departing.png') }}"></h4>
 					<table class="table table-striped table-hover">
 						<tbody class="rowlink" data-link="row">
 							@foreach($departures as $departure)
@@ -46,7 +46,7 @@
 					</table>
 				</div>
 				<div class="col-md-6">
-					<h4 class="section-header">Arrivals</h4>
+					<h4 class="section-header">Inbound flights <img src="{{ asset('assets/images/flightstates/arrived.png') }}"></h4>
 					<table class="table table-striped table-hover">
 						<tbody class="rowlink" data-link="row">
 							@foreach($arrivals as $arrival)

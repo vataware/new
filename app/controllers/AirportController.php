@@ -11,8 +11,8 @@ class AirportController extends BaseController {
 	}
 
 	function show(Airport $airport) {
-		$departures = $airport->departures()->with('pilot','arrival','arrival.country')->whereIn('state',array(0,4))->where('arrival_id','!=','')->get();
-		$arrivals = $airport->arrivals()->with('pilot','departure','departure.country')->whereIn('state',array(0,4))->get();
+		$departures = $airport->departures()->with('pilot','arrival','arrival.country')->whereIn('state',array(0,1,4))->whereMissing(false)->where('arrival_id','!=','')->get();
+		$arrivals = $airport->arrivals()->with('pilot','departure','departure.country')->whereIn('state',array(1,3))->whereMissing(false)->get();
 
 		$this->autoRender(compact('airport','departures','arrivals'), $airport->id . ' - ' . $airport->name);
 	}
