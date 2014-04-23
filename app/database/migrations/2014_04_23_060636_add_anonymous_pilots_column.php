@@ -14,7 +14,7 @@ class AddAnonymousPilotsColumn extends Migration {
 	{
 		Schema::table('pilots', function(Blueprint $table)
 		{
-			$table->boolean('hidden')->default(false)->after('rating_id');
+			$table->boolean('anonymous')->default(false)->after('rating_id');
 			$table->boolean('exclude')->default(false)->after('hidden');
 		});
 	}
@@ -28,7 +28,7 @@ class AddAnonymousPilotsColumn extends Migration {
 	{
 		Schema::table('pilots', function(Blueprint $table)
 		{
-			$table->dropColumn('hidden', 'exclude');
+			$table->dropColumn('anonymous', 'exclude');
 		});
 	}
 

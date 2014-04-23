@@ -13,7 +13,7 @@ class Pilot extends Eloquent {
 	}
 
 	public function getNameAttribute($value) {
-		if($this->hidden) return 'Anonymous';
+		if($this->anonymous) return 'Anonymous';
 		return $value;
 	}
 
