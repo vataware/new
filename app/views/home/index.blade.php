@@ -1,6 +1,6 @@
 @section('content')
 
-<iframe src="http://www.klausbasan.de/vatgm/DisplayInclude.htm" class="mapContainer"></iframe>
+<div class="mapContainer" id="flightRadar"></div>
 <div class="smallMapStats">
 PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; ATC ONLINE: <span style="color:#138995;">{{ $atc }}</span>
 </div>
@@ -44,27 +44,27 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 		<h2 class="section-header">Statistics</h2>
 		<div class="well well-sm">
 			<div class="row homeStats">
-				<div class="col-lg-2" style="border-right:3px solid #2e7d7d;">
+				<div class="col-xs-6 col-sm-4 col-md-2 homeStat-1">
 					<h2>{{ $users }}</h2>
 					<small>Users Online</small>
 				</div>
-				<div class="col-lg-2" style="border-right:3px solid #92c36f;">
+				<div class="col-xs-6 col-sm-4 col-md-2 homeStat-2">
 					<h2>{{ $day }}</h2>
 					<small>Flights Today</small>
 				</div>
-				<div class="col-lg-2" style="border-right:3px solid #ee592f;">
+				<div class="col-xs-6 col-sm-4 col-md-2 homeStat-3">
 					<h2>{{ $month }}</h2>
 					<small>Flights This Month</small>
 				</div>
-				<div class="col-lg-2" style="border-right:3px solid #92c36f;">
+				<div class="col-xs-6 col-sm-4 col-md-2 homeStat-4">
 					<h2>{{ $year }}</h2>
 					<small>Flights This Year</small>
 				</div>
-				<div class="col-lg-2" style="border-right:3px solid #ee592f;">
+				<div class="col-xs-6 col-sm-4 col-md-2 homeStat-5">
 					<h2>{{ $change }}%<sup><i style="color:#138995; font-size: 17px;" class="glyphicon glyphicon-arrow-{{ $changeArrow }}"></i> </sup></h2>
 					<small>Compared to last year</small>
 				</div>
-				<div class="col-lg-2">
+				<div class="col-xs-6 col-sm-4 col-md-2 homeStat-6">
 					<h2>{{ $distance }}</h2>
 					<small>Miles flown today</small>
 				</div>
@@ -105,4 +105,57 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 	</table>
 </div>
 
+@stop
+@section('javascript')
+<script type="text/javascript">
+	function initialize() {
+		var map = new google.maps.Map(document.getElementById("flightRadar"), { styles: googleMapStyles, zoom: {{ Session::has('map.zoom') ? Session::get('map.zoom') : 2 }}, center: new google.maps.LatLng({{ Session::has('map.coordinates') ? Session::get('map.coordinates') : '30, 0' }}), scrollwheel: false, streetViewControl: false, minZoom: 2, maxZoom: 14 });
+
+		var flights = [];
+		var polylines = [];
+
+		google.maps.event.addListener(map, 'idle', function() {
+			bounds = map.getBounds();
+			$.get('{{ URL::route('map.api') }}', {n: bounds.Ba.j, e: bounds.ra.k, s: bounds.Ba.k, w: bounds.ra.j, z: map.getZoom(), lat: map.getCenter().k, lon: map.getCenter().A}, function(data) {
+				for(i = 0; i < data.length; i++) {
+					var flight = data[i];
+					if(flights.indexOf(flight.id) == -1) {
+						var marker = new google.maps.Marker({ position: new google.maps.LatLng(flight.lat, flight.lon), map: map, icon: {
+								url: flight.icon,
+								anchor: new google.maps.Point(10,10),
+								size: new google.maps.Size(20,20),
+								origin: new google.maps.Point(0,0)
+							},
+							flightId: flight.id,
+						});
+
+						google.maps.event.addListener(marker, 'click', function() {
+							for(i=0; i < polylines.length; i++) {
+								polylines[i].setMap(null);
+							}
+							$.get('{{ URL::route('map.flight') }}', {id: this.flightId}, function(data) {
+								for (i = 0; i < data.coordinates.length - 1; i++) {
+									var flightPath = new google.maps.Polyline({
+										path: [new google.maps.LatLng(data.coordinates[i][0], data.coordinates[i][1]), new google.maps.LatLng(data.coordinates[i+1][0], data.coordinates[i+1][1])],
+										strokeColor: data.colours[i],
+										strokeOpacity: 1.0,
+										strokeWeight: 3,
+										map: map
+									});
+
+									polylines.push(flightPath);
+								}
+							});
+							
+					 	});
+
+						flights.push(flight.id);
+					}
+				}
+			});
+		});
+	}
+
+	google.maps.event.addDomListener(window, 'load', initialize);
+</script>
 @stop

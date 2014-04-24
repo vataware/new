@@ -75,10 +75,10 @@ class Flight extends Eloquent {
 		$positions = [];
 
 		foreach($this->positions as $position) {
-			$positions[] = '\'rgb(' . altitudeColour($position->altitude,', ') . ')\'';
+			$positions[] = '#' . altitudeColour($position->altitude,'',true);
 		}
 
-		return implode(",", $positions);
+		return $positions;
 	}
 
 	public function lastPosition()

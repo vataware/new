@@ -55,7 +55,7 @@ class VatawareUpdateCommand extends Command {
 	{
 		Log::info('vataware:update - start script');
 
-		if(Carbon::now()->lt(Cache::get('vatsim.nextupdate'))) {
+		if(Cache::has('vatsim.nextupdate') && Carbon::now()->lt(Cache::get('vatsim.nextupdate'))) {
 			Log::info('vataware:update - terminating execution - no new data yet (current time: ' . Carbon::now() . ', expeting at: ' . Cache::get('vatsim.nextupdate') . ')');
 			return;
 		}
@@ -260,7 +260,9 @@ class VatawareUpdateCommand extends Command {
 		$flights = Flight::where('state','!=',2)->with('lastPosition')->get();
 		Log::info('vataware:update - found ' . $flights->count() . ' flights in database');
 		foreach($flights as $flight) {
-			if(!array_key_exists($flight->callsign, $callsigns)) {
+			if(is_null($flight->lastPosition)) {
+				$flight->delete();
+			} elseif(!array_key_exists($flight->callsign, $callsigns)) {
 			// flight missing
 				if($flight->missing && Carbon::now()->diffInMinutes($flight->lastPosition->updated_at) >= 60) {
 					// no record of last position

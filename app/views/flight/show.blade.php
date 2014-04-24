@@ -178,7 +178,7 @@
 		@endif
 
 		var flightPlanCoordinates = [{{ $flight->mapsPositions }}];
-		var flightPlanColours = [{{ $flight->mapsColours }}];
+		var flightPlanColours = ['{{ implode("','", $flight->mapsColours) }}'];
 
 		for (var i = 0; i < flightPlanCoordinates.length - 1; i++) {
 			var flightPath = new google.maps.Polyline({

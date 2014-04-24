@@ -22,7 +22,7 @@ function piechartData($data) {
 	return implode(",\n", $results);
 }
 
-function altitudeColour($altitude, $implode = false) {
+function altitudeColour($altitude, $implode = false, $hex = false) {
 	if($altitude < 0) $altitude = 0;
 	$steps = $altitude / 40;
 	$stage = floor($steps / 255);
@@ -46,6 +46,14 @@ function altitudeColour($altitude, $implode = false) {
 			break;
 	}
 
-	if($implode) return implode($implode, $rgb);
+	if($hex) {
+		foreach($rgb as &$colour) {
+			$colour = str_pad(dechex($colour), 2, "0", STR_PAD_LEFT);
+		}
+	}
+	
+	if($implode !== false)
+		return implode($implode, $rgb);
+
 	return $rgb;
 }
