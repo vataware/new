@@ -19,9 +19,14 @@ body {
 }
 
 .btn {
-	border-radius: 0;
-	padding: 10px 15px;
+	/*border-radius: 0;
+	padding: 10px 15px;*/
+	border-radius: 3px;
+	//font-family: "Raleway", "Arial", sans-serif;
+	letter-spacing: 0.5px;
 }
+
+
 
 .btn-primary {
 	color: #ffffff;

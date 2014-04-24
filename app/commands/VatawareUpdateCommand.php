@@ -488,7 +488,7 @@ class VatawareUpdateCommand extends Command {
 				$controller->airport_id = (is_null($nearby)) ? null : $nearby->id;
 				unset($nearby);
 			} elseif($controller->facility_id == 6) {
-				$sector = SectorAlias::select('sectors.code')->where('sector_aliases.code','=',explode('_', $callsign)[0])->join('sectors','sector_aliases.sector_id','=','sectors.id')->pluck('code');
+				$sector = SectorAlias::select('sectors.code')->where('sector_aliases.code','=',explode('_', $data['callsign'])[0])->join('sectors','sector_aliases.sector_id','=','sectors.id')->pluck('code');
 				$controller->sector_id = (is_null($sector)) ? null : $sector;
 				unset($sector);
 			}

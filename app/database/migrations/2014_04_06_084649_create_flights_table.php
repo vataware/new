@@ -34,6 +34,7 @@ class CreateFlightsTable extends Migration {
 			$table->decimal('last_lat', 10,6);
 			$table->decimal('last_lon', 10,6);
 			$table->timestamps();
+			$table->softDeletes();
 		});
 	}
 
