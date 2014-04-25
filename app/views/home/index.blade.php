@@ -114,19 +114,21 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 		var flights = [];
 		var polylines = [];
 
-		google.maps.event.addListener(map, 'idle', function() {
-			bounds = map.getBounds();
-			$.get('{{ URL::route('map.api') }}', {n: bounds.Ba.j, e: bounds.ra.k, s: bounds.Ba.k, w: bounds.ra.j, z: map.getZoom(), lat: map.getCenter().k, lon: map.getCenter().A}, function(data) {
+		updateMap = function(firstload) {
+			if(typeof firstload == 'undefined') firstload = 0;
+			$.get('{{ URL::route('map.api') }}', {z: map.getZoom(), lat: map.getCenter().k, lon: map.getCenter().A, force: firstload}, function(data) {
 				for(i = 0; i < data.length; i++) {
 					var flight = data[i];
-					if(flights.indexOf(flight.id) == -1) {
+					if(!(flight.id in flights)) {
 						var marker = new google.maps.Marker({ position: new google.maps.LatLng(flight.lat, flight.lon), map: map, icon: {
-								url: flight.icon,
+								url: '{{ asset('assets/images/mapicon-red.png') }}?deg=' + flight.heading,
 								anchor: new google.maps.Point(10,10),
 								size: new google.maps.Size(20,20),
 								origin: new google.maps.Point(0,0)
 							},
+							optimized: false,
 							flightId: flight.id,
+							heading: flight.heading,
 						});
 
 						google.maps.event.addListener(marker, 'click', function() {
@@ -149,11 +151,20 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 							
 					 	});
 
-						flights.push(flight.id);
+						flights[flight.id] = marker;
+					} else {
+						flights[flight.id].setPosition(new google.maps.LatLng(flight.lat, flight.lon));
 					}
 				}
 			});
+		};
+
+		google.maps.event.addListener(map, 'idle', function() {
+			bounds = map.getBounds();
+			updateMap(1);
 		});
+
+		setInterval(updateMap, 60000);
 	}
 
 	google.maps.event.addDomListener(window, 'load', initialize);

@@ -95,6 +95,7 @@ class VatawareUpdateCommand extends Command {
 		Cache::forever('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
 		Cache::forever('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
 		Cache::forever('vatsim.distance', number_format(Flight::where('startdate','=',date('Y-m-d'))->sum('distance') * 0.54));
+		$this->map();
 
 		if($lastYear == 0) {
 			Cache::forever('vatsim.change', '&infin;&nbsp;');
@@ -507,6 +508,43 @@ class VatawareUpdateCommand extends Command {
 		unset($callsigns);
 
 		Log::info('vataware:update - finished processing controllers');
+	}
+
+	function map() {
+		$flights = Flight::with('lastPosition')
+			->whereIn('state',[1, 3])
+			->join('pilots','flights.vatsim_id','=','pilots.vatsim_id')
+			->select('flights.*','pilots.name')
+			->get()
+			->transform(function($flight) {
+				return [
+					'id' => $flight->id,
+					'callsign' => $flight->callsign,
+					'vatsim_id' => $flight->vatsim_id,
+					'pilot' => $flight->name,
+					
+					// Terminalds
+					'departure' => $flight->departure_id,
+					'arrival' => $flight->arrival_id,
+
+					// Aircraft
+					'aircraft_code' => $flight->aircraft_code,
+					'aircraft_id' => $flight->aircraft_id,
+
+					// Location
+					'lat' => $flight->last_lat,
+					'lon' => $flight->last_lon,
+
+					// Movement
+					'altitude' => $flight->lastPosition->altitude,
+					'speed' => $flight->lastPosition->speed,
+					'heading' => $flight->lastPosition->heading,
+				];
+			});
+
+		Cache::forever('vatsim.map', $flights);
+
+		unset($flights);
 	}
 
 }
