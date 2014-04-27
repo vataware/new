@@ -19,9 +19,14 @@ body {
 }
 
 .btn {
-	border-radius: 0;
-	padding: 10px 15px;
+	/*border-radius: 0;
+	padding: 10px 15px;*/
+	border-radius: 3px;
+	//font-family: "Raleway", "Arial", sans-serif;
+	letter-spacing: 0.5px;
 }
+
+
 
 .btn-primary {
 	color: #ffffff;
@@ -134,7 +139,7 @@ body {
 {
 	background-color: rgba(0, 0, 0, 0.74);
 	height: 37px;
-	margin-top: -42px;
+	margin-top: -37px;
 	width: 390px;
 	z-index: 10000;
 	position: absolute;
@@ -167,6 +172,12 @@ a:hover.tiles
 	margin:0;
 	padding:0;
 }
+
+.homeStats > div { border-right-width: 3px; border-right-style: solid; }
+.homeStats .homeStat-6 { border-right: 0; }
+.homeStats .homeStat-1, .homeStats .homeStat-4 { border-color: #2e7d7d; } .homeStats .homeStat-2, .homeStats .homeStat-5 { border-color: #92c36f; } .homeStats .homeStat-3 { border-color: #ee592f; }
+@media(min-width: 768px) and (max-width: 991px) { .homeStats .homeStat-3 { border-right: 0; } .homeStats .homeStat-4 { border-color: #ee592f; } .homeStats .homeStat-5 { border-color: #1fbfcf; } }
+@media(max-width: 767px) { .homeStats .homeStat-2, .homeStats .homeStat-4 { border-right: 0; } }
 
 .footer
 {
@@ -231,10 +242,6 @@ a:hover.tiles
 	background-size: 100%;
 }
 
-.navbar-vataware .navbar-nav {
-	margin-top: 35px;
-}
-
 @media(max-width: 767px) {
 	.navbar-leader .navbar-header a.navbar-brand {
 		color: white;
@@ -251,22 +258,34 @@ a:hover.tiles
 		width: 175px;
 		height: 60px;
 	}
+
+	#vataware-navbar-collapse {
+		background: white;
+	}
+}
+
+
+@media(min-width: 768px) {
+	.navbar-vataware .navbar-nav {
+		margin-top: 35px;
+	}
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
 	.navbar-vataware {
-		height: 98px;
+		height: 91px;
 	}
 
 	.navbar-vataware .navbar-brand {
 		width: 175px;
-		height: 98px;
+		height: 86px;
 	}
 
 	.navbar-vataware .navbar-nav {
-		margin-top: 28px;
+		margin-top: 23px;
 	}
 }
+
 
 .navbar-vataware .navbar-nav > li {
 	border:none;
@@ -285,14 +304,11 @@ a:hover.tiles
 
 .navbar-vataware .navbar-toggle {
   border-color: #ddd;
+  margin-top: 12px;
 }
 
 .navbar-vataware .navbar-toggle .icon-bar {
   background-color: #888;
-}
-
-.homeStats .col-lg-1 {
-	width: 10.33333333%;
 }
 
 .navbar-vataware .navbar-nav > li > .dropdown-menu {

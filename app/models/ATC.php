@@ -15,6 +15,7 @@ class ATC extends Eloquent {
 			case 2:
 				return 'Student';
 			case 3:
+				return 'Student 2';
 			case 4:
 				return 'Senior Student';
 			case 5:
@@ -97,6 +98,11 @@ class ATC extends Eloquent {
 	public function airport()
 	{
 		return $this->belongsTo('Airport');
+	}
+
+	public function sector()
+	{
+		return $this->belongsTo('Sector','sector_id','code');
 	}
 
 }

@@ -12,6 +12,11 @@ class Pilot extends Eloquent {
 		return $this->hasMany('Flight','vatsim_id');
 	}
 
+	public function getNameAttribute($value) {
+		if($this->anonymous) return 'Anonymous';
+		return $value;
+	}
+
 	function getRatingAttribute() {
 		switch($this->rating_id) {
 			case 1:

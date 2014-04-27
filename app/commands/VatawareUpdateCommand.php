@@ -54,19 +54,25 @@ class VatawareUpdateCommand extends Command {
 	public function fire()
 	{
 		Log::info('vataware:update - start script');
+
+		if(Cache::has('vatsim.nextupdate') && Carbon::now()->lt(Cache::get('vatsim.nextupdate'))) {
+			Log::info('vataware:update - terminating execution - no new data yet (current time: ' . Carbon::now() . ', expeting at: ' . Cache::get('vatsim.nextupdate') . ')');
+			return;
+		}
+
 		$vatsim = $this->loadVatsim();
 		Log::info('vataware:update - fetched remote data');
 		$general = $vatsim->getGeneralInfo()->toArray();
 		$this->updateDate = $updateDate = Carbon::createFromTimestampUTC($general['update']);
 
-		Cache::forever('vatsim.pilots', $vatsim->getPilots()->count());
-		Cache::forever('vatsim.atc', $vatsim->getControllers()->count());
-		Cache::forever('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
-
 		if(!is_null(Update::whereTimestamp($updateDate)->first())) {
 			Log::info('vataware:update - terminating execution - data already exists (' . $updateDate . ')');
 			return;
 		}
+
+		Cache::forever('vatsim.pilots', $vatsim->getPilots()->count());
+		Cache::forever('vatsim.atc', $vatsim->getControllers()->count());
+		Cache::forever('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
 
 		Log::info('vataware:update - importing data from ' . $updateDate);
 
@@ -74,9 +80,13 @@ class VatawareUpdateCommand extends Command {
 		$update->timestamp = $updateDate;
 		$update->save();
 
+		$nextUpdate = Carbon::instance($updateDate)->addMinutes($general['reload']);
+		Cache::forever('vatsim.nextupdate', $nextUpdate);
+
 		$this->updateId = $update->id;
 		$datas = $this->getVatsimPilots();
 		$this->processPilots($datas);
+		unset($datas);
 
 		$thisYear = Flight::where('startdate','LIKE',date('Y') . '%')->count();
 		$lastYear = Flight::where('startdate','LIKE',date('Y',strtotime('last year')) . '%')->count();
@@ -85,6 +95,7 @@ class VatawareUpdateCommand extends Command {
 		Cache::forever('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
 		Cache::forever('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
 		Cache::forever('vatsim.distance', number_format(Flight::where('startdate','=',date('Y-m-d'))->sum('distance') * 0.54));
+		$this->map();
 
 		if($lastYear == 0) {
 			Cache::forever('vatsim.change', '&infin;&nbsp;');
@@ -97,6 +108,7 @@ class VatawareUpdateCommand extends Command {
 		
 		$datas = $this->getVatsimControllers();
 		$this->processControllers($datas);
+		unset($datas);
 	}
 
 	/**
@@ -195,20 +207,30 @@ class VatawareUpdateCommand extends Command {
 		$position->time = $this->updateDate;
 
 		$position->save();
+
+		unset($position);
 	}
 
 	function pilot($data, $rating = false) {
 		$pilot = Pilot::whereVatsimId($data['cid'])->first();
+
+		if(is_null($pilot) || $rating === true) {
+			$it = new XmlIterator\XmlIterator('https://cert.vatsim.net/vatsimnet/idstatusint.php?cid=' . $data['cid'], 'user');
+			$official = iterator_to_array($it)[0];
+		}
+
 		if(is_null($pilot)) {
 			$pilot = new Pilot;
 			$pilot->vatsim_id = $data['cid'];
-			$pilot->name = $data['realname'];
-			$pilot->rating_id = $data['rating'];
+			$pilot->name = $official['name_first'] . ' ' . $official['name_last'];
+			$pilot->rating_id = $official['rating'];
 			$pilot->save();
 		} elseif($rating === true) {
-			$pilot->rating_id = $data['rating'];
+			$pilot->rating_id = $official['rating'];
 			$pilot->save();
 		}
+
+		unset($pilot);
 	}
 
 	function proximity($latitude, $longitude, $range = 20) {
@@ -240,11 +262,10 @@ class VatawareUpdateCommand extends Command {
 		Log::info('vataware:update - found ' . $flights->count() . ' flights in database');
 		foreach($flights as $flight) {
 			if(is_null($flight->lastPosition)) {
-				// remove flight if there's no known last position
 				$flight->delete();
 			} elseif(!array_key_exists($flight->callsign, $callsigns)) {
 			// flight missing
-				if(Carbon::now()->diffInHours($flight->lastPosition->updated_at) >= 1) {
+				if($flight->missing && Carbon::now()->diffInMinutes($flight->lastPosition->updated_at) >= 60) {
 					// no record of last position
 					$flight->delete();
 				} else {
@@ -252,7 +273,7 @@ class VatawareUpdateCommand extends Command {
 					$flight->missing = true;
 
 					if($flight->isAirborne() || $flight->isArriving()) {
-					// airborne or near arrival
+					// Airborne or near arrival
 						$nearby = $this->proximity($flight->last_lat, $flight->last_lon);
 						if(!is_null($nearby) && $this->altitudeRange($flight->lastPosition->altitude, $nearby->elevation) && $flight->lastPosition->groundspeed < 30) {
 							// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
@@ -278,6 +299,7 @@ class VatawareUpdateCommand extends Command {
 						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
 						$flight->stateArriving();
 					}
+					unset($nearby);
 				}
 				elseif($flight->isArriving())
 				{
@@ -292,6 +314,7 @@ class VatawareUpdateCommand extends Command {
 						// Make sure flight is marked as Airborne
 						$flight->stateAirborne();
 					}
+					unset($nearby);
 				}
 				elseif($flight->isPreparing())
 				{
@@ -312,7 +335,7 @@ class VatawareUpdateCommand extends Command {
 
 				if(empty($flight->departure_id)) {
 					$flight->departure_id = $data['planned_depairport'];
-					$flight->departure_id = $this->getAirports($data['planned_depairport']);
+					$flight->departure_country_id = $this->getAirports($data['planned_depairport']);
 				}
 
 				if(empty($flight->arrival_id)) {
@@ -333,12 +356,14 @@ class VatawareUpdateCommand extends Command {
 				$flight->speed = $data['planned_tascruise'];
 
 				// Update distance flown
-				if($flight->last_lat != 0 && $flight->last_lon != 0) $flight->distance += acos(sin(deg2rad($flight->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($flight->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($flight->last_lon) - deg2rad($data['longitude']))) * 6371;
+				if(!empty($data['latitude']) && !empty($data['longitude'])) {
+					if($flight->last_lat != 0 && $flight->last_lon != 0) $flight->distance += acos(sin(deg2rad($flight->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($flight->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($flight->last_lon) - deg2rad($data['longitude']))) * 6371;
 				
-				// Update latest coordinates
-				$flight->last_lat = $data['latitude'];
-				$flight->last_lon = $data['longitude'];
-
+					// Update latest coordinates
+					$flight->last_lat = $data['latitude'];
+					$flight->last_lon = $data['longitude'];
+				}
+				
 				// Ensure flight is not marked as missing
 				$flight->missing = false;
 				
@@ -347,8 +372,11 @@ class VatawareUpdateCommand extends Command {
 				// Create position report
 				$this->positionReport($data, $flight->id);
 			}
-			unset($callsigns[$flight->callsign]);
+			unset($callsigns[$flight->callsign], $flight, $data);
 		}
+
+		unset($flights);
+
 		Log::info('vataware:update - done processing existing flights');
 		Log::info('vataware:update - adding ' . count($callsigns) . ' flights to the database');
 		foreach($callsigns as $data) {
@@ -369,6 +397,7 @@ class VatawareUpdateCommand extends Command {
 			{
 				$nearby = $this->proximity($data['latitude'], $data['longitude']);
 				if(!is_null($nearby)) $flight->setDeparture($nearby);
+				unset($nearby);
 			}
 			else
 			{
@@ -385,8 +414,10 @@ class VatawareUpdateCommand extends Command {
 			$callsign = str_replace('-','',strtoupper($data['callsign']));
 			if(!is_null($airline = $this->getAirlines($callsign))) { // Airline
 				$flight->isAirline($airline->icao);
+				unset($airline);
 			} elseif(!is_null($registration = $this->getRegistrations($callsign))) {
 				$flight->isPrivate($registration->country_id);
+				unset($registration);
 			}
 
 			// Set status as 'Preparing'
@@ -394,7 +425,11 @@ class VatawareUpdateCommand extends Command {
 			$flight->save();
 
 			$this->positionReport($data, $flight->id);
+
+			unset($flight, $data, $callsign, $date);
 		}
+
+		unset($callsigns);
 
 		Log::info('vataware:update - finished processing pilots');
 	}
@@ -431,8 +466,11 @@ class VatawareUpdateCommand extends Command {
 				$controller->time = $updateDate;
 				$controller->save();
 			}
-			unset($callsigns[$controller->callsign]);
+			unset($callsigns[$controller->callsign], $controller, $data);
 		}
+
+		unset($controllers);
+
 		Log::info('vataware:update - done processing existing controllers');
 		Log::info('vataware:update - adding ' . count($callsigns) . ' controllers to the database');
 		foreach($callsigns as $data) {
@@ -451,6 +489,11 @@ class VatawareUpdateCommand extends Command {
 			if($controller->facility_id < 6) {
 				$nearby = $this->proximity($data['latitude'], $data['longitude']);
 				$controller->airport_id = (is_null($nearby)) ? null : $nearby->id;
+				unset($nearby);
+			} elseif($controller->facility_id == 6) {
+				$sector = SectorAlias::select('sectors.code')->where('sector_aliases.code','=',explode('_', $data['callsign'])[0])->join('sectors','sector_aliases.sector_id','=','sectors.id')->pluck('code');
+				$controller->sector_id = (is_null($sector)) ? null : $sector;
+				unset($sector);
 			}
 
 			$this->pilot($data, true);
@@ -458,8 +501,50 @@ class VatawareUpdateCommand extends Command {
 			$controller->missing = false;
 			$controller->time = $updateDate;
 			$controller->save();
+
+			unset($controller, $data);
 		}
+
+		unset($callsigns);
+
 		Log::info('vataware:update - finished processing controllers');
+	}
+
+	function map() {
+		$flights = Flight::with('lastPosition')
+			->whereIn('state',[1, 3])
+			->join('pilots','flights.vatsim_id','=','pilots.vatsim_id')
+			->select('flights.*','pilots.name')
+			->get()
+			->transform(function($flight) {
+				return [
+					'id' => $flight->id,
+					'callsign' => $flight->callsign,
+					'vatsim_id' => $flight->vatsim_id,
+					'pilot' => $flight->name,
+					
+					// Terminalds
+					'departure' => $flight->departure_id,
+					'arrival' => $flight->arrival_id,
+
+					// Aircraft
+					'aircraft_code' => $flight->aircraft_code,
+					'aircraft_id' => $flight->aircraft_id,
+
+					// Location
+					'lat' => $flight->last_lat,
+					'lon' => $flight->last_lon,
+
+					// Movement
+					'altitude' => $flight->lastPosition->altitude,
+					'speed' => $flight->lastPosition->speed,
+					'heading' => $flight->lastPosition->heading,
+				];
+			});
+
+		Cache::forever('vatsim.map', $flights);
+
+		unset($flights);
 	}
 
 }

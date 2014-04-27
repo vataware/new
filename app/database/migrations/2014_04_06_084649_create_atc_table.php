@@ -16,6 +16,7 @@ class CreateAtcTable extends Migration {
 			$table->double('lat',10,6);
 			$table->double('lon',10,6);
 			$table->string('airport_id',6)->nullable()->default(null);
+			$table->string('sector_id',10)->nullable()->default(null);
 			$table->smallInteger('visual_range');
 			$table->double('frequency',6,3);
 			$table->smallInteger('facility_id')->unsigned();

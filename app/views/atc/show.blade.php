@@ -82,17 +82,39 @@
 @section('javascript')
 <script type="text/javascript">
 	function initialize() {
-		var map = new google.maps.Map(document.getElementById("map"));
+		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles });
 
+		@if(!is_null($controller->sector))
+		var bounds = new google.maps.LatLngBounds();
+		
+		var sectorBounds = {{ $controller->sector->polygon }};
+
+		for(var i = 0; i < sectorBounds.length; i++) {
+			bounds.extend(sectorBounds[i]);
+		}
+
+		var sectorRadius = new google.maps.Polygon({
+			paths: sectorBounds,
+			strokeColor: '#FFFFFF',
+		    strokeOpacity: 0.8,
+		    strokeWeight: 2,
+		    fillColor: '#008996',
+		    fillOpacity: 0.35,
+		});
+
+		sectorRadius.setMap(map);
+
+		map.fitBounds(bounds); 
+		@else
 		var coordinates = new google.maps.LatLng({{ $controller->lat }}, {{ $controller->lon }});
 
 		controller = new google.maps.Marker({ position: coordinates, map: map, icon: 'http://maps.google.com/mapfiles/marker_white.png' });
-		
+
 		var controlRadius = new google.maps.Circle({
-			strokeColor: '#FF0000',
+			strokeColor: '#FFFFFF',
 			strokeOpacity: 0.8,
 			strokeWeight: 2,
-			fillColor: '#FF0000',
+			fillColor: '#008996',
 			fillOpacity: 0.35,
 			map: map,
 			center: coordinates,
@@ -100,6 +122,7 @@
 		});
 
 		map.fitBounds(controlRadius.getBounds());
+		@endif
 	}
 
 	google.maps.event.addDomListener(window, 'load', initialize);

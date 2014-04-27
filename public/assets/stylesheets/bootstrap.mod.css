@@ -73,3 +73,25 @@ h6,
 .h6 {
   font-size: 13px;
 }
+
+.btn-inverse {
+	color: #FFFFFF;
+	background-color: #222222;
+	border-color: #222222;
+}
+
+.btn-inverse:hover, .btn-inverse:focus, .btn-inverse:active, .btn-inverse.active, .open .dropdown-toggle.btn-inverse {
+	color: #FFFFFF;
+	background-color: #111111;
+	border-color: #000000;
+}
+
+.btn.btn-outline { background-color: #ffffff; }
+.btn.btn-outline:hover { background-color: #fcfcfc; }
+
+.btn-outline.btn-danger { color: #d43f3a; }
+.btn-outline.btn-success { color: #398439; }
+.btn-outline.btn-warning { color: #d58512; }
+.btn-outline.btn-primary { color: #285e8e; }
+.btn-outline.btn-info { color: #46b8da; }
+.btn-outline.btn-inverse { color: #333333; }

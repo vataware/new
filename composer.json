@@ -5,7 +5,8 @@
 	"require": {
 		"laravel/framework": "4.1.*",
 		"bonroyage/messages": "dev-master",
-		"skymeyer/vatsimphp": "dev-master"
+		"skymeyer/vatsimphp": "dev-master",
+		"halilim/xml-iterator": "dev-master"
 	},
 	"require-dev": {
 		"barryvdh/laravel-debugbar": "1.*",

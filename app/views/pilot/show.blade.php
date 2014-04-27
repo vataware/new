@@ -8,8 +8,22 @@
 			<div class="row">
 				<div class="col-md-4 col-sm-6 col-xs-12">
 					<h2>
-						@if($citypair->count() == 2)
-						<abbr title="{{ $citypair[0]->name }}, {{ (!empty($citypair[0]->city)) ? $citypair[0]->city . ', ' : '' }}{{ $citypair[0]->country->country }}">{{ $citypair[0]->id }}</abbr>-<abbr title="{{ $citypair[1]->name }}, {{ (!empty($citypair[1]->city)) ? $citypair[1]->city . ', ' : '' }}{{ $citypair[1]->country->country }}">{{ $citypair[1]->id }}</abbr>
+						@if(count($citypair['code']) == 2)
+						@if(isset($citypair['data'][0]))
+						<abbr title="{{ $citypair['data'][0]->name }}, {{ (!empty($citypair['data'][0]->city)) ? $citypair['data'][0]->city . ', ' : '' }}{{ $citypair['data'][0]->country->country }}">
+						@endif
+						{{ $citypair['code'][0] }}
+						@if(isset($citypair['data'][0]))
+						</abbr>
+						@endif
+						-
+						@if(isset($citypair['data'][1]))
+						<abbr title="{{ $citypair['data'][1]->name }}, {{ (!empty($citypair['data'][1]->city)) ? $citypair['data'][1]->city . ', ' : '' }}{{ $citypair['data'][1]->country->country }}">
+						@endif
+						{{ $citypair['code'][1] }}
+						@if(isset($citypair['data'][1]))
+						</abbr>
+						@endif
 						@else
 						Unknown
 						@endif
@@ -151,14 +165,12 @@
 				<tbody class="rowlink" data-link="row">
 					@foreach($flights as $flight)
 					<tr>
-						<td><a href="{{ URL::route('flight.show', $flight->id) }}"><strong>{{ $flight->callsign }}</strong></a><br />{{ $flight->departure_time->format('d M') }}</td>
-						<td>
+						<td><a href="{{ URL::route('flight.show', $flight->id) }}"><strong>{{ $flight->callsign }}</strong></a>@if($flight->departure_time)<br />{{ $flight->departure_time->format('d M') }}@endif</td>
+						<td style="min-width: 90px;">
 							@unless(is_null($flight->departure))
-							<img src="{{ asset('assets/images/flags/' . $flight->departure->country_id . '.png') }}">&nbsp;
-							@endunless{{ $flight->departure_id }}<br />
+							<img src="{{ asset('assets/images/flags/' . $flight->departure->country_id . '.png') }}">&nbsp;@endunless{{ $flight->departure_id }}<br />
 							@unless(is_null($flight->arrival))
-							<img src="{{ asset('assets/images/flags/' . $flight->arrival->country_id . '.png') }}">&nbsp;
-							@endunless{{ $flight->arrival_id }}</td>
+							<img src="{{ asset('assets/images/flags/' . $flight->arrival->country_id . '.png') }}">&nbsp;@endunless{{ $flight->arrival_id }}</td>
 						<td>{{ (is_null($flight->departure)) ? 'Unknown' : (($flight->departure->city) ? $flight->departure->city . ', ' . strtoupper($flight->departure->country_id) : $flight->departure->country->country) }}<br />
 							{{ (is_null($flight->arrival)) ? 'Unknown' : (($flight->arrival->city) ? $flight->arrival->city . ', ' . strtoupper($flight->arrival->country_id) : $flight->arrival->country->country) }}</td>
 					</tr>
