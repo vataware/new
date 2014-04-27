@@ -4,6 +4,7 @@ class Flight extends Eloquent {
 
 	protected $table = 'flights';
 	public $timestamps = true;
+	protected $softDelete = true;
 	protected $dates = ['departure_time','arrival_time','deleted_at'];
 
 	public function aircraft()
