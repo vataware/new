@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "7ce02fb42e1f2be2aa2c72bfa3d0a47d",
+    "hash": "bfc7b1004415fbbe02dc72f4b0688f30",
     "packages": [
         {
             "name": "bonroyage/messages",
@@ -182,6 +182,52 @@
             "time": "2013-12-04 14:19:30"
         },
         {
+            "name": "halilim/xml-iterator",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/halilim/xml-iterator.git",
+                "reference": "4978b172777e2b5e3e2b55dae706ff5c1a73bf90"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/halilim/xml-iterator/zipball/4978b172777e2b5e3e2b55dae706ff5c1a73bf90",
+                "reference": "4978b172777e2b5e3e2b55dae706ff5c1a73bf90",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-simplexml": "*",
+                "ext-spl": "*",
+                "ext-xmlreader": "*",
+                "php": ">=5.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "XmlIterator": "."
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Halil Özgür",
+                    "email": "halil@ozgur.gmail.com"
+                }
+            ],
+            "description": "XML Reader to simplexml/array iterator with low memory usage and an acceptable level of ease of use.",
+            "keywords": [
+                "SimpleXML",
+                "XMLReader",
+                "iterator",
+                "xml"
+            ],
+            "time": "2013-07-06 10:26:51"
+        },
+        {
             "name": "ircmaxell/password-compat",
             "version": "1.0.3",
             "source": {
@@ -270,16 +316,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v4.1.24",
+            "version": "v4.1.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "4f69e545e0ca19b54010ca4c68a66ba6de6e853c"
+                "reference": "2f1c6cd51dfd51d573977f07e34ba609cc0bf3ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/4f69e545e0ca19b54010ca4c68a66ba6de6e853c",
-                "reference": "4f69e545e0ca19b54010ca4c68a66ba6de6e853c",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/2f1c6cd51dfd51d573977f07e34ba609cc0bf3ac",
+                "reference": "2f1c6cd51dfd51d573977f07e34ba609cc0bf3ac",
                 "shasum": ""
             },
             "require": {
@@ -338,7 +384,7 @@
                 "illuminate/workbench": "self.version"
             },
             "require-dev": {
-                "aws/aws-sdk-php": "2.5.*",
+                "aws/aws-sdk-php": "2.6.*",
                 "iron-io/iron_mq": "1.5.*",
                 "mockery/mockery": "0.9.*",
                 "pda/pheanstalk": "2.1.*",
@@ -355,9 +401,7 @@
             },
             "autoload": {
                 "classmap": [
-                    [
-                        "src/Illuminate/Queue/IlluminateQueueClosure.php"
-                    ]
+                    "src/Illuminate/Queue/IlluminateQueueClosure.php"
                 ],
                 "files": [
                     "src/Illuminate/Support/helpers.php"
@@ -383,7 +427,7 @@
                 "framework",
                 "laravel"
             ],
-            "time": "2014-03-17 15:49:21"
+            "time": "2014-04-16 15:27:05"
         },
         {
             "name": "monolog/monolog",
@@ -773,6 +817,60 @@
                 "psr-3"
             ],
             "time": "2012-12-21 11:40:51"
+        },
+        {
+            "name": "skymeyer/vatsimphp",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/skymeyer/Vatsimphp.git",
+                "reference": "21bcc1cfa068d99941e17b1385756c75544c0ee9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/skymeyer/Vatsimphp/zipball/21bcc1cfa068d99941e17b1385756c75544c0ee9",
+                "reference": "21bcc1cfa068d99941e17b1385756c75544c0ee9",
+                "shasum": ""
+            },
+            "require": {
+                "monolog/monolog": "~1.6",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": ">=3.7",
+                "satooshi/php-coveralls": "dev-master"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Vatsimphp": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Jelle Vink",
+                    "email": "jelle.vink@gmail.com",
+                    "homepage": "http://skymeyer.be"
+                }
+            ],
+            "description": "PHP library for VATSIM.net",
+            "homepage": "http://github.com/skymeyer/Vatsimphp",
+            "keywords": [
+                "flight simulator",
+                "online flight simulation",
+                "vatsim",
+                "virtual air traffic"
+            ],
+            "time": "2014-03-21 19:33:07"
         },
         {
             "name": "stack/builder",
@@ -1659,16 +1757,16 @@
         },
         {
             "name": "maximebf/debugbar",
-            "version": "1.9.12",
+            "version": "1.9.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/maximebf/php-debugbar.git",
-                "reference": "a7cce7e9e4ee79ac61cbb9f298142fd290b22cd5"
+                "reference": "f6da2ec2239a764032c197ebfe85c23faf694748"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/maximebf/php-debugbar/zipball/a7cce7e9e4ee79ac61cbb9f298142fd290b22cd5",
-                "reference": "a7cce7e9e4ee79ac61cbb9f298142fd290b22cd5",
+                "url": "https://api.github.com/repos/maximebf/php-debugbar/zipball/f6da2ec2239a764032c197ebfe85c23faf694748",
+                "reference": "f6da2ec2239a764032c197ebfe85c23faf694748",
                 "shasum": ""
             },
             "require": {
@@ -1706,7 +1804,7 @@
             "keywords": [
                 "debug"
             ],
-            "time": "2014-03-25 16:17:09"
+            "time": "2014-04-05 14:50:54"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -2176,7 +2274,9 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "bonroyage/messages": 20
+        "bonroyage/messages": 20,
+        "skymeyer/vatsimphp": 20,
+        "halilim/xml-iterator": 20
     },
     "platform": [
 

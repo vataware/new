@@ -11,3 +11,6 @@
 |
 */
 
+Artisan::add(new VatawareUpdateCommand);
+Artisan::add(new VatawareAirportsCommand);
+Artisan::add(new VatawareProgressCommand);
