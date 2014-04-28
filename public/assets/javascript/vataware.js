@@ -15,7 +15,11 @@ $(document).ready(function() {
 	});
 });
 
-function createPieChart(element, data) {
+function createPieChart(element, data, legend) {
+	if(typeof legend == 'undefined') {
+		legend = false;
+
+	}
 	$.plot(element, data, {
 		series: {
 			pie: {
@@ -30,12 +34,12 @@ function createPieChart(element, data) {
 				},
 				// startAngle: 0,
 				label: {
-					show: true,
+					show: 'auto',
 					radius: 3/4,
 					formatter: function(label, series) {
-					 	return '<div class="chart-label">' + label + '</div>';
+						return '<div class="chart-label">' + label + '</div>';
 					},
-					background: { 
+					background: {
 						opacity: 0.6,
 						color: '#000'
 					}
@@ -43,7 +47,10 @@ function createPieChart(element, data) {
 			}
 		},
 		legend: {
-			show: false,
+			show: legend,
+			labelFormatter: function(label, series) {
+				return '<div class="chart-legend">' + label + '<br /><small>' + series.data[0][1] + ' minutes </small></div>';
+			},
 		},
 		grid: {
 			hoverable: true,
