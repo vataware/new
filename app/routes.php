@@ -39,6 +39,9 @@ Route::get('controller/{pilot}', ['as' => 'controller.show', 'uses' => 'Controll
 Route::get('airport', ['as' => 'airport.index', 'uses' => 'AirportController@index']);
 Route::get('airport/{airport}', ['as' => 'airport.show', 'uses' => 'AirportController@show'])->where('airport','[A-Z0-9]{3,4}');
 
+Route::get('airline', ['as' => 'airline.index', 'uses' => 'AirlineController@index']);
+Route::get('airline/{airline}', ['as' => 'airline.show', 'uses' => 'AirlineController@show'])->where('airline','[A-Z0-9]+');
+
 Route::get('search', ['as' => 'search', 'uses' => 'SearchController@index']);
 
 Route::bind('flight',function($value, $route) {
@@ -78,6 +81,16 @@ Route::bind('airport',function($value, $route) {
 		return App::abort(404);
 	} else {
 		return $airport;
+	}
+});
+
+Route::bind('airline',function($value, $route) {
+	$airline = Airline::whereIcao($value)->first();
+
+	if(is_null($airline)) {
+		return App::abort(404);
+	} else {
+		return $airline;
 	}
 });
 
