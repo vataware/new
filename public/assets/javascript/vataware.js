@@ -49,7 +49,11 @@ function createPieChart(element, data, legend) {
 		legend: {
 			show: legend,
 			labelFormatter: function(label, series) {
-				return '<div class="chart-legend">' + label + '<br /><small>' + series.data[0][1] + ' minutes </small></div>';
+				if(legend) {
+					return '<div class="chart-legend">' + label + '<br /><small>' + series.data[0][1] + ' minutes </small></div>';
+				} else {
+					return '<div class="chart-label">' + label + '</div>';
+				}
 			},
 		},
 		grid: {

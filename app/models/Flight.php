@@ -14,12 +14,12 @@ class Flight extends Eloquent {
 
 	public function departure()
 	{
-		return $this->belongsTo('Airport', 'departure_id');
+		return $this->belongsTo('Airport', 'departure_id', 'icao');
 	}
 
 	public function arrival()
 	{
-		return $this->belongsTo('Airport', 'arrival_id');
+		return $this->belongsTo('Airport', 'arrival_id', 'icao');
 	}
 
 	public function pilot()
@@ -59,7 +59,7 @@ class Flight extends Eloquent {
 
 	public function positions()
 	{
-		return $this->hasMany('Position')->orderBy('time','asc');
+		return $this->hasMany('Position');
 	}
 
 	public function getMapsPositionsAttribute() {
@@ -84,7 +84,7 @@ class Flight extends Eloquent {
 
 	public function lastPosition()
 	{
-		return $this->hasOne('Position')->orderBy('time','desc');
+		return $this->hasOne('Position')->orderBy('id','desc');
 	}
 
 	public function getStatusAttribute() {

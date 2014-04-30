@@ -15,6 +15,12 @@ class FlightController extends BaseController {
 			Messages::error('This flight has been missing for ' . Carbon::now()->diffInMinutes($flight->positions->last()->updated_at) . ' minutes. It will be deleted if it has been missing for 1 hour.')->one();
 		}
 
+		if($flight->pilot->getOriginal('updated_at') == '0000-00-00 00:00:00') {
+			Queue::push('LegacyUpdate', $flight->pilot->vatsim_id, 'legacy');
+			$flight->pilot->processing = 2;
+			$flight->pilot->save();
+		}
+
 		$flight->miles = $flight->distance * 0.54;
 
 		$this->autoRender(compact('flight'), $flight->callsign);

@@ -15,7 +15,7 @@ class SearchController extends BaseController {
 				'airport' => '[A-Z0-9]{4}',
 				'airline' => '[A-Z0-9]{3}',
 				'airportIata' => '[A-Z0-9]{3}',
-				'citypair' => '([A-Z0-9]{3,4})(?:(?:\s?[-|>]\s?)|\sto\s)([A-Z0-9]{3,4})',
+				'citypair' => '([A-Z0-9]{3,4})(?:(?:\s*?[-|>]\s*?)|\s+to\s+|\s+)([A-Z0-9]{3,4})',
 				'callsign' => '.*'
 			);
 

@@ -45,7 +45,11 @@ Route::get('airline/{airline}', ['as' => 'airline.show', 'uses' => 'AirlineContr
 Route::get('search', ['as' => 'search', 'uses' => 'SearchController@index']);
 
 Route::bind('flight',function($value, $route) {
-	$flight = Flight::with('aircraft','departure','arrival','pilot','departureCountry','arrivalCountry','airline','positions')->find($value);
+	$flight = Flight::with(['aircraft','departure','arrival','pilot','departureCountry','arrivalCountry','airline','positions' => function($positions) {
+		$positions->join('updates','positions.update_id','=','updates.id');
+		$positions->select('positions.*', DB::raw('updates.timestamp AS time'));
+		$positions->orderBy('time','asc');
+	}])->find($value);
 
 	if(is_null($flight) || $value == 0) {
 		return App::abort(404);
@@ -112,6 +116,11 @@ Route::get('pilot.cfm', function() {
 Route::get('airport.cfm', function() {
 	if(!Input::has('airport')) return Redirect::route('airport.index');
 	return Redirect::route('airport.show', array('airport' => strtoupper(Input::get('airport'))), 301);
+});
+
+Route::get('airline.cfm', function() {
+	if(!Input::has('icao')) return Redirect::route('airline.index');
+	return Redirect::route('airline.show', array('airline' => strtoupper(Input::get('icao'))), 301);
 });
 
 Route::get('citypair.cfm', function() {

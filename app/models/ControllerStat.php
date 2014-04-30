@@ -11,8 +11,7 @@ class ControllerStat {
 		$this->_total = $query->count();
 	}
 
-	function durations() {
-		$total = $this->query()->sum('duration');
+	function durations($total) {
 		$hours = floor($total/60);
 		$minutes = str_pad(($total - ($hours * 60)),2,'0',STR_PAD_LEFT);
 
@@ -28,13 +27,14 @@ class ControllerStat {
 		$other = 0;
 		$result = array();
 		$chart = array();
+		$names = array();
 
 		$counter = $this->query()->select(DB::raw('airport_id, count(airport_id) as counter'))->groupBy('airport_id')->whereNotNull('airport_id')->orderBy('counter','DESC')->lists('counter','airport_id');
 		$other = $this->_total - array_sum($counter);
 		if(count($counter) > 0) {
-			$namesRaw = Airport::with('country')->whereIn('id',array_keys($counter))->get();
+			$namesRaw = Airport::with('country')->whereIn('icao',array_keys($counter))->get();
 			foreach($namesRaw as $airport) {
-				$names[$airport->id] = $airport; 
+				$names[$airport->icao] = $airport; 
 			}
 
 			foreach($counter as $key => $flights) {

@@ -484,7 +484,6 @@ class VatawareUpdateCommand extends Command {
 			$controller->lat = $data['latitude'];
 			$controller->lon = $data['longitude'];
 			$controller->frequency = $data['frequency'];
-			$controller->facility_id = (ends_with($data['callsign'], '_ATIS')) ? 99 : $data['facilitytype'];
 
 			if($controller->facility_id < 6) {
 				$nearby = $this->proximity($data['latitude'], $data['longitude']);

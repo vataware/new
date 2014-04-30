@@ -84,7 +84,7 @@ class ATC extends Eloquent {
 	}
 
 	public function getDurationAttribute() {
-		$time = (is_null($this->end)) ? $this->time : $this->end;
+		$time = (is_null($this->end)) ? Carbon::now() : $this->end;
 		$hours = $time->diffInHours($this->start);
 		$minutes = $time->diffInMinutes($this->start);
 		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
@@ -97,7 +97,7 @@ class ATC extends Eloquent {
 
 	public function airport()
 	{
-		return $this->belongsTo('Airport');
+		return $this->belongsTo('Airport','airport_id','icao');
 	}
 
 	public function sector()

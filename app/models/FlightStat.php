@@ -11,8 +11,7 @@ class FlightStat {
 		$this->_total = $query->count();
 	}
 
-	function distances() {
-		$km = $this->query()->sum('distance');
+	function distances($km) {
 		$nm = $km * 0.54;
 		$mi = $km * 0.6214;
 		$ae = $km / 40075;
@@ -129,9 +128,9 @@ class FlightStat {
 		}
 		arsort($counter);
 		if(count($counter) > 0) {
-			$namesRaw = Airport::with('country')->whereIn('id',array_keys($counter))->get();
+			$namesRaw = Airport::with('country')->whereIn('icao',array_keys($counter))->get();
 			foreach($namesRaw as $airport) {
-				$names[$airport->id] = $airport; 
+				$names[$airport->icao] = $airport; 
 			}
 		}
 		
@@ -139,7 +138,7 @@ class FlightStat {
 			if(count($result) < 5 && array_key_exists($key, $names)) {
 				$percentage = ($this->_total == 0) ? 0 : number_format($flights / ($this->_total*2) * 100, 1);
 				$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => $percentage);
-				if($percentage > 0) $chart[] = [$names[$key]->id, $percentage];
+				if($percentage > 0) $chart[] = [$names[$key]->icao, $percentage];
 			} else
 				$other += $flights;
 		}

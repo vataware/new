@@ -6,10 +6,6 @@ class Airport extends Eloquent {
 	public $timestamps = true;
 	protected $softDelete = false;
 
-	public function getIcaoAttribute() {
-		return $this->id;
-	}
-
 	public function country()
 	{
 		return $this->belongsTo('Country');
@@ -17,12 +13,12 @@ class Airport extends Eloquent {
 
 	public function departures()
 	{
-		return $this->hasMany('Flight', 'departure_id');
+		return $this->hasMany('Flight', 'departure_id', 'icao');
 	}
 
 	public function arrivals()
 	{
-		return $this->hasMany('Flight', 'arrival_id');
+		return $this->hasMany('Flight', 'arrival_id', 'icao');
 	}
 
 	public function getLatSAttribute() {

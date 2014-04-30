@@ -73,13 +73,18 @@
 		</div>
 		<div clas="col-md-7">
 			<div class="visible-xs visible-sm"><hr /></div>
+			@if(!is_null($controller->sector) || $controller->visual_range > 0)
 			<div id="map" style="height: 350px;"></div>
+			@else
+			<p>Sorry, no map available for this ATC duty.
+			@endif
 		</div>
 	</div>
 </div>
 
 @stop
 @section('javascript')
+@if(!is_null($controller->sector) || $controller->visual_range > 0)
 <script type="text/javascript">
 	function initialize() {
 		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles });
@@ -127,4 +132,5 @@
 
 	google.maps.event.addDomListener(window, 'load', initialize);
 </script>
+@endif
 @stop

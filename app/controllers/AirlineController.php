@@ -11,12 +11,12 @@ class AirlineController extends BaseController {
 	}
 
 	function show(Airline $airline) {
-		$activeFlights = $airline->flights()->whereIn('state',[0, 1, 3, 4])->with('pilot','departure','arrival')->orderBy('startdate','desc')->get();
-		$flights = $airline->flights()->whereState(2)->with('pilot','departure','arrival')->orderBy('startdate','desc')->get();
+		$activeFlights = $airline->flights()->whereIn('state',[0, 1, 3, 4])->with('pilot','departure','arrival')->orderBy('departure_time','desc')->get();
+		$flights = $airline->flights()->whereState(2)->with('pilot','departure','arrival')->orderBy('departure_time','desc')->get();
 		
 		$totalDuration = $flights->sum('duration');
 
-		$pilots = $airline->flights()->whereState(2)->leftJoin('pilots','flights.vatsim_id','=','pilots.vatsim_id')->select('pilots.*', DB::raw('SUM(duration) AS duration'))->orderBy('duration','desc')->groupBy('flights.vatsim_id')->take(5)->get()
+		$pilots = $airline->flights()->whereState(2)->leftJoin('pilots','flights.vatsim_id','=','pilots.vatsim_id')->select('pilots.*', DB::raw('SUM(flights.duration) AS duration'))->orderBy('duration','desc')->groupBy('flights.vatsim_id')->take(5)->get()
 			->transform(function($pilot) use ($totalDuration) {
 				return array('name' => $pilot->name, 'duration' => $pilot->duration, 'percent' => number_format($pilot->duration/$totalDuration * 100, 1));
 			});

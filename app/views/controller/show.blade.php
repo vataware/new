@@ -11,7 +11,7 @@
 					<p class="lead">Rating</p>
 				</div>
 				<div class="col-md-3 col-sm-6 col-xs-12">
-					<h2>{{ number_format($duties->count() + $actives->count()) }}</h2>
+					<h2>{{ number_format($pilot->counter_atc + $actives->count()) }}</h2>
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-briefcase"></i></small> Duties</p>
 				</div>
 				<div class="col-md-4 col-sm-6 col-xs-12">

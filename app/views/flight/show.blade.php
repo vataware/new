@@ -37,7 +37,7 @@
 					<th>Origin</th>
 					<td>
 						@if(!is_null($flight->departure))
-						{{ $flight->departure->id }} - {{ $flight->departure->name }}<br />
+						{{ $flight->departure->icao }} - {{ $flight->departure->name }}<br />
 						<img src="{{ flag($flight->departure->country_id) }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departure->country->country }}
 						@else
 						{{ $flight->departure_id }}
@@ -48,7 +48,7 @@
 					<th>Destination</th>
 					<td>
 						@if(!is_null($flight->arrival))
-						{{ $flight->arrival->id }} - {{ $flight->arrival->name }}<br />
+						{{ $flight->arrival->icao }} - {{ $flight->arrival->name }}<br />
 						<img src="{{ flag($flight->arrival->country_id) }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrival->country->country }}
 						@else
 						{{ $flight->arrival_id }}
