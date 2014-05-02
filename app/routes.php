@@ -144,3 +144,7 @@ Route::get('pilotredir.cfm', function() {
 	// Redirect to flight page when flight is found
 	return Redirect::route('flight.show', array('flight' => $latestFlight->id));
 });
+
+Route::post('queue/receive/1q2w3e4r5t6y7u8i9o0p', function() {
+	return Queue::marshal();
+});
