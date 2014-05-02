@@ -40,17 +40,19 @@ class ControllerStat {
 			foreach($counter as $key => $flights) {
 				if(count($result) < 5 && array_key_exists($key, $names)) {
 					$percentage = ($this->_total == 0) ? 0 : number_format($flights / $this->_total * 100, 1);
-					$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => $percentage);
+					$result[] = array('data' => $names[$key], 'count' => $flights, 'percent' => $percentage, 'key' => $key);
 					if($percentage > 0) $chart[] = [$key, $percentage];
 				} else
 					$other += $flights;
 			}
 		}
 
-		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / $this->_total * 100,1));
-		if($result['Other']['percent'] > 0) $chart[] = ['Other', $result['Other']['percent']];
+		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / $this->_total * 100,1), 'key' => 'Other');
+		$chart[] = ['Other', $result['Other']['percent']];
 
-		return array('table' => $result, 'chart' => piechartData($chart));
+		$piechartData = piechartData($chart);
+
+		return array('table' => $result, 'chart' => $piechartData['javascript'], 'colours' => $piechartData['colours']);
 	}
 
 	function topFacilities() {
@@ -63,17 +65,19 @@ class ControllerStat {
 			foreach($counter as $flights) {
 				if(count($result) < 5) {
 					$percentage = ($this->_total == 0) ? 0 : number_format($flights->counter / $this->_total * 100, 1);
-					$result[] = array('data' => $flights->facility, 'count' => $flights->counter, 'percent' => $percentage);
+					$result[] = array('data' => $flights->facility, 'count' => $flights->counter, 'percent' => $percentage, 'key' => $flights->facilityAbbr);
 					if($percentage > 0) $chart[] = [$flights->facilityAbbr, $percentage];
 				} else
 					$other += $flights->counter;
 			}
 		}
 
-		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / $this->_total * 100,1));
-		if($result['Other']['percent'] > 0) $chart[] = ['Other', $result['Other']['percent']];
+		$result['Other'] = array('count' => $other, 'percent' => ($this->_total == 0) ? 0 : number_format($other / $this->_total * 100,1), 'key' => 'Other');
+		$chart[] = ['Other', $result['Other']['percent']];
 
-		return array('table' => $result, 'chart' => piechartData($chart));
+		$piechartData = piechartData($chart);
+
+		return array('table' => $result, 'chart' => $piechartData['javascript'], 'colours' => $piechartData['colours']);
 	}
 
 	private function query() {

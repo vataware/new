@@ -28,13 +28,14 @@
 					<table class="table table-striped table-condensed">
 						<thead>
 							<tr>
-								<th>Airport</th>
+								<th colspan="2">Airport</th>
 								<th width="15%" class="text-center">#</th>
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
 						@foreach($airports['table'] as $airport => $counter)
 						<tr>
+							<td style="width: 10px; background: {{ $airports['colours'][$counter['key']] }}"></td>
 							<td>{{ is_string($airport) ? '<em>' . $airport . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->name . ' (' . $counter['data']->id . ')' . '"><img src="' . flag($counter['data']->country_id) . '" /> ' . $counter['data']->icao . '<span class="hidden-inline-xs">&nbsp;&raquo; ' . (($counter['data']->city) ? $counter['data']->city . ', ' : '') . $counter['data']->country->country . '</span></span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>
@@ -52,13 +53,14 @@
 					<table class="table table-striped table-condensed">
 						<thead>
 							<tr>
-								<th>Facility</th>
+								<th colspan="2">Facility</th>
 								<th width="15%" class="text-center">#</th>
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
 						@foreach($facilities['table'] as $facility => $counter)
 						<tr>
+							<td style="width: 10px; background: {{ $facilities['colours'][$counter['key']] }}"></td>
 							<td>{{ is_string($facility) ? '<em>' . $facility . '</em>' : $counter['data'] }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>

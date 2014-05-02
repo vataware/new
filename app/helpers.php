@@ -14,12 +14,14 @@ function piechartData($data) {
 	$colourCount = count($colours)+1;
 	
 	$results = array();
+	$colourResults = array();
 
 	foreach($data as $key => $entry) {
 		$results[] = '{ label: "' . $entry[0] . '",  data: ' . $entry[1] . ', color: "' . (isset($entry[2]) ? $entry[2] : $colours[$key%$colourCount]) . '"}';
+		$colourResults[$entry[0]] = (isset($entry[2]) ? $entry[2] : $colours[$key%$colourCount]);
 	}
 
-	return implode(",\n", $results);
+	return array('javascript' => implode(",\n", $results), 'colours' => $colourResults);
 }
 
 function altitudeColour($altitude, $implode = false, $hex = false) {

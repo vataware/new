@@ -37,7 +37,7 @@
 			<tr>
 				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a></td>
 				<td>{{ $flight->aircraft_id }}</td>
-				<td>{{ $flight->pilot->name }}</td>
+				<td>{{ $flight->name }}</td>
 				<td>
 					@if($flight->departure)
 					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id }} {{ $flight->departure->city }}
@@ -55,7 +55,7 @@
 	<h4 class="section-header">25 Most Recent Flights</h4>
 	<table class="table table-striped table-hover">
 		<tbody class="rowlink" data-link="row">
-			@foreach($flights as $flight)
+			@foreach($historicFlights as $flight)
 			<tr>
 				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a></td>
 				<td>{{ $flight->aircraft_id }}</td>

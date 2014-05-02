@@ -33,17 +33,7 @@ function createPieChart(element, data, legend) {
 					width: 2
 				},
 				// startAngle: 0,
-				label: {
-					show: 'auto',
-					radius: 3/4,
-					formatter: function(label, series) {
-						return '<div class="chart-label">' + label + '</div>';
-					},
-					background: {
-						opacity: 0.6,
-						color: '#000'
-					}
-				}
+				label: false
 			}
 		},
 		legend: {

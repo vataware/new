@@ -16,7 +16,7 @@
 					<th>Operator</th>
 					<td>
 						@if($flight->callsign_type == 1)
-						<img src="{{ asset('assets/images/airlines/' . $flight->airline_id . '.png') }}">&nbsp;&nbsp;{{ $flight->airline->name }}
+						<img src="{{ asset('assets/images/airlines/' . $flight->airline_id . '.png') }}">&nbsp;&nbsp;<a href="{{ URL::route('airline.show', $flight->airline_id) }}">{{ $flight->airline->name }}</a>
 						@elseif($flight->callsign_type == 2)
 						Private ({{ $flight->privateCountry->country }})
 						@else
@@ -37,10 +37,10 @@
 					<th>Origin</th>
 					<td>
 						@if(!is_null($flight->departure))
-						{{ $flight->departure->icao }} - {{ $flight->departure->name }}<br />
+						<a href="{{ URL::route('airport.show', $flight->departure_id) }}">{{ $flight->departure->icao }}</a> - {{ $flight->departure->name }}<br />
 						<img src="{{ flag($flight->departure->country_id) }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departure->country->country }}
 						@else
-						{{ $flight->departure_id }}
+						<a href="{{ URL::route('airport.show', $flight->departure_id) }}">{{ $flight->departure_id }}</a>
 						@endif
 					</td>
 				</tr>
@@ -48,10 +48,10 @@
 					<th>Destination</th>
 					<td>
 						@if(!is_null($flight->arrival))
-						{{ $flight->arrival->icao }} - {{ $flight->arrival->name }}<br />
+						<a href="{{ URL::route('airport.show', $flight->arrival_id) }}">{{ $flight->arrival->icao }}</a> - {{ $flight->arrival->name }}<br />
 						<img src="{{ flag($flight->arrival->country_id) }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrival->country->country }}
 						@else
-						{{ $flight->arrival_id }}
+						<a href="{{ URL::route('airport.show', $flight->arrival_id) }}">{{ $flight->arrival_id }}</a>
 						@endif
 					</td>
 				</tr>

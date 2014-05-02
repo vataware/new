@@ -31,7 +31,7 @@ class PilotController extends BaseController {
 		$citypair = $stats->citypair();
 
 		if($flights->count() > 0) {
-			$durations = $stats->durations();
+			$durations = $stats->durations($pilot->duration);
 			extract($durations);
 		}
 
