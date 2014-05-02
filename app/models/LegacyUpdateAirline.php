@@ -2,7 +2,6 @@
 
 class LegacyUpdateAirline {
 	
-	protected $airlines = null;
 	protected $registrations = null;
 
 	function fire($job, $data) {
@@ -16,9 +15,8 @@ class LegacyUpdateAirline {
 		foreach($flights as $flight) {
 
 			$callsign = str_replace('-','',strtoupper($flight->callsign));
-			if(!is_null($airline = $this->getAirlines($callsign))) { // Airline
-				$flight->isAirline($airline->icao);
-				unset($airline);
+			if(preg_match('/^' . $data['airline'] . '[0-9]{1,5}[A-Z]{0,2}$/', $flight->callsign)) { // Airline
+				$flight->isAirline($data['airline']);
 			} elseif(!is_null($registration = $this->getRegistrations($callsign))) {
 				$flight->isPrivate($registration->country_id);
 				unset($registration);
@@ -69,17 +67,6 @@ class LegacyUpdateAirline {
 			});
 
 		return $this->registrations;
-	}
-
-	function getAirlines($callsign = null) {
-		if(is_null($this->airlines)) $this->airlines = Airline::get();
-
-		if(!is_null($callsign)) 
-			return $this->airlines->first(function($key, $airline) use ($callsign) {
-				return preg_match('/^' . $airline->icao . '[0-9]{1,5}[A-Z]{0,2}$/', $callsign);
-			});
-
-		return $this->airlines;
 	}
 
 }

@@ -30,7 +30,7 @@ function createPieChart(element, data, legend) {
 				},
 				stroke: {
 					color: '#fff',
-					width: 2
+					width: 0
 				},
 				// startAngle: 0,
 				label: false

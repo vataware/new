@@ -154,7 +154,7 @@
 @section('javascript')
 <script type="text/javascript">
 	function initialize() {
-		var map = new google.maps.Map(document.getElementById("map"));
+		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles });
 		var bounds = new google.maps.LatLngBounds();
 
 		@if(!is_null($flight->departure))

@@ -79,7 +79,7 @@ Route::bind('pilot',function($value, $route) {
 });
 
 Route::bind('airport',function($value, $route) {
-	$airport = Airport::find($value);
+	$airport = Airport::whereIcao($value)->first();
 
 	if(is_null($airport)) {
 		return App::abort(404);

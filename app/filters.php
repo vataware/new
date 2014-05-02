@@ -80,7 +80,8 @@ Route::filter('csrf', function()
 });
 
 Route::filter('flatten.flight', function($route, $request, $response) {
-	if($route->getParameter('flight')->state == 2) {
+	$flight = $route->getParameter('flight');
+	if($flight->state == 2 && $flight->processed) {
 		Flatten::end($response);
 	}
 });
