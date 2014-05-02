@@ -18,7 +18,7 @@ Route::get('map/flight', ['as' => 'map.flight', 'uses' => 'HomeController@mapFli
 
 // Flights
 Route::get('flight', ['as' => 'flight.index', 'uses' => 'FlightController@index']);
-Route::get('flight/{flight}', ['as' => 'flight.show', 'uses' => 'FlightController@show'])->where('flight','[0-9]+');
+Route::get('flight/{flight}', ['as' => 'flight.show', 'uses' => 'FlightController@show'])->where('flight','[0-9]+')->after('flatten.flight');
 
 Route::get('citypair/{departure}-{arrival}', ['as' => 'citypair', 'uses' => 'FlightController@citypair'])->where('departure','[A-Z0-9]{3,4}')->where('arrival','[A-Z0-9]{3,4}');
 

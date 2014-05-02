@@ -78,3 +78,9 @@ Route::filter('csrf', function()
 		throw new Illuminate\Session\TokenMismatchException;
 	}
 });
+
+Route::filter('flatten.flight', function($route, $request, $response) {
+	if($route->getParameter('flight')->state == 2) {
+		Flatten::end($response);
+	}
+});
