@@ -2,7 +2,14 @@
 
 var googleMapStyles = [{featureType:"transit.station.airport",stylers:[{visibility:"on"},{hue:"#2c3e50"},{saturation:10},{gamma:0.3}]},{featureType:"landscape",stylers:[{color:"#2c5a71"}]},{featureType:"water",stylers:[{color:"#2c3e50"}]},{featureType:"road",stylers:[{visibility:"off"}]},{featureType:"administrative.country",elementType:"geometry",stylers:[{visibility:"on"},{color:"#ffffff"},{weight:0.5}]},{featureType:"administrative.country",elementType:"labels",stylers:[{visibility:"on"},{color:"#FFFFFF"},{weight:0.1}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"administrative.province",stylers:[{visibility:"off"}]},{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"poi",stylers:[{visibility:"off"}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"on"},{weight:0.1},{color:"#dddddd"}]},{featureType:"transit.line",stylers:[{visibility:"off"}]}];
 
+function getMapHeight() {
+	return Math.max(400, ($(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
+}
+
 $(document).ready(function() {
+	$('.vataware-map-container').height(getMapHeight());
+	$(window).scrollTop(Math.max(400, $(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
+
 	$('tbody.rowlink').rowlink();
 
 	$('#search .searchField').popover({
@@ -14,6 +21,9 @@ $(document).ready(function() {
 		container: 'body'
 	});
 });
+
+$(window).on('beforeunload', function() { $(window).scrollTop(getMapHeight()); });
+$(window).resize(function() { $('.vataware-map-container').height(getMapHeight()); });
 
 function createPieChart(element, data, legend) {
 	if(typeof legend == 'undefined') {

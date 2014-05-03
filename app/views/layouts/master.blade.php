@@ -28,6 +28,10 @@
 </head>
 <body>
 	<div class="wrapper">
+		<div class="vataware-map-container">
+			<div id="flightRadar" class="vataware-map"></div>
+			<div class="vataware-map-stats">PILOTS ONLINE: <span style="color:#138995;">{{ $statsPilots }}</span>&nbsp; &nbsp; ATC ONLINE: <span style="color:#138995;">{{ $statsAtc }}</span></div>
+		</div>
 		{{-- Temporarily hide leader navigation --}}
 		@if(false)
 		<div class="navbar navbar-default navbar-leader">
@@ -62,7 +66,7 @@
 		@endif
 		<div class="navbar navbar-default navbar-leader">
 			<div class="container">
-				<div style="color: white; text-align: center; margin-top: 10px;">Data from the past 7 years is in the process of being imported. Please have patience. Thank you for your understanding.</div>
+				<div style="color: white; text-align: center; margin-top: 10px;"><strong>Did you know?</strong> You can scroll up for the live map</div>
 			</div>
 		</div>
 		<nav class="navbar navbar-vataware" role="navigation">
@@ -101,6 +105,7 @@
 				</div><!-- /.navbar-collapse -->
 			</div><!-- /.container-fluid -->
 		</nav>
+		@include('search.bar')
 		<div class="container">
 			{{ Messages::get() }}
 		</div>
@@ -141,6 +146,68 @@
 	<script src="{{ asset($javascript) }}"></script>
 	@endforeach
 	@endif
+	<script type="text/javascript">
+		function globalMap() {
+			var map = new google.maps.Map(document.getElementById("flightRadar"), { styles: googleMapStyles, zoom: {{ Session::has('map.zoom') ? Session::get('map.zoom') : 2 }}, center: new google.maps.LatLng({{ Session::has('map.coordinates') ? Session::get('map.coordinates') : '30, 0' }}), scrollwheel: false, streetViewControl: false, minZoom: 2, maxZoom: 14 });
+
+			var flights = [];
+			var polylines = [];
+
+			updateMap = function(firstload) {
+				if(typeof firstload == 'undefined') firstload = 0;
+				$.get('{{ URL::route('map.api') }}', {z: map.getZoom(), lat: map.getCenter().k, lon: map.getCenter().A, force: firstload}, function(data) {
+					for(i = 0; i < data.length; i++) {
+						var flight = data[i];
+						if(!(flight.id in flights)) {
+							var marker = new google.maps.Marker({ position: new google.maps.LatLng(flight.lat, flight.lon), map: map, icon: {
+									url: '{{ asset('assets/images/mapicon-red.png') }}?deg=' + flight.heading,
+									anchor: new google.maps.Point(10,10),
+									size: new google.maps.Size(20,20),
+									origin: new google.maps.Point(0,0)
+								},
+								optimized: false,
+								flightId: flight.id,
+								heading: flight.heading,
+							});
+
+							google.maps.event.addListener(marker, 'click', function() {
+								for(i=0; i < polylines.length; i++) {
+									polylines[i].setMap(null);
+								}
+								$.get('{{ URL::route('map.flight') }}', {id: this.flightId}, function(data) {
+									for (i = 0; i < data.coordinates.length - 1; i++) {
+										var flightPath = new google.maps.Polyline({
+											path: [new google.maps.LatLng(data.coordinates[i][0], data.coordinates[i][1]), new google.maps.LatLng(data.coordinates[i+1][0], data.coordinates[i+1][1])],
+											strokeColor: data.colours[i],
+											strokeOpacity: 1.0,
+											strokeWeight: 3,
+											map: map
+										});
+
+										polylines.push(flightPath);
+									}
+								});
+								
+						 	});
+
+							flights[flight.id] = marker;
+						} else {
+							flights[flight.id].setPosition(new google.maps.LatLng(flight.lat, flight.lon));
+						}
+					}
+				});
+			};
+
+			google.maps.event.addListener(map, 'idle', function() {
+				bounds = map.getBounds();
+				updateMap(1);
+			});
+
+			setInterval(updateMap, 60000);
+		}
+
+		google.maps.event.addDomListener(window, 'load', globalMap);
+	</script>
 	@yield('javascript')
 </body>
 </html>

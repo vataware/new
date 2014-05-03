@@ -5,8 +5,6 @@ class HomeController extends BaseController {
 	protected $layout = 'layouts.master';
 
 	public function index() {
-		$pilots = Cache::get('vatsim.pilots');
-		$atc = Cache::get('vatsim.atc');
 		$users = Cache::get('vatsim.users');
 		$year = Cache::get('vatsim.year');
 		$month = Cache::get('vatsim.month');
@@ -19,7 +17,7 @@ class HomeController extends BaseController {
 
 		$this->javascript('http://jqueryrotate.googlecode.com/svn/trunk/jQueryRotate.js');
 		$this->stylesheet('assets/stylesheets/map-rotate.css');
-		$this->autoRender(compact('pilots','atc','users','year','month','day','change','changeArrow','distance','flights'));
+		$this->autoRender(compact('users','year','month','day','change','changeArrow','distance','flights'));
 	}
 
 	function team() {
