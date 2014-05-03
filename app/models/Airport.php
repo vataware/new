@@ -41,4 +41,25 @@ class Airport extends Eloquent {
 		return floor($lon) . '&deg; ' . floor($minutes) . '\' ' . floor($seconds) . '" ' . $direction;
 	}
 
+	public function getTypeAttribute($value) {
+		switch($value) {
+			case 'large_airport':
+				return 'Large Airport';
+			case 'medium_airport':
+				return 'Medium Airport';
+			case 'small_airport':
+				return 'Small Airport';
+			case 'heliport':
+				return 'Heliport';
+			case 'seaplane_base':
+				return 'Seaplane Base';
+			case 'balloonport':
+				return 'Balloon Port';
+			case 'closed':
+				return 'Closed';
+			default:
+				return 'Other';
+		}
+	}
+
 }

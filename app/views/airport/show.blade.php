@@ -1,10 +1,16 @@
 @section('content')
 <div class="container">
-	<div class="page-header"><h1>{{ $airport->id }} - {{ $airport->name }}</h1></div>
+	<div class="page-header"><h1>{{ $airport->icao }} - {{ $airport->name }}</h1></div>
 	<div class="row">
 		<div class="col-md-3 hidden-xs hidden-sm">
 			<h4 class="section-header">Location</h4>
 			<table class="table table-condensed table-striped">
+				@if(!is_null($airport->iata))
+				<tr>
+					<th>IATA</th>
+					<td>{{ $airport->iata }}</td>
+				</tr>
+				@endif
 				<tr>
 					<th>City</th>
 					<td>{{ $airport->city }}</td>
@@ -24,6 +30,10 @@
 				<tr>
 					<th>Elevation</th>
 					<td>{{ $airport->elevation }} ft</td>
+				</tr>
+				<tr>
+					<th>Type</th>
+					<td>{{ $airport->type }}</td>
 				</tr>
 			</table>
 		</div>
