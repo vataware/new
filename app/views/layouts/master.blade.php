@@ -148,7 +148,7 @@
 	@endif
 	<script type="text/javascript">
 		function globalMap() {
-			var map = new google.maps.Map(document.getElementById("flightRadar"), { styles: googleMapStyles, zoom: {{ Session::has('map.zoom') ? Session::get('map.zoom') : 2 }}, center: new google.maps.LatLng({{ Session::has('map.coordinates') ? Session::get('map.coordinates') : '30, 0' }}), scrollwheel: false, streetViewControl: false, minZoom: 2, maxZoom: 14 });
+			var map = new google.maps.Map(document.getElementById("flightRadar"), { styles: googleMapStyles, zoom: {{ Session::has('map.zoom') ? Session::get('map.zoom') : 2 }}, center: new google.maps.LatLng({{ Session::has('map.coordinates') ? Session::get('map.coordinates') : '30, 0' }}), streetViewControl: false, minZoom: 2, maxZoom: 14 });
 
 			var flights = [];
 			var polylines = [];

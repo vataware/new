@@ -10,6 +10,12 @@ $(document).ready(function() {
 	$('.vataware-map-container').height(getMapHeight());
 	$(window).scrollTop(Math.max(400, $(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
 
+	$('.vataware-map-container').hover(function() {
+		$('body').css('overflow','hidden');
+	}, function() {
+		$('body').css('overflow','scroll');
+	});
+
 	$('tbody.rowlink').rowlink();
 
 	$('#search .searchField').popover({
