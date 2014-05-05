@@ -87,6 +87,7 @@ class VatawareUpdateCommand extends Command {
 		$datas = $this->getVatsimPilots();
 		$this->processPilots($datas);
 		unset($datas);
+		Queue::push('DatafeedClean', null, 'datafeed');
 
 		$thisYear = Flight::where('startdate','LIKE',date('Y') . '%')->count();
 		$lastYear = Flight::where('startdate','LIKE',date('Y',strtotime('last year')) . '%')->count();
@@ -232,12 +233,23 @@ class VatawareUpdateCommand extends Command {
 		unset($pilot);
 	}
 
-	function proximity($latitude, $longitude, $range = 20) {
+	function proximity($latitude, $longitude, $range = null, $expects = null) {
+		if(is_null($range)) $range = 20;
 		if(empty($latitude) || empty($longitude)) return null;
-		return Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
+		$airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
 			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
 			->orderBy('distance','asc')
-			->first();
+			->get();
+
+		if(!is_null($expects)) {
+			$expected = $airports->first(function($airport) use ($expects) {
+				return ($airport->icao == $expects);
+			});
+
+			if(!is_null($expected)) return $expected;
+		}
+		
+		return $airports->first();
 	}
 
 	function extractAircraft($code) {
@@ -257,34 +269,31 @@ class VatawareUpdateCommand extends Command {
 		$callsigns = array_pluck($data, 'callsign');
 		$callsigns = array_combine($callsigns, $data);
 		$updateDate = $this->updateDate;
-		$flights = Flight::where('state','!=',2)->with('lastPosition')->get();
+		$flights = Flight::where('state','!=',2)->whereMissing(false)->with('lastPosition')->get();
 		Log::info('vataware:update - found ' . $flights->count() . ' flights in database');
 		foreach($flights as $flight) {
-			if(is_null($flight->lastPosition)) {
-				$flight->delete();
-			} elseif(!array_key_exists($flight->callsign, $callsigns)) {
-			// flight missing
-				if($flight->missing && Carbon::now()->diffInMinutes($flight->lastPosition->updated_at) >= 60) {
-					// no record of last position
-					$flight->delete();
-				} else {
-					// flight has been missing for less than an hour
-					$flight->missing = true;
+			if(!array_key_exists($flight->callsign, $callsigns)) {
+				// flight has been missing for less than an hour
+				$flight->missing = true;
 
-					if($flight->isAirborne() || $flight->isArriving()) {
-					// Airborne or near arrival
-						$nearby = $this->proximity($flight->last_lat, $flight->last_lon);
-						if(!is_null($nearby) && $this->altitudeRange($flight->lastPosition->altitude, $nearby->elevation) && $flight->lastPosition->groundspeed < 30) {
-							// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
-							$flight->stateArrived();
-							$flight->arrival_time = $flight->lastPosition->time;
-							$flight->setArrival($nearby);
-							$flight->missing = false;
-						}
-					}
-
-					$flight->save();
+				if($flight->last_lat != $flight->lastPosition->lat || $flight->last_lon != $flight->lastPosition->lon) {
+					$flight->last_lat = $flight->lastPosition->lat;
+					$flight->last_lon = $flight->lastPosition->lon;
 				}
+
+				if($flight->isAirborne() || $flight->isArriving()) {
+				// Airborne or near arrival
+					$nearby = $this->proximity($flight->last_lat, $flight->last_lon, null, $flight->arrival_id);
+					if(!is_null($nearby) && ($this->altitudeRange($flight->lastPosition->altitude, $nearby->elevation) || $nearby->elevation > $flight->lastPosition->altitude) && $flight->lastPosition->groundspeed < 30) {
+						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
+						$flight->stateArrived();
+						$flight->arrival_time = $flight->lastPosition->updated_at;
+						$flight->setArrival($nearby);
+						$flight->missing = false;
+					}
+				}
+
+				$flight->save();
 			} else {
 				$data = $callsigns[$flight->callsign];
 				if(is_null($flight->lastPosition)) $this->positionReport($data, $flight->id);
@@ -293,8 +302,8 @@ class VatawareUpdateCommand extends Command {
 				{
 					$flight->duration = $this->duration($flight->departure_time, $updateDate);
 
-					$nearby = $this->proximity($data['latitude'], $data['longitude']);
-					if(!is_null($nearby) && $this->altitudeRange($data['altitude'], $nearby->elevation) && $data['groundspeed'] < 30) {
+					$nearby = $this->proximity($data['latitude'], $data['longitude'], null, $flight->arrival_id);
+					if(!is_null($nearby) && ($this->altitudeRange($data['altitude'], $nearby->elevation) || $nearby->elevation > $data['altitude']) && $data['groundspeed'] < 30) {
 						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
 						$flight->stateArriving();
 					}
@@ -303,8 +312,8 @@ class VatawareUpdateCommand extends Command {
 				elseif($flight->isArriving())
 				{
 					$flight->duration = $this->duration($flight->departure_time, $updateDate);
-					$nearby = $this->proximity($data['latitude'], $data['longitude']);
-					if(!is_null($nearby) && $this->altitudeRange($data['altitude'], $nearby->elevation) && $data['groundspeed'] < 30) {
+					$nearby = $this->proximity($data['latitude'], $data['longitude'], null, $flight->arrival_id);
+					if(!is_null($nearby) && ($this->altitudeRange($data['altitude'], $nearby->elevation) || $nearby->elevation > $data['altitude']) && $data['groundspeed'] < 30) {
 						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
 						$flight->stateArrived();
 						$flight->arrival_time = $updateDate;
@@ -444,7 +453,7 @@ class VatawareUpdateCommand extends Command {
 		foreach($controllers as $controller) {
 			if(!array_key_exists($controller->callsign, $callsigns)) {
 			// controller missing
-				if(Carbon::now()->diffInMinutes($controller->time) >= 5) {
+				if(Carbon::now()->diffInMinutes($controller->time) >= 10) {
 					// no record of last position
 					$controller->end = $controller->time;
 				} else {

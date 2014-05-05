@@ -155,6 +155,7 @@
 
 			updateMap = function(firstload) {
 				if(typeof firstload == 'undefined') firstload = 0;
+				if(!isVisible($('.vataware-map-container')) && firstload == 0) return;
 				$.get('{{ URL::route('map.api') }}', {z: map.getZoom(), lat: map.getCenter().k, lon: map.getCenter().A, force: firstload}, function(data) {
 					for(i = 0; i < data.length; i++) {
 						var flight = data[i];

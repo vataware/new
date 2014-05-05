@@ -6,7 +6,18 @@ function getMapHeight() {
 	return Math.max(400, ($(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
 }
 
+function isVisible(elem) {
+	var docViewTop = $(window).scrollTop();
+	var docViewBottom = docViewTop + $(window).height();
+
+	var elemTop = $(elem).offset().top;
+	var elemBottom = elemTop + $(elem).height();
+
+	return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
+}
+
 $(document).ready(function() {
+	$('body').css('margin-top', '0px');
 	$('.vataware-map-container').height(getMapHeight());
 	$(window).scrollTop(Math.max(400, $(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
 
