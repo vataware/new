@@ -2,7 +2,7 @@
 <div class="container">
 	<div class="page-header"><h1>{{ $airport->icao }} - {{ $airport->name }}</h1></div>
 	<div class="row">
-		<div class="col-md-3 hidden-xs hidden-sm">
+		<div class="col-md-3">
 			<h4 class="section-header">Location</h4>
 			<table class="table table-condensed table-striped">
 				@if(!is_null($airport->iata))
@@ -37,41 +37,65 @@
 				</tr>
 			</table>
 		</div>
-		<div class="col-md-9">
-			<div class="row">
-				<div class="col-md-6">
-					<h4 class="section-header">Outbound flights <img src="{{ asset('assets/images/flightstates/departing.png') }}"></h4>
-					<table class="table table-striped table-hover">
-						<tbody class="rowlink" data-link="row">
-							@foreach($departures as $departure)
-							<tr>
-								<td><a href="{{ URL::route('flight.show', $departure->id) }}">{{ $departure->callsign }}</a></td>
-								<td>
-									<img src="{{ flag($departure->arrival_country_id) }}">&nbsp;{{ $departure->arrival_id }} - {{ $departure->arrival->city ? $departure->arrival->city . ', ' : '' }}{{ $departure->arrival->country->country }}<br />
-									<em>{{ $departure->pilot->name }}</em>
-								</td>
-							</tr>
-							@endforeach
-						</tbody>
-					</table>
-				</div>
-				<div class="col-md-6">
-					<h4 class="section-header">Inbound flights <img src="{{ asset('assets/images/flightstates/arrived.png') }}"></h4>
-					<table class="table table-striped table-hover">
-						<tbody class="rowlink" data-link="row">
-							@foreach($arrivals as $arrival)
-							<tr>
-								<td><a href="{{ URL::route('flight.show', $arrival->id) }}">{{ $arrival->callsign }}</a></td>
-								<td>
-									<img src="{{ flag($arrival->departure_country_id) }}">&nbsp;{{ $arrival->departure_id }} - {{ $arrival->departure->city ? $arrival->departure->city . ', ' : '' }}{{ $arrival->departure->country->country }}<br />
-									<em>{{ $arrival->pilot->name }}</em>
-								</td>
-							</tr>
-							@endforeach
-						</tbody>
-					</table>
-				</div>
-			</div>
+		<div class="col-md-6">
+			<h4 class="section-header">Weather</h4>
+			<h5>METAR</h5>
+			@if(!is_null($metar))
+			<pre>{{ $metar }}</pre>
+			@else
+			No METAR available
+			@endif
+			<h5>TAF</h5>
+			@if(!is_null($taf))
+			<pre>{{ $taf }}</pre>
+			@else
+			No TAF available
+			@endif
+		</div>
+		<div class="col-md-3">
+			<h4 class="section-header">Runways</h4>
+			<table class="table table-condensed table-striped">
+				@foreach($airport->runways as $runway)
+				<tr>
+					<th>{{ $runway->ident_a }}{{ !empty($runway->ident_b) ? '/' . $runway->ident_b : '' }}</th>
+					<td>{{ $runway->length }} ft / {{ $runway->width }} ft</td>
+				</tr>
+				@endforeach
+			</table>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+			<h4 class="section-header">Outbound flights <img src="{{ asset('assets/images/flightstates/departing.png') }}"></h4>
+			<table class="table table-striped table-hover">
+				<tbody class="rowlink" data-link="row">
+					@foreach($departures as $departure)
+					<tr>
+						<td><a href="{{ URL::route('flight.show', $departure->id) }}">{{ $departure->callsign }}</a></td>
+						<td>
+							<img src="{{ flag($departure->arrival_country_id) }}">&nbsp;{{ $departure->arrival_id }} - {{ $departure->arrival->city ? $departure->arrival->city . ', ' : '' }}{{ $departure->arrival->country->country }}<br />
+							<em>{{ $departure->pilot->name }}</em>
+						</td>
+					</tr>
+					@endforeach
+				</tbody>
+			</table>
+		</div>
+		<div class="col-md-6">
+			<h4 class="section-header">Inbound flights <img src="{{ asset('assets/images/flightstates/arrived.png') }}"></h4>
+			<table class="table table-striped table-hover">
+				<tbody class="rowlink" data-link="row">
+					@foreach($arrivals as $arrival)
+					<tr>
+						<td><a href="{{ URL::route('flight.show', $arrival->id) }}">{{ $arrival->callsign }}</a></td>
+						<td>
+							<img src="{{ flag($arrival->departure_country_id) }}">&nbsp;{{ $arrival->departure_id }} - {{ $arrival->departure->city ? $arrival->departure->city . ', ' : '' }}{{ $arrival->departure->country->country }}<br />
+							<em>{{ $arrival->pilot->name }}</em>
+						</td>
+					</tr>
+					@endforeach
+				</tbody>
+			</table>
 		</div>
 	</div>
 </div>

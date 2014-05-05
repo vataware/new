@@ -16,11 +16,17 @@ function isVisible(elem) {
 	return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
-$(document).ready(function() {
+$(window).load(function() {
 	$('body').css('margin-top', '0px');
 	$('.vataware-map-container').height(getMapHeight());
 	$(window).scrollTop(Math.max(400, $(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
+	if($(document).height() - $('.vataware-map-container').height() < $(window).height()) {
+		$('footer').outerHeight("+=" + Math.max(0, $('.vataware-map-container').height() - $(window).scrollTop()));
+	}
+	$(window).scrollTop(Math.max(400, $(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
+});
 
+$(document).ready(function() {
 	$('.vataware-map-container').hover(function() {
 		$('body').css('overflow','hidden');
 	}, function() {

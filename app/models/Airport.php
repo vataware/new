@@ -21,6 +21,11 @@ class Airport extends Eloquent {
 		return $this->hasMany('Flight', 'arrival_id', 'icao');
 	}
 
+	public function runways()
+	{
+		return $this->hasMany('Runway', 'airport_id', 'icao');
+	}
+
 	public function getLatSAttribute() {
 		$direction = ($this->lat > 0) ? 'N' : 'S';
 

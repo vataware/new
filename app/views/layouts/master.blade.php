@@ -27,11 +27,11 @@
 	@endif
 </head>
 <body>
-	<div class="wrapper">
-		<div class="vataware-map-container">
-			<div id="flightRadar" class="vataware-map"></div>
-			<div class="vataware-map-stats">PILOTS ONLINE: <span style="color:#138995;">{{ $statsPilots }}</span>&nbsp; &nbsp; ATC ONLINE: <span style="color:#138995;">{{ $statsAtc }}</span></div>
-		</div>
+	<div class="vataware-map-container">
+		<div id="flightRadar" class="vataware-map"></div>
+		<div class="vataware-map-stats">PILOTS ONLINE: <span style="color:#138995;">{{ $statsPilots }}</span>&nbsp; &nbsp; ATC ONLINE: <span style="color:#138995;">{{ $statsAtc }}</span></div>
+	</div>
+	<section class="wrapper">
 		{{-- Temporarily hide leader navigation --}}
 		@if(false)
 		<div class="navbar navbar-default navbar-leader">
@@ -110,8 +110,8 @@
 			{{ Messages::get() }}
 		</div>
 		@yield('content')
-	</div>
-	<div class="footer">
+	</section>
+	<footer class="footer">
 		<div class="container">
 			<div class="col-lg-12" style="margin-top:20px;">
 				<div class="pull-right" style="font-size:29px; position:absolute; right:0;">
@@ -122,7 +122,7 @@
 				<small>version 1.0-{{ $build }}</small>
 			</div>
 		</div>
-	</div>
+	</footer>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 	<script src="{{ asset('assets/javascript/bootstrap.min.js') }}"></script>
