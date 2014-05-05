@@ -4,16 +4,41 @@ class LegacyUpdateAirline {
 	
 	protected $registrations = null;
 
-	function fire($job, $data) {
-		Log::info('queue:legacy - started airline ' . $data['airline'] . ' for year ' . $data['year']);
+	protected $take = 90;
 
-		$flights = Flight::where('callsign','LIKE',$data['airline'] . '%')->whereState(2)->where('startdate','LIKE',$data['year'] . '%')->whereProcessed(false)->get();
+	function fire($job, $data) {		
+		Log::info('queue:legacy[' . $job->getJobId() . '] - started airline ' . $data['airline']);
+
+		$running = Cache::get('legacy.airlines.' . $data['airline'], false);
+		if($running != $job->getJobId() && $running !== false) {
+			Log::info('queue:legacy[' . $job->getJobId() . '] - already running ' . $data['airline']);
+			Cache::forget('legacy.airlines.' . $data['airline']);
+			$job->delete();
+			return;
+		} else {
+			Cache::forever('legacy.airlines.' . $data['airline'], $job->getJobId());
+		}
+
+		$flights = Flight::where('callsign','LIKE',$data['airline'] . '%')->whereState(2)->whereProcessed(false)->take($this->take)->get();
 
 		$totalFlights = $flights->count();
-		Log::info('queue:legacy[' . $data['airline'] . '] - flights: ' . $flights->count());
+		Log::info('queue:legacy[' . $job->getJobId() . '] - flights: ' . $flights->count());
 
-		foreach($flights as $flight) {
+		if($flights->count() == 0) {
+			Log::info('queue:legacy[' . $job->getJobId() . '] - no more flights for ' . $data['airline']);
+			$airline = Airline::whereIcao($data['airline'])->first();
+			$airline->duration = $airline->flights()->whereState(2)->sum('duration');
+			$airline->save();
+			return $this->finishJob($job, $data['airline']);
+		}
 
+		$job->delete();
+
+		if($job->attempts() > 1) {
+			return;
+		}
+
+		foreach($flights as $i => $flight) {
 			$callsign = str_replace('-','',strtoupper($flight->callsign));
 			if(preg_match('/^' . $data['airline'] . '[0-9]{1,5}[A-Z]{0,2}$/', $flight->callsign)) { // Airline
 				$flight->isAirline($data['airline']);
@@ -37,14 +62,14 @@ class LegacyUpdateAirline {
 			$flight->processed = true;
 			$flight->save();
 
-			unset($flight, $distance, $previous);
+			unset($flight, $distance, $previous, $i);
 		}
 
 		unset($flights);
 
-		Log::info('queue:legacy - finished airline ' . $data['airline'] . ' (' . $data['year'] . ') for ' . $totalFlights . ' flights');
-
-		$job->delete();
+		Log::info('queue:legacy[' . $job->getJobId() . '] - finished airline ' . $data['airline']);
+		Cache::forget('legacy.airlines.' . $data['airline']);
+		Queue::push('LegacyUpdateAirline', $data, 'legacy');
 	}
 
 	function duration($start, $now) {
@@ -67,6 +92,15 @@ class LegacyUpdateAirline {
 			});
 
 		return $this->registrations;
+	}
+
+	function finishJob($job, $airline) {
+		$airlines = Cache::get('legacy.airlines', array());
+		$airlines[] = $airline;
+		Cache::forever('legacy.airlines', $airlines);
+
+		$job->delete();
+		return;
 	}
 
 }

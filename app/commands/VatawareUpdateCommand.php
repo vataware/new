@@ -151,7 +151,7 @@ class VatawareUpdateCommand extends Command {
 	}
 
 	function getAirports($icao = null) {
-		if(is_null($this->airports)) $this->airports = Airport::lists('country_id','id');
+		if(is_null($this->airports)) $this->airports = Airport::lists('country_id','icao');
 
 		if(!is_null($icao)) 
 			return array_key_exists($icao, $this->airports) ? $this->airports[$icao] : '';
@@ -204,7 +204,6 @@ class VatawareUpdateCommand extends Command {
 		// $position->ground_elevation = 
 		
 		$position->update_id = $this->updateId;
-		$position->time = $this->updateDate;
 
 		$position->save();
 

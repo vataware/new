@@ -26,19 +26,22 @@ class AirlineController extends BaseController {
 			->orderBy('departure_time','desc')
 			->take(25)->remember(15)->get();
 		
-		$totalDuration = $airline->flights()->whereState(2)->remember(120)->sum('duration');
+		if($airline->duration == 0) {
+			$airline->duration = $airline->flights()->whereState(2)->remember(120)->sum('duration');
+			$airline->save();
+		}
 
-		if($totalDuration > 0) {
+		if($airline->duration > 0) {
 			$pilots = $airline->flights()
 				->whereState(2)
 				->leftJoin('pilots','flights.vatsim_id','=','pilots.vatsim_id')
 				->select('pilots.*', DB::raw('SUM(flights.duration) AS duration'))
 				->orderBy('duration','desc')->groupBy('flights.vatsim_id')
 				->take(5)->remember(120)->get()
-				->transform(function($pilot) use ($totalDuration) {
-					return array('name' => $pilot->name, 'duration' => $pilot->duration, 'percent' => number_format($pilot->duration/$totalDuration * 100, 1));
+				->transform(function($pilot) use ($airline) {
+					return array('name' => $pilot->name, 'duration' => $pilot->duration, 'percent' => number_format($pilot->duration/$airline->duration * 100, 1));
 				});
-			$pilots->add(array('name' => 'Others', 'duration' => ($totalDuration - $pilots->sum('duration')), 'percent' => number_format(($totalDuration - $pilots->sum('duration'))/$totalDuration * 100, 1)));
+			$pilots->add(array('name' => 'Others', 'duration' => ($airline->duration - $pilots->sum('duration')), 'percent' => number_format(($airline->duration - $pilots->sum('duration'))/$airline->duration * 100, 1)));
 			$pilots = $pilots->toArray();
 			foreach($pilots as &$pilot) {
 				$pilot = array($pilot['name'], $pilot['duration']);
@@ -50,11 +53,11 @@ class AirlineController extends BaseController {
 				->select('aircraft_id', DB::raw('SUM(duration) AS duration'))
 				->orderBy('duration','desc')->groupBy('aircraft_id')
 				->take(5)->remember(120)->get()
-				->transform(function($aircraft) use ($totalDuration) {
-					return array('name' => $aircraft->aircraft->implode('name','<br />'), 'duration' => $aircraft->duration, 'percent' => number_format($aircraft->duration/$totalDuration * 100, 1));
+				->transform(function($aircraft) use ($airline) {
+					return array('name' => $aircraft->aircraft->implode('name','<br />'), 'duration' => $aircraft->duration, 'percent' => number_format($aircraft->duration/$airline->duration * 100, 1));
 				});
 
-			$aircraft->add(array('name' => 'Other', 'duration' => ($totalDuration - $aircraft->sum('duration')), 'percent' => number_format(($totalDuration - $aircraft->sum('duration'))/$totalDuration * 100, 1)));
+			$aircraft->add(array('name' => 'Other', 'duration' => ($airline->duration - $aircraft->sum('duration')), 'percent' => number_format(($airline->duration - $aircraft->sum('duration'))/$airline->duration * 100, 1)));
 			$aircraft = $aircraft->toArray();
 			foreach($aircraft as &$airplane) {
 				$airplane = array($airplane['name'], $airplane['duration']);
@@ -67,14 +70,9 @@ class AirlineController extends BaseController {
 		$pilots = piechartData($pilots)['javascript'];
 		$aircraft = piechartData($aircraft)['javascript'];
 
-		$airlines = Cache::get('legacy.airlines', array());
-		if(!in_array($airline->icao, $airlines)) {
-			for($i = 2007; $i <= 2014; $i++) {
-				Queue::push('LegacyUpdateAirline', array('airline' => $airline->icao, 'year' => $i), 'legacy');
-			}
-			$airlines[] = $airline->icao;
-			Cache::forever('legacy.airlines', $airlines);
-			Messages::warning('Data for this airline may be missing. It is being processed by year.')->one();
+		if(!in_array($airline->icao, Cache::get('legacy.airlines', []))) {
+			Queue::push('LegacyUpdateAirline', array('airline' => $airline->icao), 'legacy');
+			Messages::warning('Data for this airline may be missing. It is being processed by year. Depending on the popularity of the airline, it could take minutes to hours before it is done.')->one();
 		}
 
 		$this->javascript('assets/javascript/jquery.flot.min.js');

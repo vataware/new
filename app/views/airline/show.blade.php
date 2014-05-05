@@ -59,7 +59,7 @@
 			<tr>
 				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a></td>
 				<td>{{ $flight->aircraft_id }}</td>
-				<td class="rowlink-skip"><a href="{{ URL::route('pilot.show', $flight->vatsim_id) }}">{{ $flight->pilot->name }}</a></td>
+				<td class="rowlink-skip"><a href="{{ URL::route('pilot.show', $flight->vatsim_id) }}">{{ $flight->name }}</a></td>
 				<td>
 					@if($flight->departure)
 					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->icao }} {{ $flight->departure->city }}

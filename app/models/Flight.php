@@ -152,12 +152,12 @@ class Flight extends Eloquent {
 	}
 
 	function setDeparture(Airport $airport) {
-		$this->attributes['departure_id'] = $airport->id;
+		$this->attributes['departure_id'] = $airport->icao;
 		$this->attributes['departure_country_id'] = $airport->country_id;
 	}
 
 	function setArrival(Airport $airport) {
-		$this->attributes['arrival_id'] = $airport->id;
+		$this->attributes['arrival_id'] = $airport->icao;
 		$this->attributes['arrival_country_id'] = $airport->country_id;
 	}
 
