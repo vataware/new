@@ -32,8 +32,9 @@ class SearchController extends BaseController {
 		$pilots = Pilot::where('vatsim_id','=',$q)->orWhere('name','LIKE','%' . $q . '%')->where('vatsim_id','!=',0)->get();
 		$flights = Flight::where('callsign','=',$q)->orderBy('departure_time','desc')->get();
 		$airlines = Airline::where('icao','=',$q)->orWhere('name','LIKE','%' . $q . '%')->get();
+		$airports = Airport::where('icao','=',$q)->orWhere('iata','=',$q)->orWhere('name','LIKE','%' . $q . '%')->orWhere('city','LIKE','%' . $q . '%')->get();
 
-		$this->autoRender(compact('q','flights','pilots','airlines'), 'Search');
+		$this->autoRender(compact('q','flights','pilots','airlines','airports'), 'Search');
 	}
 
 }

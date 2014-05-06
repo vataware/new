@@ -45,7 +45,9 @@ $(document).ready(function() {
 	});
 });
 
-$(window).on('beforeunload', function() { $(window).scrollTop(getMapHeight()); });
+if($(window).scrollTop() < $('.vataware-map-container').height()) {
+	$(window).on('beforeunload', function() { $(window).scrollTop(getMapHeight()); });
+}
 $(window).resize(function() { $('.vataware-map-container').height(getMapHeight()); });
 
 function createPieChart(element, data, legend) {

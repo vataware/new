@@ -205,6 +205,16 @@
 			});
 
 			setInterval(updateMap, 60000);
+
+			google.maps.event.addDomListener(window, 'scroll', function() {
+				if($(window).scrollTop() <= 0) {
+					map.setOptions({ scrollwheel: true });
+					$('body').css('overflow','hidden');
+				} else {
+					map.setOptions({ scrollwheel: false });
+					$('body').css('overflow','scroll');
+				}
+			});
 		}
 
 		google.maps.event.addDomListener(window, 'load', globalMap);

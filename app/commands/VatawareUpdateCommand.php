@@ -242,7 +242,7 @@ class VatawareUpdateCommand extends Command {
 			->get();
 
 		if(!is_null($expects)) {
-			$expected = $airports->first(function($airport) use ($expects) {
+			$expected = $airports->first(function($key, $airport) use ($expects) {
 				return ($airport->icao == $expects);
 			});
 
@@ -290,6 +290,11 @@ class VatawareUpdateCommand extends Command {
 						$flight->arrival_time = $flight->lastPosition->updated_at;
 						$flight->setArrival($nearby);
 						$flight->missing = false;
+						
+						$flight->pilot->distance += $flight->distance;
+						$flight->pilot->duration += $flight->duration;
+						$flight->pilot->counter++;
+						$flight->pilot->save();
 					}
 				}
 
@@ -372,6 +377,13 @@ class VatawareUpdateCommand extends Command {
 					$flight->last_lon = $data['longitude'];
 				}
 				
+				if($flight->isArrived()) {
+					$flight->pilot->distance += $flight->distance;
+					$flight->pilot->duration += $flight->duration;
+					$flight->pilot->counter++;
+					$flight->pilot->save();
+				}
+
 				// Ensure flight is not marked as missing
 				$flight->missing = false;
 				

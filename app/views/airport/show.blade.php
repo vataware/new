@@ -73,8 +73,12 @@
 					<tr>
 						<td><a href="{{ URL::route('flight.show', $departure->id) }}">{{ $departure->callsign }}</a></td>
 						<td>
-							<img src="{{ flag($departure->arrival_country_id) }}">&nbsp;{{ $departure->arrival_id }} - {{ $departure->arrival->city ? $departure->arrival->city . ', ' : '' }}{{ $departure->arrival->country->country }}<br />
-							<em>{{ $departure->pilot->name }}</em>
+							@if(!is_null($departure->arrival))
+							<img src="{{ flag($departure->arrival_country_id) }}">&nbsp;{{ $departure->arrival_id }} - {{ $departure->arrival->city ? $departure->arrival->city . ', ' : '' }}{{ $departure->arrival->country->country }}
+							@else
+							{{ $departure->arrival_id }}
+							@endif
+							<br /><em>{{ $departure->pilot->name }}</em>
 						</td>
 					</tr>
 					@endforeach
@@ -89,8 +93,12 @@
 					<tr>
 						<td><a href="{{ URL::route('flight.show', $arrival->id) }}">{{ $arrival->callsign }}</a></td>
 						<td>
-							<img src="{{ flag($arrival->departure_country_id) }}">&nbsp;{{ $arrival->departure_id }} - {{ $arrival->departure->city ? $arrival->departure->city . ', ' : '' }}{{ $arrival->departure->country->country }}<br />
-							<em>{{ $arrival->pilot->name }}</em>
+							@if(!is_null($arrival->departure))
+							<img src="{{ flag($arrival->departure_country_id) }}">&nbsp;{{ $arrival->departure_id }} - {{ $arrival->departure->city ? $arrival->departure->city . ', ' : '' }}{{ $arrival->departure->country->country }}
+							@else
+							{{ $arrival->departure_id }}
+							@endif
+							<br /><em>{{ $arrival->pilot->name }}</em>
 						</td>
 					</tr>
 					@endforeach
