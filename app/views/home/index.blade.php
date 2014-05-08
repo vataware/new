@@ -1,4 +1,7 @@
 @section('content')
+<div id="banners">
+	<div class="banner" id="competition-may" style="background-image: url(http://vataware.dev/assets/images/banners/competition-may.jpg);"></div>
+</div>
 <div class="container"><br /><br />
 	<div class="tiles" style="text-align: center;">
 		<a href="#" class="tile" style="background-color:#138995;">

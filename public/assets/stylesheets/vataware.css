@@ -472,3 +472,13 @@ a:hover.tiles
 .chart-legend {
 	padding-left: 5px;
 }
+
+#banners .banner {
+	background-size: auto 100%;
+	background-position: center center;
+}
+
+#banners .banner { height: 197px; }
+@media(min-width: 768px) { #banners .banner { height: 254px; } }
+@media(min-width: 992px) { #banners .banner { height: 330px; } }
+@media(min-width: 1200px) { #banners .banner { height: 400px; } }
