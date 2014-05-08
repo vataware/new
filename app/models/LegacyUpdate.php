@@ -20,12 +20,14 @@ class LegacyUpdate {
 			$pilot->rating_id = $official['rating'];
 		} catch(ErrorException $e) {}
 
+		$newFlights = array();
+
 		$flights = Flight::whereVatsimId($pilot->vatsim_id)->whereState(2)->get();
 		$totalDistance = 0;
 		$totalDuration = 0;
 		$totalFlights = $flights->count();
 		foreach($flights as $flight) {
-			if($flight->processed) {
+			if($flight->processed == 1) {
 				$totalDistance += $flight->distance;
 				$totalDuration += $flight->duration;
 			} else {
@@ -52,19 +54,57 @@ class LegacyUpdate {
 					$previous = $position;
 				}
 				$flight->distance = $distance;
-				$flight->processed = true;
-				$flight->save();
+				// $flight->processed = true;
+				// $flight->save();
 				if(!is_nan($distance)) $totalDistance += $distance;
 				unset($distance, $previous);
 			}
+
+			$newFlights[] = array('id' => $flight->id, 'duration' => $flight->duration, 'distance' => $flight->distance, 'airline_id' => $flight->airline_id, 'callsign_type' => $flight->callsign_type);
 			unset($flight);
 		}
 
 		unset($flights);
 
+		Log::info('queue:legacy[' . $job->getJobId() . '] - processed flights');
+
+		DB::statement("create temporary table if not exists flights_temp (
+			`id` int(10) unsigned NOT NULL,
+			`callsign_type` tinyint(1) NOT NULL DEFAULT '0',
+			`airline_id` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+			`duration` smallint(6) NOT NULL DEFAULT '0',
+			`distance` smallint(6) NOT NULL DEFAULT '0',
+			PRIMARY KEY (`id`)
+		)");
+
+		Log::info('queue:legacy[' . $job->getJobId() . '] - created temp table flights');
+
+		$remaining = count($newFlights);
+		$step = 0;
+		do {
+			Log::info('queue:legacy[' . $job->getJobId() . '] - inserted flights - ' . $remaining);
+			DB::table('flights_temp')->insert(array_slice($newFlights, 100 * $step, 100));
+			$remaining -= 100;
+			$step++;
+		} while($remaining > 0);
+
+		Log::info('queue:legacy[' . $job->getJobId() . '] - inserted flights - done');
+
+		DB::statement("update flights dest, flights_temp src set
+			dest.callsign_type = src.callsign_type,
+			dest.airline_id = src.airline_id,
+			dest.duration = src.duration,
+			dest.distance = src.distance,
+			dest.processed = 1
+		where dest.id = src.id
+		");
+
+		Log::info('queue:legacy[' . $job->getJobId() . '] - updated flights');
+
 		$atcs = ATC::whereVatsimId($vatsim_id)->whereNotNull('end')->get();
 		$totalDurationAtc = 0;
 		$totalAtc = $atcs->count();
+		$newAtc = array();
 		foreach($atcs as $atc) {
 			if($atc->processed) {
 				if($atc->facility_id != 99) $totalDurationAtc += $atc->duration;
@@ -88,13 +128,50 @@ class LegacyUpdate {
 					$totalAtc--;
 				}
 
-				$atc->processed = true;
-				$atc->save();
+				// $atc->processed = true;
+				// $atc->save();
 			}
+
+			$newAtc[] = array('id' => $atc->id, 'airport_id' => $atc->airport_id, 'sector_id' => $atc->sector_id, 'duration' => $atc->duration, 'facility_id' => $atc->facility_id);
 
 			unset($atc);
 		}
 		unset($atcs);
+
+		Log::info('queue:legacy[' . $job->getJobId() . '] - processed atc');
+
+		DB::statement("create temporary table if not exists atc_temp (
+			`id` int(10) unsigned NOT NULL,
+			`facility_id` smallint(6) unsigned NOT NULL,
+			`airport_id` varchar(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+			`sector_id` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+			`duration` smallint(6) NOT NULL DEFAULT '0',
+			PRIMARY KEY (`id`)
+		)");
+
+		Log::info('queue:legacy[' . $job->getJobId() . '] - created temp table atc');
+
+		$remaining = count($newAtc);
+		$step = 0;
+		do {
+			Log::info('queue:legacy[' . $job->getJobId() . '] - inserted atc - ' . $remaining);
+			DB::table('atc_temp')->insert(array_slice($newAtc, 100 * $step, 100));
+			$remaining -= 100;
+			$step++;
+		} while($remaining > 0);
+
+		Log::info('queue:legacy[' . $job->getJobId() . '] - inserted atc - done');
+
+		DB::statement("update atc dest, atc_temp src set
+			dest.duration = src.duration,
+			dest.facility_id = src.facility_id,
+			dest.airport_id = src.airport_id,
+			dest.sector_id = src.sector_id,
+			dest.processed = 1
+		where dest.id = src.id
+		");
+
+		Log::info('queue:legacy[' . $job->getJobId() . '] - updated atc');
 
 		$pilot->processing = 1;
 		$pilot->distance = $totalDistance;

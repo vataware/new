@@ -2,8 +2,8 @@
 
 $build = substr(File::get(base_path() . '/.git/' . trim(substr(File::get(base_path() . '/.git/HEAD'), 5))),0,7);
 View::share('build', $build);
-View::share('statsPilots', Cache::get('vatsim.pilots'));
-View::share('statsAtc', Cache::get('vatsim.atc'));
+View::share('statsPilots', DbConfig::get('vatsim.pilots'));
+View::share('statsAtc', DbConfig::get('vatsim.atc'));
 
 function flag($code) {
 	return asset('assets/images/flags/' . $code . '.png');

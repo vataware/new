@@ -55,8 +55,8 @@ class VatawareUpdateCommand extends Command {
 	{
 		Log::info('vataware:update - start script');
 
-		if(Cache::has('vatsim.nextupdate') && Carbon::now()->lt(Cache::get('vatsim.nextupdate'))) {
-			Log::info('vataware:update - terminating execution - no new data yet (current time: ' . Carbon::now() . ', expeting at: ' . Cache::get('vatsim.nextupdate') . ')');
+		if(DbConfig::has('vatsim.nextupdate') && Carbon::now()->lt(DbConfig::get('vatsim.nextupdate'))) {
+			Log::info('vataware:update - terminating execution - no new data yet (current time: ' . Carbon::now() . ', expeting at: ' . DbConfig::get('vatsim.nextupdate') . ')');
 			return;
 		}
 
@@ -70,9 +70,9 @@ class VatawareUpdateCommand extends Command {
 			return;
 		}
 
-		Cache::forever('vatsim.pilots', $vatsim->getPilots()->count());
-		Cache::forever('vatsim.atc', $vatsim->getControllers()->count());
-		Cache::forever('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
+		DbConfig::put('vatsim.pilots', $vatsim->getPilots()->count());
+		DbConfig::put('vatsim.atc', $vatsim->getControllers()->count());
+		DbConfig::put('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
 
 		Log::info('vataware:update - importing data from ' . $updateDate);
 
@@ -81,7 +81,7 @@ class VatawareUpdateCommand extends Command {
 		$update->save();
 
 		$nextUpdate = Carbon::instance($updateDate)->addMinutes($general['reload']);
-		Cache::forever('vatsim.nextupdate', $nextUpdate);
+		DbConfig::put('vatsim.nextupdate', $nextUpdate);
 
 		$this->updateId = $update->id;
 		$datas = $this->getVatsimPilots();
@@ -92,19 +92,19 @@ class VatawareUpdateCommand extends Command {
 		$thisYear = Flight::where('startdate','LIKE',date('Y') . '%')->count();
 		$lastYear = Flight::where('startdate','LIKE',date('Y',strtotime('last year')) . '%')->count();
 
-		Cache::forever('vatsim.year', number_format(Flight::where('startdate','LIKE',date('Y') . '%')->count()));
-		Cache::forever('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
-		Cache::forever('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
-		Cache::forever('vatsim.distance', number_format(Flight::where('startdate','=',date('Y-m-d'))->sum('distance') * 0.54));
+		DbConfig::put('vatsim.year', number_format(Flight::where('startdate','LIKE',date('Y') . '%')->count()));
+		DbConfig::put('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
+		DbConfig::put('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
+		DbConfig::put('vatsim.distance', number_format(Flight::where('startdate','=',date('Y-m-d'))->sum('distance') * 0.54));
 		$this->map();
 
 		if($lastYear == 0) {
-			Cache::forever('vatsim.change', '&infin;&nbsp;');
-			Cache::forever('vatsim.changeDirection', 'up');
+			DbConfig::put('vatsim.change', '&infin;&nbsp;');
+			DbConfig::put('vatsim.changeDirection', 'up');
 		} else {
 			$percentageChange = (($thisYear - $lastYear) / $lastYear * 100);
-			Cache::forever('vatsim.change', number_format(abs($percentageChange)));
-			Cache::forever('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
+			DbConfig::put('vatsim.change', number_format(abs($percentageChange)));
+			DbConfig::put('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
 		}
 		
 		$datas = $this->getVatsimControllers();
@@ -269,7 +269,7 @@ class VatawareUpdateCommand extends Command {
 		$callsigns = array_pluck($data, 'callsign');
 		$callsigns = array_combine($callsigns, $data);
 		$updateDate = $this->updateDate;
-		$flights = Flight::where('state','!=',2)->whereMissing(false)->with('lastPosition')->get();
+		$flights = Flight::where('state','!=',2)->whereMissing(false)->with(['lastPosition' => function($pos) { $pos->select('positions.*','updates.timestamp')->join('updates','positions.update_id','=','updates.id'); }])->get();
 		Log::info('vataware:update - found ' . $flights->count() . ' flights in database');
 		foreach($flights as $flight) {
 			if(!array_key_exists($flight->callsign, $callsigns)) {
@@ -287,7 +287,7 @@ class VatawareUpdateCommand extends Command {
 					if(!is_null($nearby) && ($this->altitudeRange($flight->lastPosition->altitude, $nearby->elevation) || $nearby->elevation > $flight->lastPosition->altitude) && $flight->lastPosition->groundspeed < 30) {
 						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
 						$flight->stateArrived();
-						$flight->arrival_time = $flight->lastPosition->updated_at;
+						$flight->arrival_time = $flight->lastPosition->timestamp;
 						$flight->setArrival($nearby);
 						$flight->missing = false;
 						
@@ -358,7 +358,7 @@ class VatawareUpdateCommand extends Command {
 
 				$flight->route = $data['planned_route'];
 				$flight->remarks = $data['planned_remarks'];
-				$flight->flighttype = $data['planned_flighttype'];
+				// $flight->flighttype = $data['planned_flighttype'];
 
 				// Aircraft codes
 				$flight->aircraft_code = $data['planned_aircraft'];
@@ -518,7 +518,7 @@ class VatawareUpdateCommand extends Command {
 			$this->pilot($data, true);
 			
 			$controller->missing = false;
-			$controller->time = $updateDate;
+			// $controller->time = $updateDate;
 			$controller->save();
 
 			unset($controller, $data);
@@ -561,7 +561,7 @@ class VatawareUpdateCommand extends Command {
 				];
 			});
 
-		Cache::forever('vatsim.map', $flights);
+		DbConfig::put('vatsim.map', $flights);
 
 		unset($flights);
 	}

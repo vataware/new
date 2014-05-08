@@ -40,12 +40,12 @@
 				<td>{{ $flight->name }}</td>
 				<td>
 					@if($flight->departure)
-					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id }} {{ $flight->departure->city }}
+					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->icao }} {{ $flight->departure->city }}
 					@endif
 				</td>
 				<td>
 					@if($flight->arrival)
-					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id }} {{ $flight->arrival->city }}
+					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->icao }} {{ $flight->arrival->city }}
 					@endif
 				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
 			</tr>

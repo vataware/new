@@ -5,13 +5,13 @@ class HomeController extends BaseController {
 	protected $layout = 'layouts.master';
 
 	public function index() {
-		$users = Cache::get('vatsim.users');
-		$year = Cache::get('vatsim.year');
-		$month = Cache::get('vatsim.month');
-		$day = Cache::get('vatsim.day');
-		$change = Cache::get('vatsim.change');
-		$changeArrow = Cache::get('vatsim.changeDirection');
-		$distance = Cache::get('vatsim.distance');
+		$users = DbConfig::get('vatsim.users');
+		$year = DbConfig::get('vatsim.year');
+		$month = DbConfig::get('vatsim.month');
+		$day = DbConfig::get('vatsim.day');
+		$change = DbConfig::get('vatsim.change');
+		$changeArrow = DbConfig::get('vatsim.changeDirection');
+		$distance = DbConfig::get('vatsim.distance');
 
 		$flights = Flight::with('pilot','departure','arrival')->whereState(1)->whereMissing(0)->orderBy(DB::raw('RAND()'))->take(15)->get();
 
@@ -35,10 +35,10 @@ class HomeController extends BaseController {
 		Session::put('map.zoom', $zoom);
 		Session::put('map.coordinates', $lat . ',' . $lon);
 
-		if(Input::get('force') != '1' && Cache::has('vatsim.nextupdate') && Carbon::now()->lt(Cache::get('vatsim.nextupdate')))
+		if(Input::get('force') != '1' && DbConfig::has('vatsim.nextupdate') && Carbon::now()->lt(DbConfig::get('vatsim.nextupdate')))
 			return [];
 
-		return Cache::get('vatsim.map');
+		return DbConfig::get('vatsim.map');
 	}
 
 	function mapFlight() {
