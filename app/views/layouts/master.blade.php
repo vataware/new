@@ -101,7 +101,7 @@
 						<li><a href="{{ URL::route('pilot.index') }}">Pilots</a></li>
 						<li><a href="{{ URL::route('atc.index') }}">ATC</a></li>
 						<li><a href="{{ URL::to('forums') }}">Forum</a></li>
-						<li><form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+						<li><form style="padding-top: 13px" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
 							<input type="hidden" name="cmd" value="_s-xclick">
 							<input type="hidden" name="hosted_button_id" value="8F5ETJJRV7HHL">
 							<input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online.">
@@ -215,6 +215,7 @@
 			google.maps.event.addDomListener(window, 'scroll', function() {
 				if($(window).scrollTop() <= 0) {
 					map.setOptions({ scrollwheel: true });
+					$('body').css('overflow','hidden');
 				} else {
 					map.setOptions({ scrollwheel: false });
 					$('body').css('overflow','scroll');

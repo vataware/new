@@ -89,14 +89,22 @@ class VatawareUpdateCommand extends Command {
 		unset($datas);
 		Queue::push('DatafeedClean', null, 'datafeed');
 
-		$thisYear = Flight::where('startdate','LIKE',date('Y') . '%')->count();
-		$lastYear = Flight::where('startdate','LIKE',date('Y',strtotime('last year')) . '%')->count();
+		$datas = $this->getVatsimControllers();
+		$this->processControllers($datas);
+		unset($datas);
 
-		DbConfig::put('vatsim.year', number_format(Flight::where('startdate','LIKE',date('Y') . '%')->count()));
+		$thisYear = Flight::where('startdate','LIKE',date('Y') . '%')->count();
+
+		DbConfig::put('vatsim.year', number_format($thisYear));
+		Log::info('vataware:update - finished statistics - year');
 		DbConfig::put('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
+		Log::info('vataware:update - finished statistics - month');
 		DbConfig::put('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
+		Log::info('vataware:update - finished statistics - day');
 		DbConfig::put('vatsim.distance', number_format(Flight::where('startdate','=',date('Y-m-d'))->sum('distance') * 0.54));
-		$this->map();
+		Log::info('vataware:update - finished statistics - distance');
+		
+		$lastYear = Flight::where('startdate','LIKE',date('Y',strtotime('last year')) . '%')->count();
 
 		if($lastYear == 0) {
 			DbConfig::put('vatsim.change', '&infin;&nbsp;');
@@ -106,10 +114,12 @@ class VatawareUpdateCommand extends Command {
 			DbConfig::put('vatsim.change', number_format(abs($percentageChange)));
 			DbConfig::put('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
 		}
-		
-		$datas = $this->getVatsimControllers();
-		$this->processControllers($datas);
-		unset($datas);
+
+		unset($thisYear, $lastYear, $percentageChange);
+		Log::info('vataware:update - finished statistics');
+
+		$this->map();
+		Log::info('vataware:update - finished map');
 	}
 
 	/**
@@ -268,6 +278,7 @@ class VatawareUpdateCommand extends Command {
 		Log::info('vataware:update - found ' . count($data) . ' flights in vatsim data');
 		$callsigns = array_pluck($data, 'callsign');
 		$callsigns = array_combine($callsigns, $data);
+		unset($data);
 		$updateDate = $this->updateDate;
 		$flights = Flight::where('state','!=',2)->whereMissing(false)->with(['lastPosition' => function($pos) { $pos->select('positions.*','updates.timestamp')->join('updates','positions.update_id','=','updates.id'); }])->get();
 		Log::info('vataware:update - found ' . $flights->count() . ' flights in database');
@@ -530,10 +541,13 @@ class VatawareUpdateCommand extends Command {
 	}
 
 	function map() {
-		$flights = Flight::with('lastPosition')
+		$flights = Flight::whereMissing(false)
 			->whereIn('state',[1, 3])
 			->join('pilots','flights.vatsim_id','=','pilots.vatsim_id')
-			->select('flights.*','pilots.name')
+			->join('positions','flights.id','=','positions.flight_id')
+			->join('updates','positions.update_id','=','updates.id')
+			->select('flights.*','positions.altitude','positions.speed','positions.heading','pilots.name')
+			->orderBy('timestamp','desc')
 			->get()
 			->transform(function($flight) {
 				return [
@@ -542,7 +556,7 @@ class VatawareUpdateCommand extends Command {
 					'vatsim_id' => $flight->vatsim_id,
 					'pilot' => $flight->name,
 					
-					// Terminalds
+					// Terminals
 					'departure' => $flight->departure_id,
 					'arrival' => $flight->arrival_id,
 

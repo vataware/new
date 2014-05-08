@@ -27,10 +27,19 @@ $(window).load(function() {
 });
 
 $(document).ready(function() {
-	$('.vataware-map-container').hover(function() {
-		$('body').css('overflow','hidden');
-	}, function() {
-		$('body').css('overflow','scroll');
+	$(window).scroll(function() {
+		if($(window).scrollTop() === 0) {
+			$('.vataware-map-container').hover(function() {
+				$('body').css('overflow','hidden');
+			}, function() {
+				$('body').css('overflow','scroll');
+			});
+			$(':not(.vataware-map-container)').mouseover(function() {
+				$('body').css('overflow','scroll');
+			});
+		} else {
+			$('body').css('overflow','scroll');
+		}
 	});
 
 	$('tbody.rowlink').rowlink();

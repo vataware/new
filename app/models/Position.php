@@ -3,7 +3,7 @@
 class Position extends Eloquent {
 
 	protected $table = 'positions';
-	public $timestamps = true;
+	public $timestamps = false;
 	protected $softDelete = false;
 	protected $dates = ['time'];
 

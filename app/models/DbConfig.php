@@ -38,8 +38,9 @@ class DbConfig {
 	}
 
 	static function put($key, $value) {
-		$affected = DB::table('config')->where('key', $key)->update(array('value' => serialize($value)));
-		if($affected == 0) {
+		if(self::has($key)) {
+			DB::table('config')->where('key', $key)->update(array('value' => serialize($value)));
+		} else {
 			DB::table('config')->insert(array('key' => $key, 'value' => serialize($value)));
 		}
 		return true;
