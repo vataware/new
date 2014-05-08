@@ -1,6 +1,6 @@
 @section('content')
 <div id="banners">
-	<div class="banner" id="competition-may" style="background-image: url(http://vataware.dev/assets/images/banners/competition-may.jpg);"></div>
+	<div class="banner" id="competition-may" style="background-image: url({{ asset('assets/images/banners/competition-may.jpg') }});"><a class="banner-link" href="http://vataware.com/forums/viewtopic.php?f=25&t=141"></a></div>
 </div>
 <div class="container"><br /><br />
 	<div class="tiles" style="text-align: center;">
