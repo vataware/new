@@ -11,7 +11,7 @@
 	<link href="{{ asset('assets/stylesheets/jasny-bootstrap.min.css') }}" rel="stylesheet">
 	<link href="{{ asset('assets/stylesheets/bootstrap.mod.css') }}" rel="stylesheet">
 	<link href="{{ asset('assets/stylesheets/vataware.css') }}" rel="stylesheet">
-
+	
 	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
 	<!--[if lt IE 9]>
@@ -20,6 +20,7 @@
 	<![endif]-->
 	<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 	<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800|Lato:400,700,400italic" rel="stylesheet" type="text/css">
+	<link href="{{ asset('assets/stylesheets/map-rotate.css') }}" rel="stylesheet">
 	@if(isset($stylesheets) && count($stylesheets) > 0)
 	@foreach($stylesheets as $stylesheet)
 	<link type="text/css" rel="stylesheet" href="{{ asset($stylesheet) }}" />
@@ -120,7 +121,7 @@
 				</div>
 				<a href="{{ URL::route('home') }}" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('pilot.index') }}">Pilots</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('atc.index') }}">ATC</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::to('forums') }}">Forum</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('team') }}">Team</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('donations') }}">Donate</a><br />
 				<br />&copy; 2014 <a href="{{ URL::route('home') }}" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
-				<small>version 1.0-{{ $build }}</small>
+				<small>version 1.1-{{ $build }}</small>
 			</div>
 		</div>
 	</footer>
@@ -129,6 +130,7 @@
 	<script src="{{ asset('assets/javascript/bootstrap.min.js') }}"></script>
 	<script src="{{ asset('assets/javascript/jasny-bootstrap.min.js') }}"></script>
 	<script src="{{ asset('https://maps.googleapis.com/maps/api/js?sensor=true') }}"></script>
+	<script src="{{ asset('http://jqueryrotate.googlecode.com/svn/trunk/jQueryRotate.js') }}"></script>
 	<script src="{{ asset('assets/javascript/vataware.js') }}"></script>
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

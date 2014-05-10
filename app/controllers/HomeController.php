@@ -15,8 +15,6 @@ class HomeController extends BaseController {
 
 		$flights = Flight::with('pilot','departure','arrival')->whereState(1)->whereMissing(0)->orderBy(DB::raw('RAND()'))->take(15)->get();
 
-		$this->javascript('http://jqueryrotate.googlecode.com/svn/trunk/jQueryRotate.js');
-		$this->stylesheet('assets/stylesheets/map-rotate.css');
 		$this->autoRender(compact('users','year','month','day','change','changeArrow','distance','flights'));
 	}
 
