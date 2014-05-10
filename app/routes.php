@@ -13,6 +13,7 @@
 
 Route::get('', ['as' => 'home', 'uses' => 'HomeController@index']);
 Route::get('team', ['as' => 'team', 'uses' => 'HomeController@team']);
+Route::get('donations', ['as' => 'donations', 'uses' => 'HomeController@donations']);
 Route::get('map/api', ['as' => 'map.api', 'uses' => 'HomeController@mapApi']);
 Route::get('map/flight', ['as' => 'map.flight', 'uses' => 'HomeController@mapFlight']);
 

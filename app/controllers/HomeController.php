@@ -27,6 +27,13 @@ class HomeController extends BaseController {
 		$this->autoRender(compact('members'), 'Team');
 	}
 
+	function donations() {
+		$donations = Donation::orderBy('amount')->remember(1440)->lists('name');
+
+		$this->stylesheet('assets/stylesheets/donations.css');
+		$this->autoRender(compact('donations'), 'Donations');
+	}
+
 	function mapApi() {
 		$zoom = max(2, min(14, Input::get('z')));
 		$lat = Input::has('lat') ? max(-90, min(90, Input::get('lat'))) : 30;
