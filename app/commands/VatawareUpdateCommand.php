@@ -123,9 +123,9 @@ class VatawareUpdateCommand extends Command {
 		// Get database records for all airlines, airports, registrations
 		$this->airlines = Airline::get();
 		$this->line('--- Loaded airlines');
-		$this->airports = Airport::get();
-		$this->airportsIcao = $this->airports->lists('country_id','icao');
-		ksort($this->airportsIcao);
+		// $this->airports = Airport::get();
+		// $this->airportsIcao = $this->airports->lists('country_id','icao');
+		// ksort($this->airportsIcao);
 		$this->line('--- Loaded airports');
 		$this->registrations = Registration::get()->each(function($registration) {
 			$registration->prefix = str_replace('-', '', $registration->prefix);
@@ -178,7 +178,6 @@ class VatawareUpdateCommand extends Command {
 	function proximity($latitude, $longitude, $range = null, $expects = null) {
 		if(is_null($range)) $range = 20;
 		if(empty($latitude) || empty($longitude)) return null;
-		if(is_null($this->airports)) $this->airports = Airport::get();
 
 		$airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
 			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
@@ -333,8 +332,13 @@ class VatawareUpdateCommand extends Command {
 
 					$this->vatsimUser($entry['cid']);
 
-					if($entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && !empty($entry['planned_deptime']))
-						$flight->departure_time = Carbon::createFromFormat('Y-m-d G:i',  $flight->startdate . ' ' . (strlen($entry['planned_deptime']) >= 3 ? substr($entry['planned_deptime'], 0, -2) : '0') . ':' . substr($entry['planned_deptime'], -2), 'UTC');
+					try {
+						if($entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && strlen($entry['planned_deptime']) >= 3 && !empty($entry['planned_deptime']))
+							$flight->departure_time = Carbon::createFromFormat('Y-m-d G:i',  $flight->startdate . ' ' . (strlen($entry['planned_deptime']) >= 3 ? substr($entry['planned_deptime'], 0, -2) : '0') . ':' . substr($entry['planned_deptime'], -2), 'UTC');
+					} catch(InvalidArgumentException $e) {
+						Log::warning($entry['planned_deptime']);
+						Log::warning($e);
+					}
 				}
 
 				// If the flight does exist, we will add a position report and
@@ -434,6 +438,9 @@ class VatawareUpdateCommand extends Command {
 			} catch(ErrorException $e) {
 				$this->error('Failed');
 				Log::error($e);
+			} catch(InvalidArgumentException $e) {
+				$this->error('Failed');
+				Log::error($e);
 			}
 		}
 		
@@ -477,7 +484,6 @@ class VatawareUpdateCommand extends Command {
 
 		// Update flights table with data in temporary table
 		DB::statement("update flights dest, flights_temp src set
-			dest.id = src.id,
 			dest.departure_id = src.departure_id,
 			dest.arrival_id = src.arrival_id,
 			dest.departure_country_id = src.departure_country_id,
@@ -509,11 +515,11 @@ class VatawareUpdateCommand extends Command {
 			unset($this->positions);
 		}
 
-		$missings = $database->filter(function($flight) use ($update) {
-			return (!array_key_exists($flight->id, $update));
-		});
+		$update = array_keys($update);
 
-		unset($update);
+		$missings = $database->filter(function($flight) use ($update) {
+			return (!in_array($flight->id, $update));
+		});
 
 		$delete = array();
 		$disappeared = array();
@@ -632,7 +638,7 @@ class VatawareUpdateCommand extends Command {
 
 			// Add atc to update array
 			elseif($atc->exists) {
-				$update[$atc->id] = array_except($atc->toArray(), array('start','callsign','vatsim_id','facility','end','facility_id','rating_id','sector_id','created_at','updated_at','deleted_at'));
+				$update[$atc->id] = array_except($atc->toArray(), array('start','callsign','vatsim_id','facility','end','facility_id','rating_id','sector_id','processed','created_at','updated_at','deleted_at'));
 			}
 
 			// Add atc to insert array, also set the created_at
@@ -770,7 +776,10 @@ class VatawareUpdateCommand extends Command {
 	protected function airportCountry($icao) {	
 		// We need to return the country code or 
 		// empty if the airport cannot be found in our database
-		return array_key_exists($icao, $this->airportsIcao) ? $this->airportsIcao[$icao] : '';
+
+		$airport = Airport::whereIcao($icao)->first();
+
+		return is_null($airport) ? '' : $airport->country_id;
 	}
 
 	/**
