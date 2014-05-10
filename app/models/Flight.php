@@ -95,6 +95,7 @@ class Flight extends Eloquent {
 			case 3:
 				return 'Airborne';
 			case 2:
+			case 5:
 				return 'Arrived';
 			case 4:
 				return 'Preparing...';
@@ -110,6 +111,7 @@ class Flight extends Eloquent {
 			case 3:
 				return 'airborne';
 			case 2:
+			case 5:
 				return 'arrived';
 		}
 	}
@@ -149,56 +151,6 @@ class Flight extends Eloquent {
 		$minutes = $now->diffInMinutes($this->arrival_time);
 		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
 		return $hours . 'h ' . str_pad($minutes,2,'0',STR_PAD_LEFT) . 'm';
-	}
-
-	function setDeparture(Airport $airport) {
-		$this->attributes['departure_id'] = $airport->icao;
-		$this->attributes['departure_country_id'] = $airport->country_id;
-	}
-
-	function setArrival(Airport $airport) {
-		$this->attributes['arrival_id'] = $airport->icao;
-		$this->attributes['arrival_country_id'] = $airport->country_id;
-	}
-
-	function statePreparing() {
-		$this->attributes['state'] = 4;
-	}
-
-	function isPreparing() {
-		return ($this->state == 4);
-	}
-
-	function stateDeparting() {
-		$this->attributes['state'] = 0;
-	}
-
-	function isDeparting() {
-		return ($this->state == 0);
-	}
-
-	function stateAirborne() {
-		$this->attributes['state'] = 1;
-	}
-
-	function isAirborne() {
-		return ($this->state == 1);
-	}
-
-	function stateArriving() {
-		$this->attributes['state'] = 3;
-	}
-
-	function isArriving() {
-		return ($this->state == 3);
-	}
-
-	function stateArrived() {
-		$this->attributes['state'] = 2;
-	}
-
-	function isArrived() {
-		return ($this->state == 2);
 	}
 
 	function isAirline($airline) {

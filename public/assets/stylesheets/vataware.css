@@ -478,7 +478,7 @@ a:hover.tiles
 	background-position: center center;
 }
 
-#banners .banner .banner-link { width: 100%; display: block; margin: 0 auto; }
+#banners .banner .banner-link { height: 100%; display: block; margin: 0 auto; }
 @media(min-width: 768px) { #banners .banner { height: 254px; } #banners .banner .banner-link { width: 720px; } }
 @media(min-width: 992px) { #banners .banner { height: 330px; } #banners .banner .banner-link { width: 940px; } }
 @media(min-width: 1200px) { #banners .banner { height: 400px; } #banners .banner .banner-link { width: 1140px; } }

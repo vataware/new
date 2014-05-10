@@ -4,7 +4,7 @@ class ATC extends Eloquent {
 
 	protected $table = 'atc';
 	public $timestamps = true;
-	protected $softDelete = false;
+	protected $softDelete = true;
 	protected $dates = ['time','start','end'];
 	protected $appends = ['facility'];
 

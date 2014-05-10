@@ -41,10 +41,18 @@ class VatawareUpdateCommand extends Command {
 
 	protected $updateId;
 	protected $updateDate;
+	protected $nextUpdate;
+
 	protected $vatsim = null;
+	protected $pilots = null;
+	protected $controllers = null;
+
 	protected $airports = null;
+	protected $airportsIcao = null;
 	protected $airlines = null;
 	protected $registrations = null;
+
+	protected $positions = array();
 
 	/**
 	 * Execute the console command.
@@ -53,73 +61,38 @@ class VatawareUpdateCommand extends Command {
 	 */
 	public function fire()
 	{
-		Log::info('vataware:update - start script');
+		// $this->error('cron:datafeed[' . $this->processId . '] - Started execution');
+		$this->error('Start: ' . ($start = Carbon::now()));
+		$this->line('--- Memory usage: ' . memory_get_usage());
 
-		if(DbConfig::has('vatsim.nextupdate') && Carbon::now()->lt(DbConfig::get('vatsim.nextupdate'))) {
-			Log::info('vataware:update - terminating execution - no new data yet (current time: ' . Carbon::now() . ', expeting at: ' . DbConfig::get('vatsim.nextupdate') . ')');
-			return;
-		}
+		// First we need to load the VATSIM data get the timestamps
+		$this->prepareVatsim();
 
-		$vatsim = $this->loadVatsim();
-		Log::info('vataware:update - fetched remote data');
-		$general = $vatsim->getGeneralInfo()->toArray();
-		$this->updateDate = $updateDate = Carbon::createFromTimestampUTC($general['update']);
+		// Second, we need to check if the update will not be a
+		// duplicate.
+		$this->checkUpdate();
 
-		if(!is_null(Update::whereTimestamp($updateDate)->first())) {
-			Log::info('vataware:update - terminating execution - data already exists (' . $updateDate . ')');
-			return;
-		}
+		// Third, we can load the database data such as airlines,
+		// airports, aircraft and registrations.
+		$this->prepareDatabase();
 
-		DbConfig::put('vatsim.pilots', $vatsim->getPilots()->count());
-		DbConfig::put('vatsim.atc', $vatsim->getControllers()->count());
-		DbConfig::put('vatsim.users', $vatsim->getPilots()->count() + $vatsim->getControllers()->count());
+		// Now we can start processing data. Starting with the pilots...
+		$this->pilots();
 
-		Log::info('vataware:update - importing data from ' . $updateDate);
+		// ... then the ATC Controllers
+		$this->controllers();
 
-		$update = new Update;
-		$update->timestamp = $updateDate;
-		$update->save();
-
-		$nextUpdate = Carbon::instance($updateDate)->addMinutes($general['reload']);
-		DbConfig::put('vatsim.nextupdate', $nextUpdate);
-
-		$this->updateId = $update->id;
-		$datas = $this->getVatsimPilots();
-		$this->processPilots($datas);
-		unset($datas);
-		Queue::push('DatafeedClean', null, 'datafeed');
-
-		$datas = $this->getVatsimControllers();
-		$this->processControllers($datas);
-		unset($datas);
-
-		$thisYear = Flight::where('startdate','LIKE',date('Y') . '%')->count();
-
-		DbConfig::put('vatsim.year', number_format($thisYear));
-		Log::info('vataware:update - finished statistics - year');
-		DbConfig::put('vatsim.month', number_format(Flight::where('startdate','LIKE',date('Y-m') . '%')->count()));
-		Log::info('vataware:update - finished statistics - month');
-		DbConfig::put('vatsim.day', number_format(Flight::where('startdate','=',date('Y-m-d'))->count()));
-		Log::info('vataware:update - finished statistics - day');
-		DbConfig::put('vatsim.distance', number_format(Flight::where('startdate','=',date('Y-m-d'))->sum('distance') * 0.54));
-		Log::info('vataware:update - finished statistics - distance');
-		
-		$lastYear = Flight::where('startdate','LIKE',date('Y',strtotime('last year')) . '%')->count();
-
-		if($lastYear == 0) {
-			DbConfig::put('vatsim.change', '&infin;&nbsp;');
-			DbConfig::put('vatsim.changeDirection', 'up');
-		} else {
-			$percentageChange = (($thisYear - $lastYear) / $lastYear * 100);
-			DbConfig::put('vatsim.change', number_format(abs($percentageChange)));
-			DbConfig::put('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
-		}
-
-		unset($thisYear, $lastYear, $percentageChange);
-		Log::info('vataware:update - finished statistics');
-
+		// Generate map code
 		$this->map();
-		Log::info('vataware:update - finished map');
+
+		// Get statistics
+		$this->statistics();
+
+		$this->error('End: ' . Carbon::now());
+		$this->error('Time: ' . $start->diffInSeconds(Carbon::now()));
+		// Clean up variables
+		$this->cleanup();
+
 	}
 
 	/**
@@ -146,106 +119,67 @@ class VatawareUpdateCommand extends Command {
 		);
 	}
 
-	function duration($start, $now) {
-		return $start->diffInMinutes($now);
-	}
-
-	function getAirlines($callsign = null) {
-		if(is_null($this->airlines)) $this->airlines = Airline::get();
-
-		if(!is_null($callsign)) 
-			return $this->airlines->first(function($key, $airline) use ($callsign) {
-				return preg_match('/^' . $airline->icao . '[0-9]{1,5}[A-Z]{0,2}$/', $callsign);
-			});
-
-		return $this->airlines;
-	}
-
-	function getAirports($icao = null) {
-		if(is_null($this->airports)) $this->airports = Airport::lists('country_id','icao');
-
-		if(!is_null($icao)) 
-			return array_key_exists($icao, $this->airports) ? $this->airports[$icao] : '';
-
-		return $this->airports;
-	}
-
-	function getRegistrations($callsign = null) {
-		if(is_null($this->registrations)) $this->registrations = Registration::get()->each(function($registration) {
+	protected function prepareDatabase() {
+		// Get database records for all airlines, airports, registrations
+		$this->airlines = Airline::get();
+		$this->line('--- Loaded airlines');
+		$this->airports = Airport::get();
+		$this->airportsIcao = $this->airports->lists('country_id','icao');
+		ksort($this->airportsIcao);
+		$this->line('--- Loaded airports');
+		$this->registrations = Registration::get()->each(function($registration) {
 			$registration->prefix = str_replace('-', '', $registration->prefix);
 			if(!$registration->regex) $registration->prefix .= '.*';
 		});
-
-		if(!is_null($callsign)) 
-			return $this->registrations->first(function($key, $registration) use ($callsign) {
-				return preg_match('/^' . $registration->prefix . '$/', $callsign);
-			});
-
-		return $this->registrations;
+		$this->line('--- Loaded registrations');
 	}
 
-	function loadVatsim() {
-		if(!is_null($this->vatsim)) return $this->vatsim;
-
+	protected function prepareVatsim() {
+		// Load VATSIM datafeed
 		$vatsim = new Vatsimphp\VatsimData();
 		$vatsim->setConfig('forceDataRefresh',true);
 		$vatsim->loadData();
 
-		return $this->vatsim = $vatsim;
+		$general = $vatsim->getGeneralInfo()->toArray();
+
+		$this->updateDate = Carbon::createFromTimestampUTC($general['update']);
+		$this->nextUpdate = Carbon::instance($this->updateDate)->addMinutes($general['reload']);
+		$this->pilots = $vatsim->getPilots()->toArray();
+		$this->controllers = $vatsim->getControllers()->toArray();
+		$this->line('--- Loaded VATSIM Datafeed');
 	}
 
-	function getVatsimPilots() {
-		return $this->vatsim->getPilots()->toArray();
+	function duration($start, $now) {
+		return $start->diffInMinutes($now);
 	}
 
-	function getVatsimControllers() {
-		return $this->vatsim->getControllers()->toArray();
-	}
+	function vatsimUser($vatsimId, $rating = false) {
+		$user = Pilot::whereVatsimId($vatsimId)->first();
 
-	function positionReport($data, $flightId) {
-		$position = new Position;
-
-		$position->flight_id = $flightId;
-		
-		$position->lat = $data['latitude'];
-		$position->lon = $data['longitude'];
-		$position->altitude = $data['altitude'];
-		$position->speed = $data['groundspeed'];
-		$position->heading = $data['heading'];
-		// $position->ground_elevation = 
-		
-		$position->update_id = $this->updateId;
-
-		$position->save();
-
-		unset($position);
-	}
-
-	function pilot($data, $rating = false) {
-		$pilot = Pilot::whereVatsimId($data['cid'])->first();
-
-		if(is_null($pilot) || $rating === true) {
-			$it = new XmlIterator\XmlIterator('https://cert.vatsim.net/vatsimnet/idstatusint.php?cid=' . $data['cid'], 'user');
+		if(is_null($user) || $rating === true) {
+			$it = new XmlIterator\XmlIterator('https://cert.vatsim.net/vatsimnet/idstatusint.php?cid=' . $vatsimId, 'user');
 			$official = iterator_to_array($it)[0];
 		}
 
-		if(is_null($pilot)) {
-			$pilot = new Pilot;
-			$pilot->vatsim_id = $data['cid'];
-			$pilot->name = $official['name_first'] . ' ' . $official['name_last'];
-			$pilot->rating_id = $official['rating'];
-			$pilot->save();
-		} elseif($rating === true) {
-			$pilot->rating_id = $official['rating'];
-			$pilot->save();
+		if(is_null($user)) {
+			$user = new Pilot;
+			$user->vatsim_id = $vatsimId;
+			$user->name = (string) $official['name_first'] . ' ' . (string) $official['name_last'];
+			$user->rating_id = (string) $official['rating'];
+			$user->save();
+		} elseif($rating === true && !is_array($official['rating'])) {
+			$user->rating_id = $official['rating'];
+			$user->save();
 		}
 
-		unset($pilot);
+		unset($user);
 	}
 
 	function proximity($latitude, $longitude, $range = null, $expects = null) {
 		if(is_null($range)) $range = 20;
 		if(empty($latitude) || empty($longitude)) return null;
+		if(is_null($this->airports)) $this->airports = Airport::get();
+
 		$airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
 			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
 			->orderBy('distance','asc')
@@ -262,292 +196,710 @@ class VatawareUpdateCommand extends Command {
 		return $airports->first();
 	}
 
-	function extractAircraft($code) {
+	
+	protected function altitudeRange($altitude, $base, $range = 20) {
+		return ($altitude >= $base - $range && $altitude <= $base + $range);
+	}
+
+	/**
+	 * Checks if the timestamp of this update has already been
+	 * processed, if yes then we will exit, otherwise we will add
+	 * it to the database.
+	 *
+	 * @return void
+	 */
+	protected function checkUpdate() {
+		// If the next update is expected at another timestamp then
+		// we will exit the program and wait for a valid timestamp.
+		if(DbConfig::has('vatsim.nextupdate') && Carbon::now()->lt(DbConfig::get('vatsim.nextupdate')))
+			exit(0);
+
+		// If the update already exists with the current timestamp
+		// then we would want to exit the program as we do not want
+		// any duplicate position reports
+		if(!is_null(Update::whereTimestamp($this->updateDate)->first()))
+			exit(0);
+
+		// Otherwise the new update time will be added to the database
+		$update = new Update;
+		$update->timestamp = $this->updateDate;
+		$update->save();
+
+		// Store the update ID in a class variable for position reports
+		$this->updateId = $update->id;
+
+		// Store the next update timestamp in the database
+		DbConfig::put('vatsim.nextupdate', $this->nextUpdate);
+	}
+
+	/**
+	 * Processes the flights in the datafeed, both new and existing
+	 * in the database. As well as any flights in the database that
+	 * have not arrived yet but are missing from the datafeed.
+	 *
+	 * @return void
+	 */
+	protected function pilots() {
+		$this->error('Pilots: begin');
+		// $this->error('Processing pilots');
+		// First we will select all flights from the database which 
+		// have not yet been marked as arrived and are not missing.
+		$database = Flight::where('state','!=','2')->get();
+
+		$insert = array();
+		$update = array();
+
+		$default = array(
+			'route' => '',
+			'remarks' => '',
+			'altitude' => '',
+			'speed' => '',
+			'flighttype' => 'I',
+			'last_lat' => '0',
+			'last_lon' => '0',
+			'last_altitude' => '0',
+			'last_speed' => '0',
+			'last_heading' => '0',
+			'missing' => '0',
+			'startdate' => date('Y-m-d'),
+			'revision' => '0',
+			'callsign' => '',
+			'callsign_type' => '0',
+			'airline_id' => null,
+			'vatsim_id' => '',
+			'aircraft_code' => '',
+			'aircraft_id' => null,
+			'departure_id' => '',
+			'arrival_id' => '',
+			'state' => '4',
+			'departure_time' => '',
+			'arrival_time' => '',
+			'departure_country_id' => '',
+			'arrival_country_id' => '',
+			'created_at' => Carbon::now(),
+			'updated_at' => Carbon::now()
+		);
+		
+		foreach($this->pilots as $entry) {
+			$this->line('--- Entry ' . $entry['callsign'] . ' by ' . $entry['cid']);
+			try {
+				// Find the flight in the data we fetched using the callsign
+				// and vatsim id of the pilot. If the flight does not exist
+				// in the database we will create a new one.
+				$flight = $database->first(function($key, $flight) use ($entry) {
+					return (str_replace('-','',$flight->callsign) == str_replace('-','',$entry['callsign']) && $flight->vatsim_id == $entry['cid']);
+				}, new Flight);
+
+				// Some data will have to be refreshed with every update of
+				// the datafeed. Pilots have the ability to update the route,
+				// remarks, altitude and speed at all times using a new flight plan.
+				$flight->route = $entry['planned_route'];
+				$flight->remarks = $entry['planned_remarks'];
+				$flight->altitude = $entry['planned_altitude'];
+				$flight->speed = $entry['planned_tascruise'];
+				$flight->flighttype = $entry['planned_flighttype'];
+
+				// Update last known coordinates
+				$flight->last_lat = $entry['latitude'];
+				$flight->last_lon = $entry['longitude'];
+				$flight->last_altitude = $entry['altitude'];
+				$flight->last_speed = $entry['groundspeed'];
+				$flight->last_heading = $entry['heading'];
+
+				// We also need to ensure that the flight is not marked as missing,
+				// now that we have a record of the flight again.
+				$flight->missing = 0;
+
+				// If the flight does not exist we need to load the basic
+				// data, such as date, pilot, callsign, aircraft, etc.
+				if(!$flight->exists) {
+					$flight->startdate = Carbon::createFromFormat('YmdHis', $entry['time_logon'], 'UTC')->toDateString();
+					$flight->revision = $entry['planned_revision'];
+					
+					$callsign = $this->callsign($entry['callsign']);
+					$flight->callsign = $callsign['callsign'];
+					$flight->callsign_type = $callsign['callsign_type'];
+					$flight->airline_id = $callsign['airline_id'];
+
+					$flight->vatsim_id = $entry['cid'];
+
+					$flight->aircraft_code = $entry['planned_aircraft'];
+					$flight->aircraft_id = $this->aircraft($entry['planned_aircraft']);
+
+					$flight->departure_id = $entry['planned_depairport'];
+					$flight->arrival_id = $entry['planned_destairport'];
+
+					$flight->state = 4;
+
+					$this->vatsimUser($entry['cid']);
+
+					if($entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && !empty($entry['planned_deptime']))
+						$flight->departure_time = Carbon::createFromFormat('Y-m-d G:i',  $flight->startdate . ' ' . (strlen($entry['planned_deptime']) >= 3 ? substr($entry['planned_deptime'], 0, -2) : '0') . ':' . substr($entry['planned_deptime'], -2), 'UTC');
+				}
+
+				// If the flight does exist, we will add a position report and
+				// only update certain fields if they have changed, such as the
+				// departure/arrival airport.
+				else {
+					// Update distance
+					$flight->distance += acos(sin(deg2rad($flight->getOriginal('last_lat'))) * sin(deg2rad($entry['latitude'])) + cos(deg2rad($flight->getOriginal('last_lat'))) * cos(deg2rad($entry['latitude'])) * cos(deg2rad($flight->getOriginal('last_lon')) - deg2rad($entry['longitude']))) * 6371;
+
+					// Add the position report
+					$this->positionReport($entry, $flight->id);
+				
+					if($entry['planned_revision'] > $flight->revision) {
+						// Only allow the departure airport/time to be updated if the
+						// current state is preparing(4) or departing(0). If done after
+						// that it's technically too late since they have already departed.
+						if(in_array($flight->state, [0, 4])) {
+							$flight->departure_id = $entry['planned_depairport'];
+							if($entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && !empty($entry['planned_deptime']))
+								$flight->departure_time = Carbon::createFromFormat('Y-m-d G:i',  $flight->startdate . ' ' . (strlen($entry['planned_deptime']) >= 3 ? substr($entry['planned_deptime'], 0, -2) : '0') . ':' . substr($entry['planned_deptime'], -2), 'UTC');
+						}
+
+
+						// Similar to the departure airport, the arrival airport can only
+						// be updated prior to arrival. That is, when the current state is
+						// preparing(4), departing(0) or airborne(1).
+						if(in_array($flight->state, [0, 1, 4]))
+							$flight->arrival_id = $entry['planned_destairport'];
+					}
+				}
+
+				// Update the arrival time to always be the planned flight time
+				// from the departure time.
+				if(!is_null($flight->departure_time))
+					$flight->arrival_time = Carbon::instance($flight->departure_time)->addHours($entry['planned_hrsenroute'])->addMinutes($entry['planned_minenroute']);
+				else
+					$flight->arrival_time = null;
+
+
+				// Workflow processes
+				// Flight is preparing and plane has taken off
+				if(($flight->state == 4 || $flight->state == 0) && $this->hasTakenOff($flight, $entry)) {
+					$flight->state = 1;
+					$flight->departure_time = $this->updateDate;
+				}
+
+				// Flight is preparing and plane has moved
+				elseif($flight->state == 4 && $this->hasMoved($flight, $entry)) {
+					$flight->state = 0;
+				}
+
+				// Flight is airborne and near airport
+				elseif($flight->state == 1 && $this->hasLanded($flight, $entry)) {
+					$flight->state = 3;
+				}
+
+				// Flight is arriving
+				elseif($flight->state == 3) {
+					$airport = $this->hasLanded($flight, $entry);
+
+					// Mark flight as arrived when still near airport
+					if($airport) {
+						$flight->state = 5;
+						$flight->arrival_id = $airport;
+						$flight->arrival_time = $this->updateDate;
+						$flight->duration = $this->duration($flight->departure_time, $flight->arrival_time);
+					}
+
+					// Mark flight as airborne again when no near airport anymore
+					else
+						$flight->state = 1;
+				}
+
+				// We want to get the airport country IDs as one of the last things
+				// because they are dependent on the other information pertaining to
+				// this flight and it is not needed for anything else.
+				$flight->departure_country_id = $this->airportCountry($flight->departure_id);
+				$flight->arrival_country_id = $this->airportCountry($flight->arrival_id);
+
+				// Skip this record if the callsign is empty
+				if(empty($flight->callsign))
+					continue;
+
+				// Add flight to update array
+				elseif($flight->exists)
+					$update[$flight->id] = array_except($flight->toArray(), array('startdate','callsign','callsign_type','airline_id','vatsim_id','aircraft_code','aircraft_id','created_at','updated_at','deleted_at'));
+
+				// Add flight to insert array, also set the created_at
+				// and updated_at columns
+				else {
+					$flight->created_at = Carbon::now();
+					$flight->updated_at = Carbon::now();
+					$insert[] = array_merge($default, array_except($flight->toArray(), array('deleted_at')));
+				}
+
+				unset($flight, $entry, $callsign);
+			} catch(ErrorException $e) {
+				$this->error('Failed');
+				Log::error($e);
+			}
+		}
+		
+		// Insert new flights into the flights table right away
+		Flight::insert($insert);
+		unset($insert, $default);
+		$this->line('Inserted new records');
+
+		// Create temporary flights table for records that are to be updated
+		DB::statement("create temporary table if not exists flights_temp (
+			`id` int(10) unsigned NOT NULL,
+			`departure_id` varchar(6) COLLATE utf8_unicode_ci NOT NULL,
+			`arrival_id` varchar(6) COLLATE utf8_unicode_ci NOT NULL,
+			`departure_country_id` varchar(2) COLLATE utf8_unicode_ci NOT NULL,
+			`arrival_country_id` varchar(2) COLLATE utf8_unicode_ci NOT NULL,
+			`route` text COLLATE utf8_unicode_ci NOT NULL,
+			`remarks` text COLLATE utf8_unicode_ci NOT NULL,
+			`altitude` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
+			`speed` smallint(6) NOT NULL,
+			`flighttype` char(1) COLLATE utf8_unicode_ci NOT NULL DEFAULT 'I',
+			`state` tinyint(4) NOT NULL,
+			`missing` tinyint(1) NOT NULL DEFAULT '0',
+			`departure_time` datetime DEFAULT NULL,
+			`arrival_time` datetime DEFAULT NULL,
+			`duration` smallint(6) NOT NULL DEFAULT '0',
+			`distance` smallint(6) NOT NULL DEFAULT '0',
+			`processed` tinyint(1) NOT NULL DEFAULT '0',
+			`revision` tinyint(4) NOT NULL DEFAULT '1',
+			`last_lat` decimal(10,6) NOT NULL,
+			`last_lon` decimal(10,6) NOT NULL,
+			`last_altitude` mediumint(6) NOT NULL,
+			`last_speed` smallint(4) unsigned NOT NULL,
+			`last_heading` smallint(3) unsigned NOT NULL,
+			PRIMARY KEY (`id`)
+		)");
+		$this->line('Created temporary table');
+
+		// Insert flights to be updated into temporary table
+		DB::table('flights_temp')->insert($update);
+		$this->line('Inserted updated records');
+
+		// Update flights table with data in temporary table
+		DB::statement("update flights dest, flights_temp src set
+			dest.id = src.id,
+			dest.departure_id = src.departure_id,
+			dest.arrival_id = src.arrival_id,
+			dest.departure_country_id = src.departure_country_id,
+			dest.arrival_country_id = src.arrival_country_id,
+			dest.route = src.route,
+			dest.remarks = src.remarks,
+			dest.altitude = src.altitude,
+			dest.speed = src.speed,
+			dest.flighttype = src.flighttype,
+			dest.state = src.state,
+			dest.missing = 0,
+			dest.departure_time = src.departure_time,
+			dest.arrival_time = src.arrival_time,
+			dest.duration = src.duration,
+			dest.distance = src.distance,
+			dest.processed = src.processed,
+			dest.revision = src.revision,
+			dest.last_lat = src.last_lat,
+			dest.last_lon = src.last_lon,
+			dest.last_altitude = src.last_altitude,
+			dest.last_speed = src.last_speed,
+			dest.last_heading = src.last_heading,
+			dest.updated_at = CURRENT_TIMESTAMP()
+		where dest.id = src.id");
+		$this->line('Updated records');
+
+		if(count($this->positions) > 0) {
+			Position::insert($this->positions);
+			unset($this->positions);
+		}
+
+		$missings = $database->filter(function($flight) use ($update) {
+			return (!array_key_exists($flight->id, $update));
+		});
+
+		unset($update);
+
+		$delete = array();
+		$disappeared = array();
+
+		foreach($missings as $missing) {
+			if($missing->state == 5) {
+				$missing->state = 2;
+				$missing->save();
+			} elseif(Carbon::now()->diffInMinutes($missing->updated_at) >= 60) {
+				$delete[] = $missing->id;
+			} else {
+				if(($missing->state == 1 || $missing->state == 3) && $airport = $this->hasLanded($missing)) {
+					$missing->state = 2;
+					$missing->missing = 0;
+					$missing->arrival_id = $airport;
+					$missing->arrival_time = $missing->updated_at;
+					$missing->duration = $this->duration($missing->departure_time, $missing->arrival_time);
+					$missing->save();
+				} elseif(!$missing->missing) {
+					$disappeared[] = $missing->id;
+				}
+			}
+
+			unset($airport, $missing);
+		}
+
+		// Delete flights that have been missing for more than an hour
+		if(count($delete) > 0)
+			Flight::destroy($delete);
+
+		// Set flights to missing
+		if(count($disappeared) > 0)
+			Flight::whereIn('id', $disappeared)->update(array('missing' => '1'));
+
+		unset($database, $delete, $disappeared, $missings);
+		$this->error('Pilots: end');
+	}
+
+	/**
+	 * Processes the ATC in the datafeed, both new and existing
+	 * in the database. As well as any ATC in the database that
+	 * have not finished yet but are missing from the datafeed.
+	 *
+	 * @return void
+	 */
+	function controllers() {
+		$this->error('Controllers: begin');
+		$database = ATC::whereNull('end')->get();
+
+		$update = array();
+		$insert = array();
+
+		$default = array(
+			'vatsim_id' => '',
+			'callsign' => '',
+			'atis' => '',
+			'frequency' => '',
+			'visual_range' => '0',
+			'lat' => '0',
+			'lon' => '0',
+			'time' => $this->updateDate,
+			'missing' => 0,
+			'start' => $this->updateDate,
+			'facility_id' => 0,
+			'rating_id' => 1,
+			'airport_id' => null,
+			'sector_id' => null,
+		);
+
+		foreach($this->controllers as $entry) {
+			$this->line('--- Entry ' . $entry['callsign'] . ' by ' . $entry['cid']);
+
+			// Find the ATC duty in the data we fetched using the callsign
+			// and vatsim id of the controllers. If the duty does not exist
+			// in the database we will create a new one.
+			$atc = $database->first(function($key, $atc) use ($entry) {
+				return ($atc->callsign == $entry['callsign'] && $atc->vatsim_id == $entry['cid']);
+			}, new ATC);
+
+			$atc->atis = $entry['atis_message'];
+			$atc->frequency = $entry['frequency'];
+			$atc->visual_range = $entry['visualrange'];
+			$atc->lat = $entry['latitude'];
+			$atc->lon = $entry['longitude'];
+			$atc->time = $this->updateDate;
+
+			$atc->missing = false;
+
+			if(!$atc->exists) {
+				$atc->vatsim_id = $entry['cid'];
+				$atc->callsign = $entry['callsign'];
+
+				$atc->start = Carbon::createFromFormat('YmdHis', $entry['time_logon'], 'UTC')->toDateString();
+
+				$atc->facility_id = (ends_with($entry['callsign'], '_ATIS')) ? 99 : $entry['facilitytype'];
+				$atc->rating_id = $entry['rating'];
+
+				$this->vatsimUser($entry['cid'], true);
+
+				if($atc->facility_id == 6) {
+					$sector = SectorAlias::select('sectors.code')->where('sector_aliases.code','=',explode('_', $entry['callsign'])[0])->join('sectors','sector_aliases.sector_id','=','sectors.id')->pluck('code');
+					$atc->sector_id = (is_null($sector)) ? null : $sector;
+					unset($sector);
+				}
+			}
+
+			if($this->hasRelocated($atc, $entry) && $atc->facility_id < 6) {
+				$nearby = $this->proximity($entry['latitude'], $entry['longitude']);
+				$atc->airport_id = (is_null($nearby)) ? null : $nearby->id;
+				unset($nearby);
+			}
+
+			// Skip this record if the callsign is empty
+			if(empty($atc->callsign))
+				continue;
+
+			// Add atc to update array
+			elseif($atc->exists) {
+				$update[$atc->id] = array_except($atc->toArray(), array('start','callsign','vatsim_id','facility','end','facility_id','rating_id','sector_id','created_at','updated_at','deleted_at'));
+			}
+
+			// Add atc to insert array, also set the created_at
+			// and updated_at columns
+			else {
+				$atc->created_at = Carbon::now();
+				$atc->updated_at = Carbon::now();
+				$insert[] = array_merge($default, array_except($atc->toArray(), array('facility','deleted_at')));
+			}
+		}
+
+		// Insert new atc into the atc table right away
+		ATC::insert($insert);
+		unset($insert, $default);
+		$this->line('Inserted new records');
+
+		// Create temporary atc table for records that are to be updated
+		DB::statement("create temporary table if not exists atc_temp (
+			`id` int(10) unsigned NOT NULL,
+			`frequency` double(6,3) NOT NULL,
+			`visual_range` smallint(6) NOT NULL,
+			`lat` double(10,6) NOT NULL,
+			`lon` double(10,6) NOT NULL,
+			`missing` tinyint(1) NOT NULL DEFAULT '0',
+			`airport_id` varchar(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+			`time` datetime NOT NULL,
+			`atis` text COLLATE utf8_unicode_ci,
+			`duration` smallint(6) NOT NULL DEFAULT '0',
+			PRIMARY KEY (`id`)
+		)");
+		$this->line('Created temporary table');
+
+		$missings = $database->filter(function($atc) use ($update) {
+			return (!array_key_exists($atc->id, $update));
+		});
+
+		foreach($missings as $missing) {
+			if(Carbon::now()->diffInMinutes($missing->time) >= 10) {
+				$missing->end = $missing->time;
+				$missing->missing = false;
+			} elseif(!$missing->missing) {
+				$missing->missing = true;
+			}
+
+			$update[$missing->id] = array_except($missing->toArray(), array('start','callsign','vatsim_id','facility_id','rating_id','sector_id','created_at','updated_at','deleted_at'));
+
+			unset($missing);
+			
+		}
+
+		// Insert atc to be updated into temporary table
+		DB::table('atc_temp')->insert($update);
+		$this->line('Inserted updated records');
+
+		// Update atc table with data in temporary table
+		DB::statement("update atc dest, atc_temp src set
+			dest.frequency = src.frequency,
+			dest.visual_range = src.visual_range,
+			dest.lat = src.lat,
+			dest.lon = src.lon,
+			dest.airport_id = src.airport_id,
+			dest.time = src.time,
+			dest.missing = src.missing,
+			dest.atis = src.atis,
+			dest.duration = src.duration,
+			dest.updated_at = CURRENT_TIMESTAMP()
+		where dest.id = src.id");
+		$this->line('Updated records');
+
+		unset($database, $update, $missings);
+
+		$this->error('Controllers: end');
+	}
+
+	private function cleanup() {
+		//cleanup everything from attributes
+		$this->line('--- Memory usage: ' . memory_get_usage());
+		foreach (get_class_vars(__CLASS__) as $clsVar => $_) {
+			unset($this->$clsVar);
+		}
+		exit('--- Memory usage: ' . memory_get_usage() . "\n");
+	}
+
+	/**
+	 * Processes the callsign by checking if it is an airline,
+	 * private registration or otherwise unknown. Outputs the
+	 * processed callsign, its type and the airline ICAO code
+	 * or country's ISO code.
+	 *
+	 * @param  string  $originalCallsign
+	 * @return array
+	 */
+	function callsign($originalCallsign) {
+		// Strip callsign of hyphens so we can search without
+		// complications regarding the format.
+		$callsign = str_replace('-','',strtoupper($originalCallsign));
+
+		// For airlines we will use the stripped callsign and
+		// search based on a prefix basis
+		if(!is_null($airline = $this->airline($callsign)))
+			return ['callsign' => $callsign, 'callsign_type' => 1, 'airline_id' => $airline->icao];
+		
+		// For private registrations we will return the original
+		// callsign with the hyphens.
+		elseif(!is_null($registration = $this->registration($callsign)))
+			return ['callsign' => $originalCallsign, 'callsign_type' => 2, 'airline_id' => $registration->country_id];
+		
+		// If all else fails, callsign type is 0, airline_id is null
+		// and the original callsign will be used.
+		return ['callsign' => $originalCallsign, 'callsign_type' => 0, 'airline_id' => null];
+	}
+
+	/**
+	 * Strips the slashes and other codes from the aircraft
+	 * code to be left with the official ICAO code.
+	 *
+	 * @param  string  $code
+	 * @return string
+	 */
+	protected function aircraft($code) {
 		if(empty($code)) return '';
 
+		// Get the aircraft code (between slashes)
 		preg_match('/(?:.\/)?([^\/]+)(?:\/.)?/', $code, $aircraft);
 		return $aircraft[1];
 	}
 
-	function altitudeRange($altitude, $base, $range = 20) {
-		return ($altitude >= $base - $range && $altitude <= $base + $range);
+	/**
+	 * Gets the country ISO code for the airport queried. If the
+	 * airport cannot be found it will return an empty string.
+	 *
+	 * @param  string  $icao
+	 * @return string
+	 */
+	protected function airportCountry($icao) {	
+		// We need to return the country code or 
+		// empty if the airport cannot be found in our database
+		return array_key_exists($icao, $this->airportsIcao) ? $this->airportsIcao[$icao] : '';
 	}
 
-	function processPilots($data) {
-		Log::info('vataware:update - start processing pilots');
-		Log::info('vataware:update - found ' . count($data) . ' flights in vatsim data');
-		$callsigns = array_pluck($data, 'callsign');
-		$callsigns = array_combine($callsigns, $data);
-		unset($data);
-		$updateDate = $this->updateDate;
-		$flights = Flight::where('state','!=',2)->whereMissing(false)->with(['lastPosition' => function($pos) { $pos->select('positions.*','updates.timestamp')->join('updates','positions.update_id','=','updates.id'); }])->get();
-		Log::info('vataware:update - found ' . $flights->count() . ' flights in database');
-		foreach($flights as $flight) {
-			if(!array_key_exists($flight->callsign, $callsigns)) {
-				// flight has been missing for less than an hour
-				$flight->missing = true;
-
-				if($flight->last_lat != $flight->lastPosition->lat || $flight->last_lon != $flight->lastPosition->lon) {
-					$flight->last_lat = $flight->lastPosition->lat;
-					$flight->last_lon = $flight->lastPosition->lon;
-				}
-
-				if($flight->isAirborne() || $flight->isArriving()) {
-				// Airborne or near arrival
-					$nearby = $this->proximity($flight->last_lat, $flight->last_lon, null, $flight->arrival_id);
-					if(!is_null($nearby) && ($this->altitudeRange($flight->lastPosition->altitude, $nearby->elevation) || $nearby->elevation > $flight->lastPosition->altitude) && $flight->lastPosition->groundspeed < 30) {
-						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
-						$flight->stateArrived();
-						$flight->arrival_time = $flight->lastPosition->timestamp;
-						$flight->setArrival($nearby);
-						$flight->missing = false;
-						
-						$flight->pilot->distance += $flight->distance;
-						$flight->pilot->duration += $flight->duration;
-						$flight->pilot->counter++;
-						$flight->pilot->save();
-					}
-				}
-
-				$flight->save();
-			} else {
-				$data = $callsigns[$flight->callsign];
-				if(is_null($flight->lastPosition)) $this->positionReport($data, $flight->id);
-
-				if($flight->isAirborne())
-				{
-					$flight->duration = $this->duration($flight->departure_time, $updateDate);
-
-					$nearby = $this->proximity($data['latitude'], $data['longitude'], null, $flight->arrival_id);
-					if(!is_null($nearby) && ($this->altitudeRange($data['altitude'], $nearby->elevation) || $nearby->elevation > $data['altitude']) && $data['groundspeed'] < 30) {
-						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
-						$flight->stateArriving();
-					}
-					unset($nearby);
-				}
-				elseif($flight->isArriving())
-				{
-					$flight->duration = $this->duration($flight->departure_time, $updateDate);
-					$nearby = $this->proximity($data['latitude'], $data['longitude'], null, $flight->arrival_id);
-					if(!is_null($nearby) && ($this->altitudeRange($data['altitude'], $nearby->elevation) || $nearby->elevation > $data['altitude']) && $data['groundspeed'] < 30) {
-						// Airport is within range (20km), altitude is within elevation +/- 20ft and ground speed < 30 kts
-						$flight->stateArrived();
-						$flight->arrival_time = $updateDate;
-						$flight->setArrival($nearby);
-					} else {
-						// Make sure flight is marked as Airborne
-						$flight->stateAirborne();
-					}
-					unset($nearby);
-				}
-				elseif($flight->isPreparing())
-				{
-					if($data['longitude'] <> $flight->last_lon || $data['latitude'] <> $flight->last_lat || !$this->altitudeRange($data['altitude'], $flight->lastPosition->altitude, 10)) {
-						// Plane has moved (horizontally or vertically)
-						$flight->stateDeparting();
-					}
-				}
-
-				if($flight->isDeparting() &&
-					$data['altitude'] >= 
-					($flight->lastPosition->altitude + 50)) {
-					// Flight is departing and altitude has increased by more than 50 ft
-					$flight->stateAirborne();
-					$flight->departure_time = $updateDate;
-					$flight->arrival_time = Carbon::instance($updateDate)->addHours($data['planned_hrsenroute'])->addMinutes($data['planned_minenroute']);
-				}
-
-				if(empty($flight->departure_id)) {
-					$flight->departure_id = $data['planned_depairport'];
-					$flight->departure_country_id = $this->getAirports($data['planned_depairport']);
-				}
-
-				if(empty($flight->arrival_id)) {
-					$flight->arrival_id = $data['planned_destairport'];
-					$flight->arrival_country_id = $this->getAirports($data['planned_destairport']);
-				}
-
-				$flight->route = $data['planned_route'];
-				$flight->remarks = $data['planned_remarks'];
-				// $flight->flighttype = $data['planned_flighttype'];
-
-				// Aircraft codes
-				$flight->aircraft_code = $data['planned_aircraft'];
-				$flight->aircraft_id = $this->extractAircraft($data['planned_aircraft']);
-				
-				// Constantly update filed altitude, speed from flight plan
-				$flight->altitude = $data['planned_altitude'];
-				$flight->speed = $data['planned_tascruise'];
-
-				// Update distance flown
-				if(!empty($data['latitude']) && !empty($data['longitude'])) {
-					if($flight->last_lat != 0 && $flight->last_lon != 0) $flight->distance += acos(sin(deg2rad($flight->last_lat)) * sin(deg2rad($data['latitude'])) + cos(deg2rad($flight->last_lat)) * cos(deg2rad($data['latitude'])) * cos(deg2rad($flight->last_lon) - deg2rad($data['longitude']))) * 6371;
-				
-					// Update latest coordinates
-					$flight->last_lat = $data['latitude'];
-					$flight->last_lon = $data['longitude'];
-				}
-				
-				if($flight->isArrived()) {
-					$flight->pilot->distance += $flight->distance;
-					$flight->pilot->duration += $flight->duration;
-					$flight->pilot->counter++;
-					$flight->pilot->save();
-				}
-
-				// Ensure flight is not marked as missing
-				$flight->missing = false;
-				
-				$flight->save();
-
-				// Create position report
-				$this->positionReport($data, $flight->id);
-			}
-			unset($callsigns[$flight->callsign], $flight, $data);
-		}
-
-		unset($flights);
-
-		Log::info('vataware:update - done processing existing flights');
-		Log::info('vataware:update - adding ' . count($callsigns) . ' flights to the database');
-		foreach($callsigns as $data) {
-			/* Skip flight if there are no coordinates */
-			if(empty($data['longitude']) || empty($data['latitude'])) continue;
-
-			$date = Carbon::createFromFormat('YmdHis', $data['time_logon'], 'UTC');
-			$flight = new Flight;
-			
-			// Create entry for Pilot
-			$this->pilot($data);
-
-			$flight->vatsim_id = $data['cid'];
-			$flight->startdate = $date->toDateString();
-
-			// If no departure airport is defined, check for airport in proximity.
-			if(empty($data['planned_depairport']))
-			{
-				$nearby = $this->proximity($data['latitude'], $data['longitude']);
-				if(!is_null($nearby)) $flight->setDeparture($nearby);
-				unset($nearby);
-			}
-			else
-			{
-				$flight->departure_id = $data['planned_depairport'];
-				$flight->departure_country_id = $this->getAirports($data['planned_depairport']);
-			}
-
-			// Arrival airport
-			$flight->arrival_id = $data['planned_destairport'];
-			$flight->arrival_country_id = $this->getAirports($data['planned_destairport']);
-			
-			// Callsign, airline/private registration
-			$flight->callsign = $data['callsign'];
-			$callsign = str_replace('-','',strtoupper($data['callsign']));
-			if(!is_null($airline = $this->getAirlines($callsign))) { // Airline
-				$flight->isAirline($airline->icao);
-				unset($airline);
-			} elseif(!is_null($registration = $this->getRegistrations($callsign))) {
-				$flight->isPrivate($registration->country_id);
-				unset($registration);
-			}
-
-			// Set status as 'Preparing'
-			$flight->statePreparing();
-			$flight->save();
-
-			$this->positionReport($data, $flight->id);
-
-			unset($flight, $data, $callsign, $date);
-		}
-
-		unset($callsigns);
-
-		Log::info('vataware:update - finished processing pilots');
+	/**
+	 * Checks whether the plane has moved relative to the
+	 * last known position.
+	 *
+	 * @param  \Flight  $flight
+	 * @param  array    $datafeed
+	 * @return boolean
+	 */
+	protected function hasMoved($flight, $datafeed) {
+		return ($datafeed['longitude'] <> $flight->getOriginal('last_lon') || $datafeed['latitude'] <> $flight->getOriginal('last_lat'));
 	}
 
-	function processControllers($data) {
-		Log::info('vataware:update - start proocessing controllers');
-		Log::info('vataware:update - found ' . count($data) . ' controllers in vatsim data');
-		$updateDate = $this->updateDate;
-		$callsigns = array_pluck($data, 'callsign');
-		$callsigns = array_combine($callsigns, $data);
-		$controllers = ATC::whereNull('end')->with('pilot')->get();
-		Log::info('vataware:update - found ' . $controllers->count() . ' controllers in database');
-		foreach($controllers as $controller) {
-			if(!array_key_exists($controller->callsign, $callsigns)) {
-			// controller missing
-				if(Carbon::now()->diffInMinutes($controller->time) >= 10) {
-					// no record of last position
-					$controller->end = $controller->time;
-				} else {
-					// controller has been missing for less than an hour
-					$controller->missing = true;
-				}
-				$controller->save();
-			} else {
-				$data = $callsigns[$controller->callsign];
-
-				$controller->pilot->rating_id = $data['rating'];
-				$controller->pilot->save();
-
-				$controller->frequency = $data['frequency'];
-				$controller->duration = $this->duration($controller->start, $updateDate);
-				
-				$controller->missing = false;
-				$controller->time = $updateDate;
-				$controller->save();
-			}
-			unset($callsigns[$controller->callsign], $controller, $data);
-		}
-
-		unset($controllers);
-
-		Log::info('vataware:update - done processing existing controllers');
-		Log::info('vataware:update - adding ' . count($callsigns) . ' controllers to the database');
-		foreach($callsigns as $data) {
-			$controller = new ATC;
-			$controller->vatsim_id = $data['cid'];
-			$controller->callsign = $data['callsign'];
-			$controller->start = Carbon::createFromFormat('YmdHis', $data['time_logon']);
-			$controller->facility_id = (ends_with($data['callsign'], '_ATIS')) ? 99 : $data['facilitytype'];
-			$controller->rating_id = $data['rating'];
-			$controller->visual_range = $data['visualrange'];
-			$controller->lat = $data['latitude'];
-			$controller->lon = $data['longitude'];
-			$controller->frequency = $data['frequency'];
-
-			if($controller->facility_id < 6) {
-				$nearby = $this->proximity($data['latitude'], $data['longitude']);
-				$controller->airport_id = (is_null($nearby)) ? null : $nearby->id;
-				unset($nearby);
-			} elseif($controller->facility_id == 6) {
-				$sector = SectorAlias::select('sectors.code')->where('sector_aliases.code','=',explode('_', $data['callsign'])[0])->join('sectors','sector_aliases.sector_id','=','sectors.id')->pluck('code');
-				$controller->sector_id = (is_null($sector)) ? null : $sector;
-				unset($sector);
-			}
-
-			$this->pilot($data, true);
-			
-			$controller->missing = false;
-			// $controller->time = $updateDate;
-			$controller->save();
-
-			unset($controller, $data);
-		}
-
-		unset($callsigns);
-
-		Log::info('vataware:update - finished processing controllers');
+	/**
+	 * Checks whether the ATC controller has relocated
+	 * to another location.
+	 *
+	 * @param  \ATC   $atc
+	 * @param  array  $datafeed
+	 * @return boolean
+	 */
+	protected function hasRelocated($atc, $datafeed) {
+		return ($datafeed['longitude'] <> $atc->getOriginal('lon') || $datafeed['latitude'] <> $atc->getOriginal('lat'));
 	}
 
-	function map() {
+	/**
+	 * Checks whether the plane has taken off by comparing
+	 * altitude.
+	 *
+	 * @param  \Flight  $flight
+	 * @param  array    $datafeed
+	 * @return boolean
+	 */
+	protected function hasTakenOff($flight, $datafeed) {
+		return ($datafeed['altitude'] >= ($flight->getOriginal('last_altitude') + 50));
+	}
+
+	/**
+	 * Checks whether the plane has landed by checking
+	 * proximity to airport, altitude and speed.
+	 *
+	 * @param  \Flight     $flight
+	 * @param  array|null  $datafeed
+	 * @return string|boolean
+	 */
+	protected function hasLanded($flight, $datafeed = null) {
+		if(is_null($datafeed)) {
+			$latitude = $flight->last_lat;
+			$longitude = $flight->last_lon;
+			$altitude = $flight->last_altitude;
+			$speed = $flight->last_speed;
+		} else {
+			$latitude = $datafeed['latitude'];
+			$longitude = $datafeed['longitude'];
+			$altitude = $datafeed['altitude'];
+			$speed = $datafeed['groundspeed'];
+		}
+
+		$nearby = $this->proximity($latitude, $longitude, null, $flight->arrival_id);
+		return (!is_null($nearby) && ($this->altitudeRange($altitude, $nearby->elevation) || $nearby->elevation > $altitude) && $speed < 30)
+			? $nearby->icao
+			: false;
+	}
+
+	/**
+	 * Checks whether the callsign matches an airline on
+	 * record using regular expression.
+	 *
+	 * @param  string  $callsign
+	 * @return \Airline|null
+	 */
+	protected function airline($callsign) {
+		return $this->airlines->first(function($key, $airline) use ($callsign) {
+			return preg_match('/^' . $airline->icao . '[0-9]{1,5}[A-Z]{0,2}$/', $callsign);
+		});
+	}
+
+	/**
+	 * Checks whether the callsign matches a registration on
+	 * record using regular expression.
+	 *
+	 * @param  string  $callsign
+	 * @return \Registration|null
+	 */
+	protected function registration($callsign) {
+		return $this->registrations->first(function($key, $registration) use ($callsign) {
+			return preg_match('/^' . $registration->prefix . '$/', $callsign);
+		});
+	}
+
+	/**
+	 * Create a position report for a flight and store it
+	 * in a class variable.
+	 *
+	 * @param  array  $data
+	 * @param  int    $flightId
+	 * @return void
+	 */
+	protected function positionReport($data, $flightId) {
+		$position = new Position;
+
+		$position->flight_id = $flightId;
+		
+		$position->lat = $data['latitude'];
+		$position->lon = $data['longitude'];
+		$position->altitude = $data['altitude'];
+		$position->speed = $data['groundspeed'];
+		$position->heading = $data['heading'];
+		// $position->ground_elevation = 
+		
+		$position->update_id = $this->updateId;
+
+		$this->positions[] = $position->toArray();
+
+		unset($position, $data, $flightId);
+	}
+
+	/**
+	 * Prepares an array for the map and stores it in the database.
+	 *
+	 * @return void
+	 */
+	protected function map() {
+		$this->error('Map: start');
 		$flights = Flight::whereMissing(false)
 			->whereIn('state',[1, 3])
 			->join('pilots','flights.vatsim_id','=','pilots.vatsim_id')
-			->join('positions','flights.id','=','positions.flight_id')
-			->join('updates','positions.update_id','=','updates.id')
-			->select('flights.*','positions.altitude','positions.speed','positions.heading','pilots.name')
-			->orderBy('timestamp','desc')
+			->select('flights.*','pilots.name')
 			->get()
 			->transform(function($flight) {
 				return [
@@ -569,15 +921,60 @@ class VatawareUpdateCommand extends Command {
 					'lon' => $flight->last_lon,
 
 					// Movement
-					'altitude' => $flight->lastPosition->altitude,
-					'speed' => $flight->lastPosition->speed,
-					'heading' => $flight->lastPosition->heading,
+					'altitude' => $flight->last_altitude,
+					'speed' => $flight->last_speed,
+					'heading' => $flight->last_heading,
 				];
 			});
 
 		DbConfig::put('vatsim.map', $flights);
 
 		unset($flights);
+		$this->error('Map: end');
+	}
+
+	protected function statistics() {
+		$this->error('Statistics: begin');
+		// Count the number of records in the pilot and controller arrays.
+		$pilots = count($this->pilots);
+		$controllers = count($this->controllers);
+
+		// Store the counts in the database.
+		DbConfig::put('vatsim.pilots', $pilots);
+		DbConfig::put('vatsim.atc', $controllers);
+		DbConfig::put('vatsim.users', $pilots + $controllers);
+
+		// Count the number of flights for the current year.
+		$thisYear = Flight::whereBetween('startdate',array(date('Y') . '-01-01', date('Y-m-d')))->count();
+		DbConfig::put('vatsim.year', number_format($thisYear));
+
+		// Count the number of flights for this month
+		$thisMonth = Flight::whereBetween('startdate',array(date('Y-m') . '-01', date('Y-m-t')))->count();
+		DbConfig::put('vatsim.month', number_format($thisMonth));
+
+		// Count the number of flights for this day
+		$thisDay = Flight::whereStartdate(date('Y-m-d'))->count();
+		DbConfig::put('vatsim.day', number_format($thisDay));
+
+		// Sum of the total distance flown today.
+		$distance = Flight::whereStartdate(date('Y-m-d'))->sum('distance') * 0.54;
+		DbConfig::put('vatsim.distance', number_format($distance));
+
+		// Count the number of flights for the same period last year.
+		$lastYear = Flight::whereBetween('startdate',array((date('Y')-1) . '-01-01', (date('Y')-1) . date('m-d')))->count();
+
+		if($lastYear == 0) {
+			DbConfig::put('vatsim.change', '&infin;&nbsp;');
+			DbConfig::put('vatsim.changeDirection', 'up');
+		} else {
+			$percentageChange = (($thisYear - $lastYear) / $lastYear * 100);
+			DbConfig::put('vatsim.change', number_format(abs($percentageChange)));
+			DbConfig::put('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
+		}
+
+		unset($thisYear, $thisMonth, $thisDay, $distance, $lastYear, $percentageChange);
+
+		$this->error('Statistics: end');
 	}
 
 }
