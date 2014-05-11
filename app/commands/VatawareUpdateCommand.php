@@ -694,12 +694,13 @@ class VatawareUpdateCommand extends Command {
 			if(Carbon::now()->diffInMinutes($missing->time) >= 10) {
 				$this->comment('--- Marked as done');
 				$missing->end = $missing->time;
+				$missing->duration = $this->duration($missing->start, $missing->end);
 				$missing->missing = false;
 			} elseif(!$missing->missing) {
 				$missing->missing = true;
 			}
 
-			$update[$missing->id] = array_except($missing->toArray(), array('start','callsign','vatsim_id','facility','facility_id','rating_id','sector_id','created_at','updated_at','deleted_at'));
+			$update[$missing->id] = array_except($missing->toArray(), array('start','callsign','vatsim_id','facility','facility_id','rating_id','sector_id','processed','created_at','updated_at','deleted_at'));
 
 			unset($missing);
 		}

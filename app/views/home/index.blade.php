@@ -2,8 +2,9 @@
 <div id="banners">
 	<div class="banner" id="competition-may" style="background-image: url({{ asset('assets/images/banners/competition-may.jpg') }});"><a class="banner-link" href="http://vataware.com/forums/viewtopic.php?f=25&t=141"></a></div>
 </div>
+
 <div class="container"><br /><br />
-	<div class="tiles" style="text-align: center;">
+	{{--<div class="tiles" style="text-align: center;">
 		<a href="#" class="tile" style="background-color:#138995;">
 			<div style="margin-top: 50px;">
 				<i class="fa fa-user" style="font-size:50px; margin-bottom: 15px;"></i><br />
@@ -34,7 +35,7 @@
 				Resources
 			</div>
 		</a>
-	</div>
+	</div>--}}
 	<div>
 		<h2 class="section-header">Statistics</h2>
 		<div class="well well-sm">

@@ -78,9 +78,9 @@
 				<tbody class="rowlink" data-link="row">
 					@foreach($actives as $active)
 					<tr>
-						<td><a href="{{ URL::route('atc.show', $active->id) }}"><strong>{{ ($active->airport_id) ? '<img src="' . flag($active->airport->country_id) . '"> ' . $active->airport_id : $active->callsign }}</strong></a></td>
+						<td><a href="{{ URL::route('atc.show', $active->id) }}"><strong>{{ ($active->airport) ? '<img src="' . flag($active->airport->country_id) . '"> ' . $active->airport_id : $active->callsign }}</strong></a></td>
 						<td>{{ $active->facility }}</td>
-						<td>{{ $active->duration }}</td>
+						<td>{{ $active->duration_human }}</td>
 					</tr>
 					@endforeach
 				</tbody>
@@ -93,7 +93,7 @@
 					<tr>
 						<td><a href="{{ URL::route('atc.show', $duty->id) }}"><strong>{{ ($duty->airport_id) ? '<img src="' . flag($duty->airport->country_id) . '"> ' . $duty->airport_id : $duty->callsign }}</strong></a></td>
 						<td>{{ $duty->facility }}</td>
-						<td>{{ $duty->duration }}</td>
+						<td>{{ $duty->duration_human }}</td>
 					</tr>
 					@endforeach
 				</tbody>
