@@ -65,11 +65,11 @@
 			<table class="table table-striped">
 				<tr>
 					<th>Altitude<br /><small>(Current/Filed)</small></th>
-					<td>{{ number_format($flight->positions->last()->altitude) }}ft / {{ $flight->flighttype == 'V' ? 'VFR' : (is_numeric($flight->altitude) ? number_format($flight->altitude) . 'ft' : $flight->altitude) }}</td>
+					<td>{{ number_format($flight->last_altitude) }}ft / {{ $flight->flighttype == 'V' ? 'VFR' : (is_numeric($flight->altitude) ? number_format($flight->altitude) . 'ft' : $flight->altitude) }}</td>
 				</tr>
 				<tr>
 					<th>Speed<br /><small>(Current/Filed)</small></th>
-					<td>{{ number_format($flight->positions->last()->speed) }}kts / {{ number_format($flight->speed) }}kts</td>
+					<td>{{ number_format($flight->last_speed) }}kts / {{ number_format($flight->speed) }}kts</td>
 				</tr>
 				<tr>
 					<th>Departed</th>

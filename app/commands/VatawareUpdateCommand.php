@@ -37,8 +37,10 @@ class VatawareUpdateCommand extends Command {
 	public function __construct()
 	{
 		parent::__construct();
+		$this->uniqueId = uniqid();
 	}
 
+	protected $uniqueId;
 	protected $updateId;
 	protected $updateDate;
 	protected $nextUpdate;
@@ -90,6 +92,7 @@ class VatawareUpdateCommand extends Command {
 
 		$this->error('End: ' . Carbon::now());
 		$this->error('Time: ' . $start->diffInSeconds(Carbon::now()));
+
 		// Clean up variables
 		$this->cleanup();
 
@@ -346,7 +349,15 @@ class VatawareUpdateCommand extends Command {
 				// departure/arrival airport.
 				else {
 					// Update distance
-					$flight->distance += acos(sin(deg2rad($flight->getOriginal('last_lat'))) * sin(deg2rad($entry['latitude'])) + cos(deg2rad($flight->getOriginal('last_lat'))) * cos(deg2rad($entry['latitude'])) * cos(deg2rad($flight->getOriginal('last_lon')) - deg2rad($entry['longitude']))) * 6371;
+					try {
+						$flight->distance += acos(sin(deg2rad($flight->getOriginal('last_lat'))) * sin(deg2rad($entry['latitude'])) + cos(deg2rad($flight->getOriginal('last_lat'))) * cos(deg2rad($entry['latitude'])) * cos(deg2rad($flight->getOriginal('last_lon')) - deg2rad($entry['longitude']))) * 6371;
+					} catch(ErrorException $e) {
+						Log::debug($e);
+						Log::debug('last_lat: ' . $flight->getOriginal('last_lat'));
+						Log::debug('last_lon: ' . $flight->getOriginal('last_lon'));
+						Log::debug('latitude: ' . $entry['latitude']);
+						Log::debug('longitude: ' . $entry['longitude']);
+					}
 
 					// Add the position report
 					$this->positionReport($entry, $flight->id);
@@ -445,7 +456,7 @@ class VatawareUpdateCommand extends Command {
 		}
 		
 		// Insert new flights into the flights table right away
-		Flight::insert($insert);
+		$this->progressiveInsert(new Flight, $insert);
 		unset($insert, $default);
 		$this->line('Inserted new records');
 
@@ -479,7 +490,7 @@ class VatawareUpdateCommand extends Command {
 		$this->line('Created temporary table');
 
 		// Insert flights to be updated into temporary table
-		DB::table('flights_temp')->insert($update);
+		$this->progressiveInsert('flights_temp', $update);
 		$this->line('Inserted updated records');
 
 		// Update flights table with data in temporary table
@@ -511,7 +522,7 @@ class VatawareUpdateCommand extends Command {
 		$this->line('Updated records');
 
 		if(count($this->positions) > 0) {
-			Position::insert($this->positions);
+			$this->progressiveInsert(new Position, $this->positions);
 			unset($this->positions);
 		}
 
@@ -612,7 +623,7 @@ class VatawareUpdateCommand extends Command {
 				$atc->vatsim_id = $entry['cid'];
 				$atc->callsign = $entry['callsign'];
 
-				$atc->start = Carbon::createFromFormat('YmdHis', $entry['time_logon'], 'UTC')->toDateString();
+				$atc->start = Carbon::createFromFormat('YmdHis', $entry['time_logon'], 'UTC');
 
 				$atc->facility_id = (ends_with($entry['callsign'], '_ATIS')) ? 99 : $entry['facilitytype'];
 				$atc->rating_id = $entry['rating'];
@@ -638,7 +649,7 @@ class VatawareUpdateCommand extends Command {
 
 			// Add atc to update array
 			elseif($atc->exists) {
-				$update[$atc->id] = array_except($atc->toArray(), array('start','callsign','vatsim_id','facility','end','facility_id','rating_id','sector_id','processed','created_at','updated_at','deleted_at'));
+				$update[$atc->id] = array_except($atc->toArray(), array('start','callsign','vatsim_id','facility','facility_id','rating_id','sector_id','processed','created_at','updated_at','deleted_at'));
 			}
 
 			// Add atc to insert array, also set the created_at
@@ -651,7 +662,7 @@ class VatawareUpdateCommand extends Command {
 		}
 
 		// Insert new atc into the atc table right away
-		ATC::insert($insert);
+		$this->progressiveInsert(new ATC, $insert);
 		unset($insert, $default);
 		$this->line('Inserted new records');
 
@@ -664,6 +675,7 @@ class VatawareUpdateCommand extends Command {
 			`lon` double(10,6) NOT NULL,
 			`missing` tinyint(1) NOT NULL DEFAULT '0',
 			`airport_id` varchar(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+			`end` datetime DEFAULT NULL,
 			`time` datetime NOT NULL,
 			`atis` text COLLATE utf8_unicode_ci,
 			`duration` smallint(6) NOT NULL DEFAULT '0',
@@ -675,23 +687,28 @@ class VatawareUpdateCommand extends Command {
 			return (!array_key_exists($atc->id, $update));
 		});
 
+		$this->line(count($update) . ' update records');
+
 		foreach($missings as $missing) {
+			$this->line('--- Entry ' . $missing->callsign . ' by ' . $missing->vatsim_id . ' last seen ' . $missing->time);
 			if(Carbon::now()->diffInMinutes($missing->time) >= 10) {
+				$this->comment('--- Marked as done');
 				$missing->end = $missing->time;
 				$missing->missing = false;
 			} elseif(!$missing->missing) {
 				$missing->missing = true;
 			}
 
-			$update[$missing->id] = array_except($missing->toArray(), array('start','callsign','vatsim_id','facility_id','rating_id','sector_id','created_at','updated_at','deleted_at'));
+			$update[$missing->id] = array_except($missing->toArray(), array('start','callsign','vatsim_id','facility','facility_id','rating_id','sector_id','created_at','updated_at','deleted_at'));
 
 			unset($missing);
-			
 		}
 
+		$this->line(count($update) . ' update (with missing) records');
+
 		// Insert atc to be updated into temporary table
-		DB::table('atc_temp')->insert($update);
-		$this->line('Inserted updated records');
+		$this->progressiveInsert('atc_temp', $update);
+		$this->line('Inserted updated records. ' . DB::table('atc_temp')->count());
 
 		// Update atc table with data in temporary table
 		DB::statement("update atc dest, atc_temp src set
@@ -704,6 +721,7 @@ class VatawareUpdateCommand extends Command {
 			dest.missing = src.missing,
 			dest.atis = src.atis,
 			dest.duration = src.duration,
+			dest.end = src.end,
 			dest.updated_at = CURRENT_TIMESTAMP()
 		where dest.id = src.id");
 		$this->line('Updated records');
@@ -970,7 +988,7 @@ class VatawareUpdateCommand extends Command {
 		DbConfig::put('vatsim.distance', number_format($distance));
 
 		// Count the number of flights for the same period last year.
-		$lastYear = Flight::whereBetween('startdate',array((date('Y')-1) . '-01-01', (date('Y')-1) . date('m-d')))->count();
+		$lastYear = Flight::whereBetween('startdate',array((date('Y')-1) . '-01-01', (date('Y')-1) . date('-m-d')))->count();
 
 		if($lastYear == 0) {
 			DbConfig::put('vatsim.change', '&infin;&nbsp;');
@@ -984,6 +1002,32 @@ class VatawareUpdateCommand extends Command {
 		unset($thisYear, $thisMonth, $thisDay, $distance, $lastYear, $percentageChange);
 
 		$this->error('Statistics: end');
+	}
+
+	function error($arg) {
+		$log = 'datafeed[' . $this->uniqueId . '] ' . $arg;
+		Log::info($log);
+		return parent::error($arg);
+	}
+
+	function progressiveInsert($table, $data) {
+		if(is_scalar($table)) $model = DB::table($table);
+		else {
+			$model = $table;
+			$table = get_class($model);
+		}
+
+		$remaining = count($data);
+		$this->comment('Progressive insert on ' . $table . ': ' . $remaining);
+		$step = 0;
+		do {
+			$model->insert(array_slice($data, 100 * $step, 100));
+			$this->comment('Progressive insert on ' . $table . ': ' . $remaining);
+			$remaining -= 100;
+			$step++;
+		} while($remaining > 0);
+
+		unset($remaining, $data, $step);
 	}
 
 }
