@@ -37,6 +37,12 @@ class ATCController extends BaseController {
 			$otherControllers = array();
 		}
 
+		if($controller->pilot->getOriginal('updated_at') == '0000-00-00 00:00:00') {
+			Queue::push('LegacyUpdate', $controller->pilot->vatsim_id, 'legacy');
+			$controller->pilot->processing = 2;
+			$controller->pilot->save();
+		}
+
 		$this->autoRender(compact('controller','otherControllers'), $controller->callsign);
 	}
 

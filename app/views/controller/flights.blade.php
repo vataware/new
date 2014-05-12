@@ -24,12 +24,12 @@
 					<br />&nbsp;
 					@endif
 				<td>{{ $flight->aircraft_id }}</td>
-				<td><img src="{{ flag($flight->departure_country_id) }}"> {{ $flight->departure->id or '' }} {{ $flight->departure->city or ''}}
+				<td><img src="{{ flag($flight->departure_country_id) }}"> {{ $flight->departure->icao or '' }} {{ $flight->departure->city or ''}}
 					@if($flight->state > 1)
 					<br /><small>Depart at: {{ $flight->departure_time->format('H:i') }}</small>
 					@endif
 				</td>
-				<td><img src="{{ flag($flight->arrival_country_id) }}"> {{ $flight->arrival->id or '' }} {{ $flight->arrival->city or '' }}
+				<td><img src="{{ flag($flight->arrival_country_id) }}"> {{ $flight->arrival->icao or '' }} {{ $flight->arrival->city or '' }}
 					@if($flight->state > 1)
 					<br /><small>Arrive at: {{ $flight->arrival_time->format('H:i') }}</small></td>
 					@endif

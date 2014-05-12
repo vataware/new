@@ -49,6 +49,10 @@ Log::useFiles(storage_path().'/logs/laravel.log');
 App::error(function(Exception $exception, $code)
 {
 	Log::error($exception);
+	foreach($_ENV as $key => $value) {
+		unset($_ENV[$key]);
+		unset($_SERVER[$key]);
+	}
 });
 
 App::missing(function($exception)

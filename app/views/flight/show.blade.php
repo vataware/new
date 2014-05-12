@@ -16,7 +16,7 @@
 					<th>Operator</th>
 					<td>
 						@if($flight->callsign_type == 1)
-						<img src="{{ asset('assets/images/airlines/' . $flight->airline_id . '.png') }}">&nbsp;&nbsp;{{ $flight->airline->name }}
+						<img src="{{ asset('assets/images/airlines/' . $flight->airline_id . '.png') }}">&nbsp;&nbsp;<a href="{{ URL::route('airline.show', $flight->airline_id) }}">{{ $flight->airline->name }}</a>
 						@elseif($flight->callsign_type == 2)
 						Private ({{ $flight->privateCountry->country }})
 						@else
@@ -37,10 +37,10 @@
 					<th>Origin</th>
 					<td>
 						@if(!is_null($flight->departure))
-						{{ $flight->departure->id }} - {{ $flight->departure->name }}<br />
-						<img src="{{ flag($flight->departure->country_id) }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departure->country->country }}
+						<a href="{{ URL::route('airport.show', $flight->departure_id) }}">{{ $flight->departure->icao }}</a> - {{ $flight->departure->name }}<br />
+						<img src="{{ flag($flight->departure->country_id) }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departure->country ? $flight->departure->country->country : $flight->departure->country_id }}
 						@else
-						{{ $flight->departure_id }}
+						<a href="{{ URL::route('airport.show', $flight->departure_id) }}">{{ $flight->departure_id }}</a>
 						@endif
 					</td>
 				</tr>
@@ -48,10 +48,10 @@
 					<th>Destination</th>
 					<td>
 						@if(!is_null($flight->arrival))
-						{{ $flight->arrival->id }} - {{ $flight->arrival->name }}<br />
-						<img src="{{ flag($flight->arrival->country_id) }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrival->country->country }}
+						<a href="{{ URL::route('airport.show', $flight->arrival_id) }}">{{ $flight->arrival->icao }}</a> - {{ $flight->arrival->name }}<br />
+						<img src="{{ flag($flight->arrival->country_id) }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrival->country ? $flight->arrival->country->country : $flight->arrival->country_id }}
 						@else
-						{{ $flight->arrival_id }}
+						<a href="{{ URL::route('airport.show', $flight->arrival_id) }}">{{ $flight->arrival_id }}</a>
 						@endif
 					</td>
 				</tr>
@@ -65,11 +65,11 @@
 			<table class="table table-striped">
 				<tr>
 					<th>Altitude<br /><small>(Current/Filed)</small></th>
-					<td>{{ number_format($flight->positions->last()->altitude) }}ft / {{ $flight->flighttype == 'V' ? 'VFR' : (is_numeric($flight->altitude) ? number_format($flight->altitude) . 'ft' : $flight->altitude) }}</td>
+					<td>{{ number_format($flight->last_altitude) }}ft / {{ $flight->flighttype == 'V' ? 'VFR' : (is_numeric($flight->altitude) ? number_format($flight->altitude) . 'ft' : $flight->altitude) }}</td>
 				</tr>
 				<tr>
 					<th>Speed<br /><small>(Current/Filed)</small></th>
-					<td>{{ number_format($flight->positions->last()->speed) }}kts / {{ number_format($flight->speed) }}kts</td>
+					<td>{{ number_format($flight->last_speed) }}kts / {{ number_format($flight->speed) }}kts</td>
 				</tr>
 				<tr>
 					<th>Departed</th>
@@ -154,7 +154,7 @@
 @section('javascript')
 <script type="text/javascript">
 	function initialize() {
-		var map = new google.maps.Map(document.getElementById("map"));
+		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles, streetViewControl: false });
 		var bounds = new google.maps.LatLngBounds();
 
 		@if(!is_null($flight->departure))
@@ -171,7 +171,7 @@
 
 		@if(in_array($flight->state, [1, 3]))
 		var currentPosition = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->last_lat }}, {{ $flight->last_lon }}), map: map, icon: {
-				url: '{{ asset('assets/images/enroute/' . $flight->lastPosition->heading . '.png')}}',
+				url: '{{ asset('assets/images/enroute/' . $flight->last_heading . '.png')}}',
 				anchor: new google.maps.Point(23,23),
 			}
 		});

@@ -31,7 +31,7 @@
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-star"></i></small> Popular citypair</p>
 				</div>
 				<div class="col-md-4 col-sm-6 col-xs-12">
-					<h2>{{ number_format($flights->count() + ((!is_null($active)) ? 1 : 0)) }}</h2>
+					<h2>{{ number_format($pilot->counter + ((!is_null($active)) ? 1 : 0)) }}</h2>
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-plane"></i></small> Flights</p>
 				</div>
 				<div class="col-md-4 col-sm-6 col-xs-12">
@@ -74,13 +74,14 @@
 					<table class="table table-striped table-condensed">
 						<thead>
 							<tr>
-								<th>Airline</th>
+								<th colspan="2">Airline</th>
 								<th width="15%" class="text-center">#</th>
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
 						@foreach($airlines['table'] as $airline => $counter)
 						<tr>
+							<td style="width: 10px; background: {{ $airlines['colours'][$counter['key']] }}"></td>
 							<td>{{ is_string($airline) ? '<em>' . $airline . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->location . ' (' . $counter['data']->icao . ')' . '"><img src="' . asset('assets/images/airlines/' . $counter['data']->icao . '.png') . '">&nbsp;' . $counter['data']->name . '</span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>
@@ -98,14 +99,15 @@
 					<table class="table table-striped table-condensed">
 						<thead>
 							<tr>
-								<th>Airport</th>
+								<th colspan="2">Airport</th>
 								<th width="15%" class="text-center">#</th>
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
 						@foreach($airports['table'] as $airport => $counter)
 						<tr>
-							<td>{{ is_string($airport) ? '<em>' . $airport . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->name . ' (' . $counter['data']->id . ')' . '"><img src="' . flag($counter['data']->country_id) . '" /> ' . $counter['data']->icao . '<span class="hidden-inline-xs">&nbsp;&raquo; ' . (($counter['data']->city) ? $counter['data']->city . ', ' : '') . $counter['data']->country->country . '</span></span>' }}</td>
+							<td style="width: 10px; background: {{ $airports['colours'][$counter['key']] }}"></td>
+							<td>{{ is_string($airport) ? '<em>' . $airport . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->name . ' (' . $counter['data']->icao . ')' . '"><img src="' . flag($counter['data']->country_id) . '" /> ' . $counter['data']->icao . '<span class="hidden-inline-xs">&nbsp;&raquo; ' . (($counter['data']->city) ? $counter['data']->city . ', ' : '') . ((!is_null($counter['data']->country)) ? $counter['data']->country->country : $counter['data']->country_id) . '</span></span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>
 						</tr>
@@ -122,13 +124,14 @@
 					<table class="table table-striped table-condensed">
 						<thead>
 							<tr>
-								<th colspan="2">Aircraft</th>
+								<th colspan="3">Aircraft</th>
 								<th width="15%" class="text-center">#</th>
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
 						@foreach($aircraft['table'] as $airplane => $counter)
 						<tr>
+							<td style="width: 10px; background: {{ $aircraft['colours'][$counter['key']] }}"></td>
 							{{ is_string($airplane) ? '<td colspan="2"><em>' . $airplane . '</em>' : '<td><strong>' . $counter['data'][0]->code . '</strong></td><td> ' . implode('<br />', array_pluck($counter['data'],'name')) }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>
@@ -148,10 +151,10 @@
 						<td><a href="{{ URL::route('flight.show', $active->id) }}"><strong>{{ $active->callsign }}</strong></a><br /><em>{{ $active->status }}</em></td>
 						<td>
 							@if(!is_null($active->departure))
-							<img src="{{ asset('assets/images/flags/' . $active->departure_country_id . '.png') }}">&nbsp;{{ $active->departure_id }}
+							<img src="{{ asset('assets/images/flags/' . $active->departure->country_id . '.png') }}">&nbsp;{{ $active->departure_id }}
 							@endif<br />
 							@if(!is_null($active->arrival))
-							<img src="{{ asset('assets/images/flags/' . $active->arrival_country_id . '.png') }}">&nbsp;{{ $active->arrival_id }}
+							<img src="{{ asset('assets/images/flags/' . $active->arrival->country_id . '.png') }}">&nbsp;{{ $active->arrival_id }}
 							@endif
 						</td>
 						<td>{{ (is_null($active->departure)) ? 'Unknown' : (($active->departure->city) ? $active->departure->city . ', ' . strtoupper($active->departure->country_id) : $active->departure->country->country) }}<br />
@@ -171,8 +174,8 @@
 							<img src="{{ asset('assets/images/flags/' . $flight->departure->country_id . '.png') }}">&nbsp;@endunless{{ $flight->departure_id }}<br />
 							@unless(is_null($flight->arrival))
 							<img src="{{ asset('assets/images/flags/' . $flight->arrival->country_id . '.png') }}">&nbsp;@endunless{{ $flight->arrival_id }}</td>
-						<td>{{ (is_null($flight->departure)) ? 'Unknown' : (($flight->departure->city) ? $flight->departure->city . ', ' . strtoupper($flight->departure->country_id) : $flight->departure->country->country) }}<br />
-							{{ (is_null($flight->arrival)) ? 'Unknown' : (($flight->arrival->city) ? $flight->arrival->city . ', ' . strtoupper($flight->arrival->country_id) : $flight->arrival->country->country) }}</td>
+						<td>{{ (is_null($flight->departure)) ? 'Unknown' : (($flight->departure->city) ? $flight->departure->city . ', ' . strtoupper($flight->departure->country_id) : (!is_null($flight->departure->country) ? $flight->departure->country->country : strtoupper($flight->departure_country_id))) }}<br />
+							{{ (is_null($flight->arrival)) ? 'Unknown' : (($flight->arrival->city) ? $flight->arrival->city . ', ' . strtoupper($flight->arrival->country_id) : (!is_null($flight->arrival->country) ? $flight->arrival->country->country : strtoupper($flight->arrival_country_id))) }}</td>
 					</tr>
 					@endforeach
 				</tbody>

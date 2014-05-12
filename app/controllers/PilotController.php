@@ -5,7 +5,7 @@ class PilotController extends BaseController {
 	protected $layout = 'layouts.master';
 
 	function index() {
-		$pilots = Flight::with('pilot')->select(DB::raw('vatsim_id, COUNT(vatsim_id) AS aggregate, SUM(distance) as distance, SUM(duration) as duration'))->orderBy('aggregate','desc')->groupBy('vatsim_id')->paginate(50);
+		$pilots = Pilot::orderBy('counter','desc')->take(50)->paginate(50);
 
 		$this->autoRender(compact('pilots'),'Pilots');
 	}
@@ -13,14 +13,25 @@ class PilotController extends BaseController {
 	function show(Pilot $pilot) {
 		$active = Flight::with('departure','departure.country','arrival','arrival.country')->whereVatsimId($pilot->vatsim_id)->whereIn('state',array(0,1,3,4))->first();
 		$flights = Flight::with('departure','departure.country','arrival','arrival.country')->whereVatsimId($pilot->vatsim_id)->whereState(2)->orderBy('arrival_time','desc')->take(15)->get();
+		$flightCount = Flight::whereVatsimId($pilot->vatsim_id)->whereState(2)->count();
 
 		$stats = new FlightStat(Flight::whereVatsimId($pilot->vatsim_id));
+
+		if($pilot->processing == 0) {
+			Queue::push('LegacyUpdate', $pilot->vatsim_id, 'legacy');
+			$pilot->processing = 2;
+			$pilot->save();
+		}
+
+		if($pilot->processing == 2) {
+			Messages::success('The data for this pilot is currently being processed. In a couple of minutes, all statistics will be available.')->one();
+		}
 			
-		$distances = $stats->distances();
+		$distances = $stats->distances($pilot->distance);
 		$citypair = $stats->citypair();
 
 		if($flights->count() > 0) {
-			$durations = $stats->durations();
+			$durations = $stats->durations($pilot->duration);
 			extract($durations);
 		}
 
