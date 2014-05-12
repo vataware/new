@@ -30,7 +30,7 @@ Route::get('pilot/{pilot}/flights', ['as' => 'pilot.flights', 'uses' => 'PilotCo
 
 // ATC
 Route::get('atc', ['as' => 'atc.index', 'uses' => 'ATCController@index']);
-Route::get('atc/{atc}', ['as' => 'atc.show', 'uses' => 'ATCController@show'])->where('atc','[0-9]+');
+Route::get('atc/{atc}', ['as' => 'atc.show', 'uses' => 'ATCController@show'])->where('atc','[0-9]+')->after('flatten.atc');
 
 // Controllers
 Route::get('controller', ['as' => 'controller.index', 'uses' => 'ControllerController@index']);

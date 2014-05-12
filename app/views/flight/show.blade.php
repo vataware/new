@@ -38,7 +38,7 @@
 					<td>
 						@if(!is_null($flight->departure))
 						<a href="{{ URL::route('airport.show', $flight->departure_id) }}">{{ $flight->departure->icao }}</a> - {{ $flight->departure->name }}<br />
-						<img src="{{ flag($flight->departure->country_id) }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departure->country->country }}
+						<img src="{{ flag($flight->departure->country_id) }}">&nbsp;{{ $flight->departure->city ? $flight->departure->city . ', ' : '' }}{{ $flight->departure->country ? $flight->departure->country->country : $flight->departure->country_id }}
 						@else
 						<a href="{{ URL::route('airport.show', $flight->departure_id) }}">{{ $flight->departure_id }}</a>
 						@endif
@@ -49,7 +49,7 @@
 					<td>
 						@if(!is_null($flight->arrival))
 						<a href="{{ URL::route('airport.show', $flight->arrival_id) }}">{{ $flight->arrival->icao }}</a> - {{ $flight->arrival->name }}<br />
-						<img src="{{ flag($flight->arrival->country_id) }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrival->country->country }}
+						<img src="{{ flag($flight->arrival->country_id) }}">&nbsp;{{ $flight->arrival->city ? $flight->arrival->city . ', ' : '' }}{{ $flight->arrival->country ? $flight->arrival->country->country : $flight->arrival->country_id }}
 						@else
 						<a href="{{ URL::route('airport.show', $flight->arrival_id) }}">{{ $flight->arrival_id }}</a>
 						@endif
@@ -154,7 +154,7 @@
 @section('javascript')
 <script type="text/javascript">
 	function initialize() {
-		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles });
+		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles, streetViewControl: false });
 		var bounds = new google.maps.LatLngBounds();
 
 		@if(!is_null($flight->departure))

@@ -192,6 +192,13 @@ a:hover.tiles
 	font-family: "Myriad Pro", Myriad, "DejaVu Sans Condensed", "Liberation Sans", "Nimbus Sans L", Tahoma, Geneva, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+@media(max-width: 768px) {
+	.footer {
+		height: auto;
+		padding-bottom: 15px;
+	}
+}
+
 .footer > .container > .col-lg-12 > a
 {
 	color:#999b9d;
@@ -253,6 +260,7 @@ a:hover.tiles
 
 	.navbar-vataware {
 		height: 60px;
+		z-index: 999;
 	}
 
 	.navbar-vataware .navbar-brand {
@@ -264,6 +272,9 @@ a:hover.tiles
 
 	#vataware-navbar-collapse {
 		background: white;
+		margin-right: -16px;
+		margin-left: -16px;
+		border-bottom: 1px solid #2c3e50;
 	}
 }
 

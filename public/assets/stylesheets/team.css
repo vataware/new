@@ -33,6 +33,12 @@ div.teamTitle
     margin:0 auto;
 }
 
+@media(max-width: 767px) {
+    .profilePic {
+        display: none;
+    }
+}
+
 .row
 {
     margin-top:25px;

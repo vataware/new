@@ -30,7 +30,7 @@
 <body>
 	<div class="vataware-map-container">
 		<div id="flightRadar" class="vataware-map"></div>
-		<div class="vataware-map-stats">PILOTS ONLINE: <span style="color:#138995;">{{ $statsPilots }}</span>&nbsp; &nbsp; ATC ONLINE: <span style="color:#138995;">{{ $statsAtc }}</span></div>
+		<div class="vataware-map-stats">PILOTS<span class="hidden-inline-xs"> ONLINE</span>: <span style="color:#138995;">{{ $statsPilots }}</span>&nbsp; &nbsp; ATC<span class="hidden-inline-xs"> ONLINE</span>: <span style="color:#138995;">{{ $statsAtc }}</span></div>
 	</div>
 	<section class="wrapper">
 		{{-- Temporarily hide leader navigation --}}
@@ -102,7 +102,9 @@
 						<li><a href="{{ URL::route('pilot.index') }}">Pilots</a></li>
 						<li><a href="{{ URL::route('atc.index') }}">ATC</a></li>
 						<li><a href="{{ URL::to('forums') }}">Forum</a></li>
-						<li><a class="nohover" href="{{ URL::route('donations') }}"><img style="margin-top: -7px;" height="30" src="{{ asset('assets/images/donate.png') }}" alt="Donate" /></a></li>
+						<li class="visible-xs"><a href="{{ URL::route('donations') }}">Donations</a></li>
+						<li class="visible-xs"><a href="{{ URL::route('team') }}">Team</a></li>
+						<li class="hidden-xs"><a class="nohover" href="{{ URL::route('donations') }}"><img style="margin-top: -7px;" height="30" src="{{ asset('assets/images/donate.png') }}" alt="Donate" /></a></li>
 					</ul>
 				</div><!-- /.navbar-collapse -->
 			</div><!-- /.container-fluid -->
@@ -119,8 +121,8 @@
 				{{-- <div class="pull-right" style="font-size:29px; position:absolute; right:0;">
 					<a href="#" style="color:white;"><i class="fa fa-facebook" style="margin-right: 10px;"></i></a><a href="#" style="color:white;"><i class="fa fa-twitter" style="margin-right: 10px;"></i></a><a href="#" style="color:white;"><i class="fa fa-rss" style="margin-right: 10px;"></i></a>
 				</div> --}}
-				<a href="{{ URL::route('home') }}" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('pilot.index') }}">Pilots</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('atc.index') }}">ATC</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::to('forums') }}">Forum</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('team') }}">Team</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('donations') }}">Donate</a><br />
-				<br />&copy; 2014 <a href="{{ URL::route('home') }}" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
+				<div class="hidden-xs"><a href="{{ URL::route('home') }}" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('pilot.index') }}">Pilots</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('atc.index') }}">ATC</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::to('forums') }}">Forum</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('team') }}">Team</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('donations') }}">Donate</a><br /><br /></div>
+				&copy; 2014 <a href="{{ URL::route('home') }}" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
 				<small>version 1.1-{{ $build }}</small>
 			</div>
 		</div>

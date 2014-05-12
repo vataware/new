@@ -98,6 +98,7 @@ class ATC extends Eloquent {
 
 	public function getFrequencyAttribute($value) {
 		if(is_null($value)) return null;
+		if(!is_numeric($value)) return $value;
 		return number_format($value, 3, '.', '');
 	}
 

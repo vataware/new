@@ -71,30 +71,38 @@
 	<table class="table table-striped table-hover" style="margin-top: 20px;">
 		<thead>
 			<tr>
-				<th>Callsign</th>
-				<th>Type</th>
-				<th>Pilot</th>
-				<th>From</th>
-				<th>To</th>
-				<th>Duration</th>
+				<th>Callsign<span class="visible-inline-xs"><br /><em>Aircraft</em></span></th>
+				<th class="hidden-xs">Type</th>
+				<th>Pilot<span class="visible-inline-xs"><br /><em>From/To</em></span></th>
+				<th class="hidden-xs">From</th>
+				<th class="hidden-xs">To</th>
+				<th class="hidden-xs">Duration</th>
 			</tr>
 		</thead>
 		<tbody class="rowlink" data-link="row">
 			@foreach($flights as $flight)
 			<tr>
-				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a></td>
-				<td>{{ $flight->aircraft_id }}</td>
-				<td>{{ $flight->pilot->name }}</td>
-				<td>
+				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a><span class="visible-inline-xs"><br /><em>{{ $flight->aircraft_id }}</em></span></td>
+				<td class="hidden-xs">{{ $flight->aircraft_id }}</td>
+				<td>{{ $flight->pilot->name }}<span class="visible-inline-xs"><br /><em>
+					@if($flight->departure)
+					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->icao }}
+					@endif
+					&nbsp;-&nbsp;
+					@if($flight->arrival)
+					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->icao }}
+					@endif
+				</em></span></td>
+				<td class="hidden-xs">
 					@if($flight->departure)
 					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->icao }} {{ $flight->departure->city }}
 					@endif
 				</td>
-				<td>
+				<td class="hidden-xs">
 					@if($flight->arrival)
 					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->icao }} {{ $flight->arrival->city }}
 					@endif
-				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
+				<td class="hidden-xs">{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
 			</tr>
 			@endforeach
 		</tbody>
