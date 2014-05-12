@@ -11,7 +11,7 @@
 					<p class="lead">Rating</p>
 				</div>
 				<div class="col-md-3 col-sm-6 col-xs-12">
-					<h2>{{ number_format($duties->count() + $actives->count()) }}</h2>
+					<h2>{{ number_format($pilot->counter_atc + $actives->count()) }}</h2>
 					<p class="lead"><small class="text-muted"><i class="glyphicon glyphicon-briefcase"></i></small> Duties</p>
 				</div>
 				<div class="col-md-4 col-sm-6 col-xs-12">
@@ -28,13 +28,14 @@
 					<table class="table table-striped table-condensed">
 						<thead>
 							<tr>
-								<th>Airport</th>
+								<th colspan="2">Airport</th>
 								<th width="15%" class="text-center">#</th>
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
 						@foreach($airports['table'] as $airport => $counter)
 						<tr>
+							<td style="width: 10px; background: {{ $airports['colours'][$counter['key']] }}"></td>
 							<td>{{ is_string($airport) ? '<em>' . $airport . '</em>' : '<span data-toggle="tooltip" data-placement="bottom" data-html="true" data-title="' . $counter['data']->name . ' (' . $counter['data']->id . ')' . '"><img src="' . flag($counter['data']->country_id) . '" /> ' . $counter['data']->icao . '<span class="hidden-inline-xs">&nbsp;&raquo; ' . (($counter['data']->city) ? $counter['data']->city . ', ' : '') . $counter['data']->country->country . '</span></span>' }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>
@@ -52,13 +53,14 @@
 					<table class="table table-striped table-condensed">
 						<thead>
 							<tr>
-								<th>Facility</th>
+								<th colspan="2">Facility</th>
 								<th width="15%" class="text-center">#</th>
 								<th width="15%" class="text-center">%</th>
 							</tr>
 						</thead>
 						@foreach($facilities['table'] as $facility => $counter)
 						<tr>
+							<td style="width: 10px; background: {{ $facilities['colours'][$counter['key']] }}"></td>
 							<td>{{ is_string($facility) ? '<em>' . $facility . '</em>' : $counter['data'] }}</td>
 							<td class="text-center">{{ $counter['count'] }}</td>
 							<td class="text-center">{{ $counter['percent'] }}%</td>
@@ -76,9 +78,9 @@
 				<tbody class="rowlink" data-link="row">
 					@foreach($actives as $active)
 					<tr>
-						<td><a href="{{ URL::route('atc.show', $active->id) }}"><strong>{{ ($active->airport_id) ? '<img src="' . flag($active->airport->country_id) . '"> ' . $active->airport_id : $active->callsign }}</strong></a></td>
+						<td><a href="{{ URL::route('atc.show', $active->id) }}"><strong>{{ ($active->airport) ? '<img src="' . flag($active->airport->country_id) . '"> ' . $active->airport_id : $active->callsign }}</strong></a></td>
 						<td>{{ $active->facility }}</td>
-						<td>{{ $active->duration }}</td>
+						<td>{{ $active->duration_human }}</td>
 					</tr>
 					@endforeach
 				</tbody>
@@ -89,9 +91,9 @@
 				<tbody class="rowlink" data-link="row">
 					@foreach($duties as $duty)
 					<tr>
-						<td><a href="{{ URL::route('atc.show', $duty->id) }}"><strong>{{ ($duty->airport_id) ? '<img src="' . flag($duty->airport->country_id) . '"> ' . $duty->airport_id : $duty->callsign }}</strong></a></td>
+						<td><a href="{{ URL::route('atc.show', $duty->id) }}"><strong>{{ (!is_null($duty->airport)) ? '<img src="' . flag($duty->airport->country_id) . '"> ' . $duty->airport_id : $duty->callsign }}</strong></a></td>
 						<td>{{ $duty->facility }}</td>
-						<td>{{ $duty->duration }}</td>
+						<td>{{ $duty->duration_human }}</td>
 					</tr>
 					@endforeach
 				</tbody>

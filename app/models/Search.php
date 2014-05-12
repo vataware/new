@@ -25,9 +25,27 @@ class Search {
 	}
 
 	function airport() {
-		$airport = Airport::find($this->query);
+		$airport = Airport::whereIcao($this->query)->first();
 		if(!is_null($airport)) {
-			return Redirect::route('airport.show', $airport->id);
+			return Redirect::route('airport.show', $airport->icao);
+		}
+
+		return false;
+	}
+
+	function airportIata() {
+		$airport = Airport::whereIata($this->query)->first();
+		if(!is_null($airport)) {
+			return Redirect::route('airport.show', $airport->icao);
+		}
+
+		return false;
+	}
+
+	function airline() {
+		$airline = Airline::whereIcao($this->query)->first();
+		if(!is_null($airline)) {
+			return Redirect::route('airline.show', $airline->icao);
 		}
 
 		return false;

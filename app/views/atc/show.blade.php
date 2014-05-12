@@ -3,6 +3,7 @@
 <div class="container">
 	<div class="page-header"><h1>{{ $controller->callsign }}</h1></div>
 
+	@if(is_null($controller->end))
 	<div class="atc-progress hidden-xs hidden-sm">
 		<ul>
 			<li class="{{ $controller->facility_id == 0 ? 'controlled' : '' }}">Observer</li>
@@ -21,6 +22,7 @@
 		</ul>
 	</div>
 	<hr />
+	@endif
 	<div class="row">
 		<div class="col-md-5">
 			<div class="row">
@@ -48,16 +50,21 @@
 						</tr>
 						<tr>
 							<th>Time Controlled</th>
-							<td>{{ $controller->duration }}</td>
+							<td>{{ $controller->duration_human }}</td>
 						</tr>
 						@if(!is_null($controller->end))
 						<tr>
 							<th>Finished Duty</th>
 							<td>{{ $controller->end->format('j M Y - H:i') }}</td>
 						</tr>
+						<tr>
+							<th>Facility</th>
+							<td>{{ $controller->facility }}</td>
+						</tr>
 						@endif
 					</table>
 				</div>
+				@if(is_null($controller->end))
 				<div class="col-sm-6 visible-xs visible-sm atc-progress-small">
 					<span class="btn btn-primary btn-block {{ $controller->facility_id == 0 ? 'controlled' : 'hidden' }}">Observer</span>
 					<span class="btn btn-primary btn-block {{ $controller->facility_id == 1 ? 'controlled' : 'hidden' }}">Flight Service Station</span>
@@ -69,20 +76,26 @@
 					</div>
 					<span class="btn btn-primary btn-block {{ $controller->facility_id == 6 ? 'controlled' : 'hidden' }}">Center</span>
 				</div>
+				@endif
 			</div>
 		</div>
 		<div clas="col-md-7">
 			<div class="visible-xs visible-sm"><hr /></div>
+			@if(!is_null($controller->sector) || $controller->visual_range > 0)
 			<div id="map" style="height: 350px;"></div>
+			@else
+			<p>Sorry, no map available for this ATC duty.
+			@endif
 		</div>
 	</div>
 </div>
 
 @stop
 @section('javascript')
+@if(!is_null($controller->sector) || $controller->visual_range > 0)
 <script type="text/javascript">
 	function initialize() {
-		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles });
+		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles, streetViewControl: false });
 
 		@if(!is_null($controller->sector))
 		var bounds = new google.maps.LatLngBounds();
@@ -127,4 +140,5 @@
 
 	google.maps.event.addDomListener(window, 'load', initialize);
 </script>
+@endif
 @stop

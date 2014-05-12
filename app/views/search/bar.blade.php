@@ -17,11 +17,11 @@
 			</tr>
 			<tr>
 				<th>Citypair</th>
-				<td>EGLL - KSFO<br />VHHH to RCTP</td>
+				<td>EHAM - KDTW<br />VHHH to RCTP</td>
 			</tr>
 			<tr>
 				<th>Flights</th>
-				<td>KLM897<br />VH-OEQ</td>
+				<td>DAL188<br />VH-OEQ</td>
 			</tr>
 			{{--<tr>
 				<th>ATC</th>
@@ -29,7 +29,11 @@
 			</tr>--}}
 			<tr>
 				<th>Airport</th>
-				<td>LFPG</td>
+				<td>TNCM</td>
+			</tr>
+			<tr>
+				<th>Airline</th>
+				<td>CPA</td>
 			</tr>
 		</table>
 	</div>

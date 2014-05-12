@@ -9,17 +9,15 @@
 				<th>Name</th>
 				<th># Flights</th>
 				<th>Miles flown</th>
-				<th>Time in air</th>
 			</tr>
 		</thead>
 		<tbody class="rowlink" data-link="row">
 		@foreach($pilots as $pilot)
 			<tr>
 				<td><a href="{{ URL::route('pilot.show', $pilot->vatsim_id) }}">{{ $pilot->vatsim_id }}</a></td>
-				<td>{{ $pilot->pilot->name }}</td>
-				<td>{{ $pilot->aggregate }}</td>
+				<td>{{ $pilot->name }}</td>
+				<td>{{ $pilot->counter }}</td>
 				<td>{{ number_format($pilot->nm) }} nm</td>
-				<td>{{ number_format($pilot->hours) }} h {{ $pilot->minutes }} min</td>
 			</tr>
 		@endforeach
 		</tbody>

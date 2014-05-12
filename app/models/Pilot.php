@@ -45,4 +45,8 @@ class Pilot extends Eloquent {
 		}
 	}
 
+	function getNmAttribute() {
+		return $this->distance * 0.54;
+	}
+
 }

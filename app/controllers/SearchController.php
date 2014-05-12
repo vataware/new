@@ -13,7 +13,9 @@ class SearchController extends BaseController {
 			$regex = array(
 				'pilot' => '[0-9]+',
 				'airport' => '[A-Z0-9]{4}',
-				'citypair' => '([A-Z0-9]{3,4})(?:(?:\s?[-|>]\s?)|\sto\s)([A-Z0-9]{3,4})',
+				'airline' => '[A-Z0-9]{3}',
+				'airportIata' => '[A-Z0-9]{3}',
+				'citypair' => '([A-Z0-9]{3,4})(?:(?:\s*?[-|>]\s*?)|\s+to\s+|\s+)([A-Z0-9]{3,4})',
 				'callsign' => '.*'
 			);
 
@@ -29,8 +31,10 @@ class SearchController extends BaseController {
 
 		$pilots = Pilot::where('vatsim_id','=',$q)->orWhere('name','LIKE','%' . $q . '%')->where('vatsim_id','!=',0)->get();
 		$flights = Flight::where('callsign','=',$q)->orderBy('departure_time','desc')->get();
+		$airlines = Airline::where('icao','=',$q)->orWhere('name','LIKE','%' . $q . '%')->get();
+		$airports = Airport::where('icao','=',$q)->orWhere('iata','=',$q)->orWhere('name','LIKE','%' . $q . '%')->orWhere('city','LIKE','%' . $q . '%')->get();
 
-		$this->autoRender(compact('q','flights','pilots'), 'Search');
+		$this->autoRender(compact('q','flights','pilots','airlines','airports'), 'Search');
 	}
 
 }

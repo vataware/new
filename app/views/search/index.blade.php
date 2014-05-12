@@ -1,5 +1,4 @@
 @section('content')
-@include('search.bar')
 <div class="container">
 	<div class="page-header"><h1>Search <small>{{ $q }}</small></h1></div>
 
@@ -58,7 +57,51 @@
 		</tbody>
 	</table>
 	@endif
-
+	<hr />
+	<h2>Airlines <small class="pull-right" style="margin-top: 10px;">{{ $airlines->count() }} results</small></h2>
+	@if($airlines->count() > 0)
+	<table class="table table-striped table-hover" style="margin-top: 20px;">
+		<thead>
+			<tr>
+				<th>ICAO</th>
+				<th>Name</th>
+				<th>Callsign</th>
+			</tr>
+		</thead>
+		<tbody class="rowlink" data-link="row">
+			@foreach($airlines as $airline)
+			<tr>
+				<td><a href="{{ URL::route('airline.show', $airline->icao) }}">{{ $airline->icao }}<a></td>
+				<td>{{ $airline->name }}</td>
+				<td>{{ $airline->radio }}</td>
+			</tr>
+			@endforeach
+		</tbody>
+	</table>
+	@endif
+	<hr />
+	<h2>Airports <small class="pull-right" style="margin-top: 10px;">{{ $airports->count() }} results</small></h2>
+	@if($airports->count() > 0)
+	<table class="table table-striped table-hover" style="margin-top: 20px;">
+		<thead>
+			<tr>
+				<th>ICAO</th>
+				<th>Name</th>
+				<th>Callsign</th>
+			</tr>
+		</thead>
+		<tbody class="rowlink" data-link="row">
+			@foreach($airports as $airport)
+			<tr>
+				<td><a href="{{ URL::route('airport.show', $airport->icao) }}">{{ $airport->icao }}<a></td>
+				<td>{{ $airport->name }}</td>
+				<td>{{ $airport->city }}, {{ strtoupper($airport->country_id) }}</td>
+			</tr>
+			@endforeach
+		</tbody>
+	</table>
+	@endif
+	<hr />
 </div>
 
 @stop

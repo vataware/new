@@ -2,6 +2,8 @@
 
 $build = substr(File::get(base_path() . '/.git/' . trim(substr(File::get(base_path() . '/.git/HEAD'), 5))),0,7);
 View::share('build', $build);
+View::share('statsPilots', DbConfig::get('vatsim.pilots'));
+View::share('statsAtc', DbConfig::get('vatsim.atc'));
 
 function flag($code) {
 	return asset('assets/images/flags/' . $code . '.png');
@@ -14,12 +16,14 @@ function piechartData($data) {
 	$colourCount = count($colours)+1;
 	
 	$results = array();
+	$colourResults = array();
 
 	foreach($data as $key => $entry) {
 		$results[] = '{ label: "' . $entry[0] . '",  data: ' . $entry[1] . ', color: "' . (isset($entry[2]) ? $entry[2] : $colours[$key%$colourCount]) . '"}';
+		$colourResults[$entry[0]] = (isset($entry[2]) ? $entry[2] : $colours[$key%$colourCount]);
 	}
 
-	return implode(",\n", $results);
+	return array('javascript' => implode(",\n", $results), 'colours' => $colourResults);
 }
 
 function altitudeColour($altitude, $implode = false, $hex = false) {

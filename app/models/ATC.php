@@ -4,7 +4,7 @@ class ATC extends Eloquent {
 
 	protected $table = 'atc';
 	public $timestamps = true;
-	protected $softDelete = false;
+	protected $softDelete = true;
 	protected $dates = ['time','start','end'];
 	protected $appends = ['facility'];
 
@@ -83,12 +83,23 @@ class ATC extends Eloquent {
 		}
 	}
 
-	public function getDurationAttribute() {
-		$time = (is_null($this->end)) ? $this->time : $this->end;
-		$hours = $time->diffInHours($this->start);
-		$minutes = $time->diffInMinutes($this->start);
-		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
+	public function getDurationHumanAttribute() {
+		if(!is_null($this->end)) {
+			$hours = floor($this->duration/60);
+			$minutes = $this->duration % 60;
+		} else {
+			$now = Carbon::now();
+			$hours = $now->diffInHours($this->start);
+			$minutes = $now->diffInMinutes($this->start);
+			$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
+		}
 		return $hours . 'h ' . str_pad($minutes,2,'0',STR_PAD_LEFT) . 'm';
+	}
+
+	public function getFrequencyAttribute($value) {
+		if(is_null($value)) return null;
+		if(!is_numeric($value)) return $value;
+		return number_format($value, 3, '.', '');
 	}
 
 	public function pilot() {
@@ -97,7 +108,7 @@ class ATC extends Eloquent {
 
 	public function airport()
 	{
-		return $this->belongsTo('Airport');
+		return $this->belongsTo('Airport','airport_id','icao');
 	}
 
 	public function sector()
