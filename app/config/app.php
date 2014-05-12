@@ -108,6 +108,7 @@ return array(
 		'Illuminate\Workbench\WorkbenchServiceProvider',
 
 		'DeVosBurchart\Messages\MessagesServiceProvider',
+		'Vataware\Flatten\FlattenServiceProvider',
 	),
 
 	/*
@@ -176,6 +177,7 @@ return array(
 
 		'Messages'        => 'DeVosBurchart\Messages\Facades\Messages',
 		'Carbon'          => 'Carbon\Carbon',
+		'Flatten'         => 'Flatten\Facades\Flatten',
 	),
 
 );

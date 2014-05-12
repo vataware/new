@@ -5,21 +5,17 @@ class HomeController extends BaseController {
 	protected $layout = 'layouts.master';
 
 	public function index() {
-		$pilots = Cache::get('vatsim.pilots');
-		$atc = Cache::get('vatsim.atc');
-		$users = Cache::get('vatsim.users');
-		$year = Cache::get('vatsim.year');
-		$month = Cache::get('vatsim.month');
-		$day = Cache::get('vatsim.day');
-		$change = Cache::get('vatsim.change');
-		$changeArrow = Cache::get('vatsim.changeDirection');
-		$distance = Cache::get('vatsim.distance');
+		$users = DbConfig::get('vatsim.users');
+		$year = DbConfig::get('vatsim.year');
+		$month = DbConfig::get('vatsim.month');
+		$day = DbConfig::get('vatsim.day');
+		$change = DbConfig::get('vatsim.change');
+		$changeArrow = DbConfig::get('vatsim.changeDirection');
+		$distance = DbConfig::get('vatsim.distance');
 
 		$flights = Flight::with('pilot','departure','arrival')->whereState(1)->whereMissing(0)->orderBy(DB::raw('RAND()'))->take(15)->get();
 
-		$this->javascript('http://jqueryrotate.googlecode.com/svn/trunk/jQueryRotate.js');
-		$this->stylesheet('assets/stylesheets/map-rotate.css');
-		$this->autoRender(compact('pilots','atc','users','year','month','day','change','changeArrow','distance','flights'));
+		$this->autoRender(compact('users','year','month','day','change','changeArrow','distance','flights'));
 	}
 
 	function team() {
@@ -27,6 +23,13 @@ class HomeController extends BaseController {
 
 		$this->stylesheet('assets/stylesheets/team.css');
 		$this->autoRender(compact('members'), 'Team');
+	}
+
+	function donations() {
+		$donations = Donation::orderBy('amount')->remember(1440)->lists('name');
+
+		$this->stylesheet('assets/stylesheets/donations.css');
+		$this->autoRender(compact('donations'), 'Donations');
 	}
 
 	function mapApi() {
@@ -37,10 +40,10 @@ class HomeController extends BaseController {
 		Session::put('map.zoom', $zoom);
 		Session::put('map.coordinates', $lat . ',' . $lon);
 
-		if(Input::get('force') != '1' && Cache::has('vatsim.nextupdate') && Carbon::now()->lt(Cache::get('vatsim.nextupdate')))
+		if(Input::get('force') != '1' && DbConfig::has('vatsim.nextupdate') && Carbon::now()->lt(DbConfig::get('vatsim.nextupdate')))
 			return [];
 
-		return Cache::get('vatsim.map');
+		return DbConfig::get('vatsim.map');
 	}
 
 	function mapFlight() {

@@ -6,7 +6,10 @@
 		"laravel/framework": "4.1.*",
 		"bonroyage/messages": "dev-master",
 		"skymeyer/vatsimphp": "dev-master",
-		"halilim/xml-iterator": "dev-master"
+		"halilim/xml-iterator": "dev-master",
+		"iron-io/iron_mq": "dev-master",
+		"philf/setting": "dev-master",
+		"anahkiasen/flatten": "dev-master"
 	},
 	"require-dev": {
 		"barryvdh/laravel-debugbar": "1.*",
@@ -20,7 +23,10 @@
 			"app/database/migrations",
 			"app/database/seeds",
 			"app/tests/TestCase.php"
-		]
+		],
+		"psr-0": {
+			"Vataware": "app/core"
+		}
 	},
 	"scripts": {
 		"post-install-cmd": [

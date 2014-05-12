@@ -25,9 +25,9 @@ class Search {
 	}
 
 	function airport() {
-		$airport = Airport::find($this->query);
+		$airport = Airport::whereIcao($this->query)->first();
 		if(!is_null($airport)) {
-			return Redirect::route('airport.show', $airport->id);
+			return Redirect::route('airport.show', $airport->icao);
 		}
 
 		return false;
@@ -36,7 +36,7 @@ class Search {
 	function airportIata() {
 		$airport = Airport::whereIata($this->query)->first();
 		if(!is_null($airport)) {
-			return Redirect::route('airport.show', $airport->id);
+			return Redirect::route('airport.show', $airport->icao);
 		}
 
 		return false;

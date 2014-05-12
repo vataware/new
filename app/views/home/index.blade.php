@@ -1,14 +1,10 @@
 @section('content')
+<div id="banners">
+	<div class="banner" id="competition-may" style="background-image: url({{ asset('assets/images/banners/competition-may.jpg') }});"><a class="banner-link" href="http://vataware.com/forums/viewtopic.php?f=25&t=141"></a></div>
+</div>
 
-<div class="mapContainer" id="flightRadar"></div>
-<div class="smallMapStats">
-PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; ATC ONLINE: <span style="color:#138995;">{{ $atc }}</span>
-</div>
-<div style="margin-top: -5px;">
-@include('search.bar')
-</div>
 <div class="container"><br /><br />
-	<div class="tiles" style="text-align: center;">
+	{{--<div class="tiles" style="text-align: center;">
 		<a href="#" class="tile" style="background-color:#138995;">
 			<div style="margin-top: 50px;">
 				<i class="fa fa-user" style="font-size:50px; margin-bottom: 15px;"></i><br />
@@ -39,7 +35,7 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 				Resources
 			</div>
 		</a>
-	</div>
+	</div>--}}
 	<div>
 		<h2 class="section-header">Statistics</h2>
 		<div class="well well-sm">
@@ -75,98 +71,42 @@ PILOTS ONLINE: <span style="color:#138995;">{{ $pilots }}</span>&nbsp; &nbsp; AT
 	<table class="table table-striped table-hover" style="margin-top: 20px;">
 		<thead>
 			<tr>
-				<th>Callsign</th>
-				<th>Type</th>
-				<th>Pilot</th>
-				<th>From</th>
-				<th>To</th>
-				<th>Duration</th>
+				<th>Callsign<span class="visible-xs"><br /><em>Aircraft</em></span></th>
+				<th class="hidden-xs">Type</th>
+				<th>Pilot<span class="visible-xs"><br /><em>From/To</em></span></th>
+				<th class="hidden-xs">From</th>
+				<th class="hidden-xs">To</th>
+				<th class="hidden-xs">Duration</th>
 			</tr>
 		</thead>
 		<tbody class="rowlink" data-link="row">
 			@foreach($flights as $flight)
 			<tr>
-				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a></td>
-				<td>{{ $flight->aircraft_id }}</td>
-				<td>{{ $flight->pilot->name }}</td>
-				<td>
+				<td><a href="{{ URL::route('flight.show', $flight->id) }}">{{ $flight->callsign }}</a><span class="visible-xs"><br /><em>{{ $flight->aircraft_id }}</em></span></td>
+				<td class="hidden-xs">{{ $flight->aircraft_id }}</td>
+				<td>{{ $flight->pilot->name }}<span class="visible-xs"><br /><em>
 					@if($flight->departure)
-					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id }} {{ $flight->departure->city }}
+					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->icao }}
+					@endif
+					&nbsp;-&nbsp;
+					@if($flight->arrival)
+					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->icao }}
+					@endif
+				</em></span></td>
+				<td class="hidden-xs">
+					@if($flight->departure)
+					<img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->icao }} {{ $flight->departure->city }}
 					@endif
 				</td>
-				<td>
+				<td class="hidden-xs">
 					@if($flight->arrival)
-					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id }} {{ $flight->arrival->city }}
+					<img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->icao }} {{ $flight->arrival->city }}
 					@endif
-				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
+				<td class="hidden-xs">{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->traveled_time }}</td>
 			</tr>
 			@endforeach
 		</tbody>
 	</table>
 </div>
 
-@stop
-@section('javascript')
-<script type="text/javascript">
-	function initialize() {
-		var map = new google.maps.Map(document.getElementById("flightRadar"), { styles: googleMapStyles, zoom: {{ Session::has('map.zoom') ? Session::get('map.zoom') : 2 }}, center: new google.maps.LatLng({{ Session::has('map.coordinates') ? Session::get('map.coordinates') : '30, 0' }}), scrollwheel: false, streetViewControl: false, minZoom: 2, maxZoom: 14 });
-
-		var flights = [];
-		var polylines = [];
-
-		updateMap = function(firstload) {
-			if(typeof firstload == 'undefined') firstload = 0;
-			$.get('{{ URL::route('map.api') }}', {z: map.getZoom(), lat: map.getCenter().k, lon: map.getCenter().A, force: firstload}, function(data) {
-				for(i = 0; i < data.length; i++) {
-					var flight = data[i];
-					if(!(flight.id in flights)) {
-						var marker = new google.maps.Marker({ position: new google.maps.LatLng(flight.lat, flight.lon), map: map, icon: {
-								url: '{{ asset('assets/images/mapicon-red.png') }}?deg=' + flight.heading,
-								anchor: new google.maps.Point(10,10),
-								size: new google.maps.Size(20,20),
-								origin: new google.maps.Point(0,0)
-							},
-							optimized: false,
-							flightId: flight.id,
-							heading: flight.heading,
-						});
-
-						google.maps.event.addListener(marker, 'click', function() {
-							for(i=0; i < polylines.length; i++) {
-								polylines[i].setMap(null);
-							}
-							$.get('{{ URL::route('map.flight') }}', {id: this.flightId}, function(data) {
-								for (i = 0; i < data.coordinates.length - 1; i++) {
-									var flightPath = new google.maps.Polyline({
-										path: [new google.maps.LatLng(data.coordinates[i][0], data.coordinates[i][1]), new google.maps.LatLng(data.coordinates[i+1][0], data.coordinates[i+1][1])],
-										strokeColor: data.colours[i],
-										strokeOpacity: 1.0,
-										strokeWeight: 3,
-										map: map
-									});
-
-									polylines.push(flightPath);
-								}
-							});
-							
-					 	});
-
-						flights[flight.id] = marker;
-					} else {
-						flights[flight.id].setPosition(new google.maps.LatLng(flight.lat, flight.lon));
-					}
-				}
-			});
-		};
-
-		google.maps.event.addListener(map, 'idle', function() {
-			bounds = map.getBounds();
-			updateMap(1);
-		});
-
-		setInterval(updateMap, 60000);
-	}
-
-	google.maps.event.addDomListener(window, 'load', initialize);
-</script>
 @stop

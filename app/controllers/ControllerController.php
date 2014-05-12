@@ -12,10 +12,20 @@ class ControllerController extends BaseController {
 
 	function show(Pilot $pilot) {
 		$actives = ATC::with('airport','airport.country')->whereVatsimId($pilot->vatsim_id)->whereNull('end')->where('facility_id','!=',99)->get();
-		$duties = ATC::with('airport','airport.country')->whereVatsimId($pilot->vatsim_id)->whereNotNull('end')->where('facility_id','!=',99)->take(15)->get();
+		$duties = ATC::with('airport','airport.country')->whereVatsimId($pilot->vatsim_id)->whereNotNull('end')->where('facility_id','!=',99)->orderBy('end','desc')->take(15)->get();
+
+		if($pilot->processing == 0) {
+			Queue::push('LegacyUpdate', $pilot->vatsim_id, 'legacy');
+			$pilot->processing = 2;
+			$pilot->save();
+		}
+
+		if($pilot->processing == 2) {
+			Messages::success('The data for this controller is currently being processed. In a couple of minutes, all statistics will be available.')->one();
+		}
 
 		$stat = new ControllerStat(ATC::whereVatsimId($pilot->vatsim_id)->where('facility_id','!=',99));
-		extract($stat->durations());
+		extract($stat->durations($pilot->duration_atc));
 		$airports = $stat->topAirports();
 		$facilities = $stat->topFacilities();
 

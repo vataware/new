@@ -1,0 +1,35 @@
+.donations .list-group-item:first-child, .donations .list-group-item:last-child {
+	border-radius: 0;
+}
+
+.donations .list-group-item {
+	border: 0;
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 0;
+}
+
+.providers > div a, .providers > div button {
+	height: 78px;
+	width: 100%;
+	background: #ddd;
+	color: #369;
+	font-size: 24px;
+	line-height: 1.1em;
+	text-transform: lowercase;
+	text-decoration: none;
+	padding: 1em;
+	display: block;
+	margin-bottom: 20px;
+	text-align: left;
+	border: 0;
+}
+
+.providers > div a small {
+	font-size: 14px;
+	font-style: italic;
+	color: #333;
+}
+
+.providers > div a:hover {
+	background: #ccc;
+}

@@ -13,12 +13,13 @@
 
 Route::get('', ['as' => 'home', 'uses' => 'HomeController@index']);
 Route::get('team', ['as' => 'team', 'uses' => 'HomeController@team']);
+Route::get('donations', ['as' => 'donations', 'uses' => 'HomeController@donations']);
 Route::get('map/api', ['as' => 'map.api', 'uses' => 'HomeController@mapApi']);
 Route::get('map/flight', ['as' => 'map.flight', 'uses' => 'HomeController@mapFlight']);
 
 // Flights
 Route::get('flight', ['as' => 'flight.index', 'uses' => 'FlightController@index']);
-Route::get('flight/{flight}', ['as' => 'flight.show', 'uses' => 'FlightController@show'])->where('flight','[0-9]+');
+Route::get('flight/{flight}', ['as' => 'flight.show', 'uses' => 'FlightController@show'])->where('flight','[0-9]+')->after('flatten.flight');
 
 Route::get('citypair/{departure}-{arrival}', ['as' => 'citypair', 'uses' => 'FlightController@citypair'])->where('departure','[A-Z0-9]{3,4}')->where('arrival','[A-Z0-9]{3,4}');
 
@@ -29,7 +30,7 @@ Route::get('pilot/{pilot}/flights', ['as' => 'pilot.flights', 'uses' => 'PilotCo
 
 // ATC
 Route::get('atc', ['as' => 'atc.index', 'uses' => 'ATCController@index']);
-Route::get('atc/{atc}', ['as' => 'atc.show', 'uses' => 'ATCController@show'])->where('atc','[0-9]+');
+Route::get('atc/{atc}', ['as' => 'atc.show', 'uses' => 'ATCController@show'])->where('atc','[0-9]+')->after('flatten.atc');
 
 // Controllers
 Route::get('controller', ['as' => 'controller.index', 'uses' => 'ControllerController@index']);
@@ -45,7 +46,11 @@ Route::get('airline/{airline}', ['as' => 'airline.show', 'uses' => 'AirlineContr
 Route::get('search', ['as' => 'search', 'uses' => 'SearchController@index']);
 
 Route::bind('flight',function($value, $route) {
-	$flight = Flight::with('aircraft','departure','arrival','pilot','departureCountry','arrivalCountry','airline','positions')->find($value);
+	$flight = Flight::with(['aircraft','departure','arrival','pilot','departureCountry','arrivalCountry','airline','positions' => function($positions) {
+		$positions->join('updates','positions.update_id','=','updates.id');
+		$positions->select('positions.*', DB::raw('updates.timestamp AS time'));
+		$positions->orderBy('time','asc');
+	}])->find($value);
 
 	if(is_null($flight) || $value == 0) {
 		return App::abort(404);
@@ -75,7 +80,7 @@ Route::bind('pilot',function($value, $route) {
 });
 
 Route::bind('airport',function($value, $route) {
-	$airport = Airport::find($value);
+	$airport = Airport::whereIcao($value)->first();
 
 	if(is_null($airport)) {
 		return App::abort(404);
@@ -114,6 +119,11 @@ Route::get('airport.cfm', function() {
 	return Redirect::route('airport.show', array('airport' => strtoupper(Input::get('airport'))), 301);
 });
 
+Route::get('airline.cfm', function() {
+	if(!Input::has('icao')) return Redirect::route('airline.index');
+	return Redirect::route('airline.show', array('airline' => strtoupper(Input::get('icao'))), 301);
+});
+
 Route::get('citypair.cfm', function() {
 	if(!Input::has('from') || !Input::has('to')) return App::abort(404);
 	return Redirect::route('citypair', array('departure' => strtoupper(Input::get('from')), 'arrival' => strtoupper(Input::get('to'))), 301);
@@ -134,4 +144,8 @@ Route::get('pilotredir.cfm', function() {
 
 	// Redirect to flight page when flight is found
 	return Redirect::route('flight.show', array('flight' => $latestFlight->id));
+});
+
+Route::post('queue/receive/1q2w3e4r5t6y7u8i9o0p', function() {
+	return Queue::marshal();
 });

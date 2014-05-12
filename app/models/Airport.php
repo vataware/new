@@ -6,10 +6,6 @@ class Airport extends Eloquent {
 	public $timestamps = true;
 	protected $softDelete = false;
 
-	public function getIcaoAttribute() {
-		return $this->id;
-	}
-
 	public function country()
 	{
 		return $this->belongsTo('Country');
@@ -17,12 +13,17 @@ class Airport extends Eloquent {
 
 	public function departures()
 	{
-		return $this->hasMany('Flight', 'departure_id');
+		return $this->hasMany('Flight', 'departure_id', 'icao');
 	}
 
 	public function arrivals()
 	{
-		return $this->hasMany('Flight', 'arrival_id');
+		return $this->hasMany('Flight', 'arrival_id', 'icao');
+	}
+
+	public function runways()
+	{
+		return $this->hasMany('Runway', 'airport_id', 'icao');
 	}
 
 	public function getLatSAttribute() {
@@ -43,6 +44,27 @@ class Airport extends Eloquent {
 		$seconds = ($minutes - floor($minutes)) * 60;
 
 		return floor($lon) . '&deg; ' . floor($minutes) . '\' ' . floor($seconds) . '" ' . $direction;
+	}
+
+	public function getTypeAttribute($value) {
+		switch($value) {
+			case 'large_airport':
+				return 'Large Airport';
+			case 'medium_airport':
+				return 'Medium Airport';
+			case 'small_airport':
+				return 'Small Airport';
+			case 'heliport':
+				return 'Heliport';
+			case 'seaplane_base':
+				return 'Seaplane Base';
+			case 'balloonport':
+				return 'Balloon Port';
+			case 'closed':
+				return 'Closed';
+			default:
+				return 'Other';
+		}
 	}
 
 }
