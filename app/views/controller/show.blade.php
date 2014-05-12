@@ -91,7 +91,7 @@
 				<tbody class="rowlink" data-link="row">
 					@foreach($duties as $duty)
 					<tr>
-						<td><a href="{{ URL::route('atc.show', $duty->id) }}"><strong>{{ ($duty->airport_id) ? '<img src="' . flag($duty->airport->country_id) . '"> ' . $duty->airport_id : $duty->callsign }}</strong></a></td>
+						<td><a href="{{ URL::route('atc.show', $duty->id) }}"><strong>{{ (!is_null($duty->airport)) ? '<img src="' . flag($duty->airport->country_id) . '"> ' . $duty->airport_id : $duty->callsign }}</strong></a></td>
 						<td>{{ $duty->facility }}</td>
 						<td>{{ $duty->duration_human }}</td>
 					</tr>
