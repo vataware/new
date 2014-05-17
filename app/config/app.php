@@ -109,6 +109,7 @@ return array(
 
 		'DeVosBurchart\Messages\MessagesServiceProvider',
 		'Vataware\Flatten\FlattenServiceProvider',
+		'Vataware\IronCache\IronCacheServiceProvider',
 	),
 
 	/*

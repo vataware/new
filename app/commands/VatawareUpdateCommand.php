@@ -37,10 +37,8 @@ class VatawareUpdateCommand extends Command {
 	public function __construct()
 	{
 		parent::__construct();
-		$this->uniqueId = uniqid();
 	}
 
-	protected $uniqueId;
 	protected $updateId;
 	protected $updateDate;
 	protected $nextUpdate;
@@ -64,8 +62,8 @@ class VatawareUpdateCommand extends Command {
 	public function fire()
 	{
 		// // $this->error('cron:datafeed[' . $this->processId . '] - Started execution');
-		// $this->error('Start: ' . ($start = Carbon::now()));
-		// $this->line('--- Memory usage: ' . memory_get_usage());
+		$this->error('Start: ' . ($start = Carbon::now()));
+		$this->line('--- Memory usage: ' . memory_get_usage());
 
 		// First we need to load the VATSIM data get the timestamps
 		$this->prepareVatsim();
@@ -90,8 +88,8 @@ class VatawareUpdateCommand extends Command {
 		// Get statistics
 		$this->statistics();
 
-		// $this->error('End: ' . Carbon::now());
-		// $this->error('Time: ' . $start->diffInSeconds(Carbon::now()));
+		$this->error('End: ' . Carbon::now());
+		$this->error('Time: ' . $start->diffInSeconds(Carbon::now()));
 
 		// Clean up variables
 		$this->cleanup();
@@ -125,16 +123,16 @@ class VatawareUpdateCommand extends Command {
 	protected function prepareDatabase() {
 		// Get database records for all airlines, airports, registrations
 		$this->airlines = Airline::get();
-		// $this->line('--- Loaded airlines');
+		$this->line('--- Loaded airlines');
 		// $this->airports = Airport::get();
 		// $this->airportsIcao = $this->airports->lists('country_id','icao');
 		// ksort($this->airportsIcao);
-		// $this->line('--- Loaded airports');
+		$this->line('--- Loaded airports');
 		$this->registrations = Registration::get()->each(function($registration) {
 			$registration->prefix = str_replace('-', '', $registration->prefix);
 			if(!$registration->regex) $registration->prefix .= '.*';
 		});
-		// $this->line('--- Loaded registrations');
+		$this->line('--- Loaded registrations');
 	}
 
 	protected function prepareVatsim() {
@@ -149,7 +147,7 @@ class VatawareUpdateCommand extends Command {
 		$this->nextUpdate = Carbon::instance($this->updateDate)->addMinutes($general['reload']);
 		$this->pilots = $vatsim->getPilots()->toArray();
 		$this->controllers = $vatsim->getControllers()->toArray();
-		// $this->line('--- Loaded VATSIM Datafeed');
+		$this->line('--- Loaded VATSIM Datafeed');
 	}
 
 	function duration($start, $now) {
@@ -213,14 +211,18 @@ class VatawareUpdateCommand extends Command {
 	protected function checkUpdate() {
 		// If the next update is expected at another timestamp then
 		// we will exit the program and wait for a valid timestamp.
-		if(DbConfig::has('vatsim.nextupdate') && Carbon::now()->lt(DbConfig::get('vatsim.nextupdate')))
+		if(Cache::has('vatsim.nextupdate') && Carbon::now()->lt(Cache::get('vatsim.nextupdate'))) {
+			Log::info('Exit before next update ' . Cache::get('vatsim.nextupdate'));
 			exit(0);
+		}
 
 		// If the update already exists with the current timestamp
 		// then we would want to exit the program as we do not want
 		// any duplicate position reports
-		if(!is_null(Update::whereTimestamp($this->updateDate)->first()))
+		if(!is_null(Update::whereTimestamp($this->updateDate)->first())) {
+			Log::info('Exit already exists ' . $this->updateDate);
 			exit(0);
+		}
 
 		// Otherwise the new update time will be added to the database
 		$update = new Update;
@@ -231,7 +233,7 @@ class VatawareUpdateCommand extends Command {
 		$this->updateId = $update->id;
 
 		// Store the next update timestamp in the database
-		DbConfig::put('vatsim.nextupdate', $this->nextUpdate);
+		Cache::forever('vatsim.nextupdate', $this->nextUpdate);
 	}
 
 	/**
@@ -242,7 +244,7 @@ class VatawareUpdateCommand extends Command {
 	 * @return void
 	 */
 	protected function pilots() {
-		// $this->error('Pilots: begin');
+		$this->error('Pilots: begin');
 		// // $this->error('Processing pilots');
 		// First we will select all flights from the database which 
 		// have not yet been marked as arrived and are not missing.
@@ -283,7 +285,7 @@ class VatawareUpdateCommand extends Command {
 		);
 		
 		foreach($this->pilots as $entry) {
-			// // $this->line('--- Entry ' . $entry['callsign'] . ' by ' . $entry['cid']);
+			$this->line('--- Entry ' . $entry['callsign'] . ' by ' . $entry['cid']);
 			try {
 				// Find the flight in the data we fetched using the callsign
 				// and vatsim id of the pilot. If the flight does not exist
@@ -442,24 +444,24 @@ class VatawareUpdateCommand extends Command {
 				elseif($flight->exists) {
 					$update[$flight->id] = array_except($flight->toArray(), array('startdate','callsign','callsign_type','airline_id','vatsim_id','aircraft_code','aircraft_id','created_at','updated_at','deleted_at'));
 					$database->forget($flightKey);
-					// $this->comment('Updated flight');
+					$this->comment('Updated flight');
 				}
 				// Add flight to insert array, also set the created_at
 				// and updated_at columns
 				else {
 					$flight->created_at = Carbon::now();
 					$flight->updated_at = Carbon::now();
-					// $this->comment('State: ' . $flight->state);
+					$this->comment('State: ' . $flight->state);
 					$insert[] = array_merge($default, array_except($flight->toArray(), array('deleted_at')));
-					// $this->comment('Inserted new flight');
+					$this->comment('Inserted new flight');
 				}
 
 				unset($flight, $entry, $callsign);
 			} catch(ErrorException $e) {
-				// $this->error('Failed');
+				$this->error('Failed');
 				Log::error($e);
 			} catch(InvalidArgumentException $e) {
-				// $this->error('Failed');
+				$this->error('Failed');
 				Log::error($e);
 			}
 		}
@@ -467,7 +469,7 @@ class VatawareUpdateCommand extends Command {
 		// Insert new flights into the flights table right away
 		$this->progressiveInsert(new Flight, $insert);
 		unset($insert, $default);
-		// $this->line('Inserted new records');
+		$this->line('Inserted new records');
 
 		// Create temporary flights table for records that are to be updated
 		DB::statement("create temporary table if not exists flights_temp (
@@ -496,11 +498,11 @@ class VatawareUpdateCommand extends Command {
 			`last_heading` smallint(3) unsigned NOT NULL,
 			PRIMARY KEY (`id`)
 		)");
-		// $this->line('Created temporary table');
+		$this->line('Created temporary table');
 
 		// Insert flights to be updated into temporary table
 		$this->progressiveInsert('flights_temp', $update);
-		// $this->line('Inserted updated records');
+		$this->line('Inserted updated records');
 
 		// Update flights table with data in temporary table
 		DB::statement("update flights dest, flights_temp src set
@@ -528,7 +530,7 @@ class VatawareUpdateCommand extends Command {
 			dest.last_heading = src.last_heading,
 			dest.updated_at = CURRENT_TIMESTAMP()
 		where dest.id = src.id");
-		// $this->line('Updated records');
+		$this->line('Updated records');
 
 		if(count($this->positions) > 0) {
 			$this->progressiveInsert(new Position, $this->positions);
@@ -540,23 +542,23 @@ class VatawareUpdateCommand extends Command {
 		$delete = array();
 		$disappeared = array();
 
-		// $this->line($database->count() . ' flights missing');
+		$this->line($database->count() . ' flights missing');
 
 		foreach($database as $missing) {
-			// $this->line('--- Entry ' . $missing->callsign . ' by ' . $missing->vatsim_id);
+			$this->line('--- Entry ' . $missing->callsign . ' by ' . $missing->vatsim_id);
 			if($missing->state == 5) {
 				$missing->state = 2;
 				$missing->save();
-				// $this->comment('Pemanently arrived');
+				$this->comment('Pemanently arrived');
 			} elseif(Carbon::now()->diffInMinutes($missing->updated_at) >= 60) {
 				$delete[] = $missing->id;
-				// $this->comment('Deleted');
+				$this->comment('Deleted');
 			} else {
-				// $this->comment($missing->state);
+				$this->comment($missing->state);
 				if(($missing->state == 1 || $missing->state == 3) && $airport = $this->hasLanded($missing)) {
-					// $this->comment($airport);
-					// $this->comment($missing->departure_id);
-					// $this->comment($missing->arrival_id);
+					$this->comment($airport);
+					$this->comment($missing->departure_id);
+					$this->comment($missing->arrival_id);
 					$missing->state = 2;
 					$missing->missing = 0;
 					$missing->arrival_id = $airport;
@@ -568,10 +570,10 @@ class VatawareUpdateCommand extends Command {
 					$missing->pilot->distance += $missing->distance;
 					$missing->pilot->duration += $missing->duration;
 					$missing->pilot->save();
-					// $this->comment('Missing: landed');
+					$this->comment('Missing: landed');
 				} elseif(!$missing->missing) {
 					$disappeared[] = $missing->id;
-					// $this->comment('Disappeared');
+					$this->comment('Disappeared');
 				}
 			}
 
@@ -587,7 +589,7 @@ class VatawareUpdateCommand extends Command {
 			Flight::whereIn('id', $disappeared)->update(array('missing' => '1'));
 
 		unset($database, $delete, $disappeared, $missings);
-		// $this->error('Pilots: end');
+		$this->error('Pilots: end');
 	}
 
 	/**
@@ -598,7 +600,7 @@ class VatawareUpdateCommand extends Command {
 	 * @return void
 	 */
 	function controllers() {
-		// $this->error('Controllers: begin');
+		$this->error('Controllers: begin');
 		$database = ATC::whereNull('end')->get();
 
 		$update = array();
@@ -622,7 +624,7 @@ class VatawareUpdateCommand extends Command {
 		);
 
 		foreach($this->controllers as $entry) {
-			// $this->line('--- Entry ' . $entry['callsign'] . ' by ' . $entry['cid']);
+			$this->line('--- Entry ' . $entry['callsign'] . ' by ' . $entry['cid']);
 
 			// Find the ATC duty in the data we fetched using the callsign
 			// and vatsim id of the controllers. If the duty does not exist
@@ -685,7 +687,7 @@ class VatawareUpdateCommand extends Command {
 		// Insert new atc into the atc table right away
 		$this->progressiveInsert(new ATC, $insert);
 		unset($insert, $default);
-		// $this->line('Inserted new records');
+		$this->line('Inserted new records');
 
 		// Create temporary atc table for records that are to be updated
 		DB::statement("create temporary table if not exists atc_temp (
@@ -702,18 +704,18 @@ class VatawareUpdateCommand extends Command {
 			`duration` smallint(6) NOT NULL DEFAULT '0',
 			PRIMARY KEY (`id`)
 		)");
-		// $this->line('Created temporary table');
+		$this->line('Created temporary table');
 
 		$missings = $database->filter(function($atc) use ($update) {
 			return (!array_key_exists($atc->id, $update));
 		});
 
-		// $this->line(count($update) . ' update records');
+		$this->line(count($update) . ' update records');
 
 		foreach($missings as $missing) {
-			// $this->line('--- Entry ' . $missing->callsign . ' by ' . $missing->vatsim_id . ' last seen ' . $missing->time);
+			$this->line('--- Entry ' . $missing->callsign . ' by ' . $missing->vatsim_id . ' last seen ' . $missing->time);
 			if(Carbon::now()->diffInMinutes($missing->time) >= 10) {
-				// $this->comment('--- Marked as done');
+				$this->comment('--- Marked as done');
 				$missing->end = $missing->time;
 				try {
 					$missing->duration = $this->duration($missing->start, $missing->end);
@@ -737,11 +739,11 @@ class VatawareUpdateCommand extends Command {
 			unset($missing);
 		}
 
-		// $this->line(count($update) . ' update (with missing) records');
+		$this->line(count($update) . ' update (with missing) records');
 
 		// Insert atc to be updated into temporary table
 		$this->progressiveInsert('atc_temp', $update);
-		// $this->line('Inserted updated records. ' . DB::table('atc_temp')->count());
+		$this->line('Inserted updated records');
 
 		// Update atc table with data in temporary table
 		DB::statement("update atc dest, atc_temp src set
@@ -757,16 +759,16 @@ class VatawareUpdateCommand extends Command {
 			dest.end = src.end,
 			dest.updated_at = CURRENT_TIMESTAMP()
 		where dest.id = src.id");
-		// $this->line('Updated records');
+		$this->line('Updated records');
 
 		unset($database, $update, $missings);
 
-		// $this->error('Controllers: end');
+		$this->error('Controllers: end');
 	}
 
 	private function cleanup() {
 		//cleanup everything from attributes
-		// $this->line('--- Memory usage: ' . memory_get_usage());
+		$this->line('--- Memory usage: ' . memory_get_usage());
 		foreach (get_class_vars(__CLASS__) as $clsVar => $_) {
 			unset($this->$clsVar);
 		}
@@ -890,7 +892,7 @@ class VatawareUpdateCommand extends Command {
 			$speed = $datafeed['groundspeed'];
 		}
 
-		// $this->comment(print_r(compact('latitude','longitude','altitude','speed'), true));
+		$this->comment(print_r(compact('latitude','longitude','altitude','speed'), true));
 
 		$nearby = $this->proximity($latitude, $longitude, null, $flight->arrival_id);
 		return (!is_null($nearby) && ($this->altitudeRange($altitude, $nearby->elevation) || $nearby->elevation > $altitude) && $speed < 30)
@@ -957,7 +959,7 @@ class VatawareUpdateCommand extends Command {
 	 * @return void
 	 */
 	protected function map() {
-		// $this->error('Map: start');
+		$this->error('Map: start');
 		$flights = Flight::whereMissing(false)
 			->whereIn('state',[1, 3])
 			->join('pilots','flights.vatsim_id','=','pilots.vatsim_id')
@@ -989,59 +991,58 @@ class VatawareUpdateCommand extends Command {
 				];
 			});
 
-		DbConfig::put('vatsim.map', $flights);
+		Cache::forever('vatsim.map', $flights);
 
 		unset($flights);
-		// $this->error('Map: end');
+		$this->error('Map: end');
 	}
 
 	protected function statistics() {
-		// $this->error('Statistics: begin');
+		$this->error('Statistics: begin');
 		// Count the number of records in the pilot and controller arrays.
 		$pilots = count($this->pilots);
 		$controllers = count($this->controllers);
 
 		// Store the counts in the database.
-		DbConfig::put('vatsim.pilots', $pilots);
-		DbConfig::put('vatsim.atc', $controllers);
-		DbConfig::put('vatsim.users', $pilots + $controllers);
+		Cache::forever('vatsim.pilots', $pilots);
+		Cache::forever('vatsim.atc', $controllers);
+		Cache::forever('vatsim.users', $pilots + $controllers);
 
 		// Count the number of flights for the current year.
 		$thisYear = Flight::whereBetween('startdate',array(date('Y') . '-01-01', date('Y-m-d')))->count();
-		DbConfig::put('vatsim.year', number_format($thisYear));
+		Cache::forever('vatsim.year', number_format($thisYear));
 
 		// Count the number of flights for this month
 		$thisMonth = Flight::whereBetween('startdate',array(date('Y-m') . '-01', date('Y-m-t')))->count();
-		DbConfig::put('vatsim.month', number_format($thisMonth));
+		Cache::forever('vatsim.month', number_format($thisMonth));
 
 		// Count the number of flights for this day
 		$thisDay = Flight::whereStartdate(date('Y-m-d'))->count();
-		DbConfig::put('vatsim.day', number_format($thisDay));
+		Cache::forever('vatsim.day', number_format($thisDay));
 
 		// Sum of the total distance flown today.
 		$distance = Flight::whereStartdate(date('Y-m-d'))->sum('distance') * 0.54;
-		DbConfig::put('vatsim.distance', number_format($distance));
+		Cache::forever('vatsim.distance', number_format($distance));
 
 		// Count the number of flights for the same period last year.
 		$lastYear = Flight::whereBetween('startdate',array((date('Y')-1) . '-01-01', (date('Y')-1) . date('-m-d')))->count();
 
 		if($lastYear == 0) {
-			DbConfig::put('vatsim.change', '&infin;&nbsp;');
-			DbConfig::put('vatsim.changeDirection', 'up');
+			Cache::forever('vatsim.change', '&infin;&nbsp;');
+			Cache::forever('vatsim.changeDirection', 'up');
 		} else {
 			$percentageChange = (($thisYear - $lastYear) / $lastYear * 100);
-			DbConfig::put('vatsim.change', number_format(abs($percentageChange)));
-			DbConfig::put('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
+			Cache::forever('vatsim.change', number_format(abs($percentageChange)));
+			Cache::forever('vatsim.changeDirection', ($percentageChange > 0) ? 'up' : 'down');
 		}
 
 		unset($thisYear, $thisMonth, $thisDay, $distance, $lastYear, $percentageChange);
 
-		// $this->error('Statistics: end');
+		$this->error('Statistics: end');
 	}
 
 	function error($arg) {
-		$log = 'datafeed[' . $this->uniqueId . '] ' . $arg;
-		Log::info($log);
+		Log::info($arg);
 		return parent::error($arg);
 	}
 
@@ -1053,7 +1054,7 @@ class VatawareUpdateCommand extends Command {
 		}
 
 		$remaining = count($data);
-		// $this->comment('Progressive insert on ' . $table . ': ' . $remaining);
+		$this->comment('Progressive insert on ' . $table . ': ' . $remaining);
 		$step = 0;
 		do {
 			try {
@@ -1061,7 +1062,7 @@ class VatawareUpdateCommand extends Command {
 			} catch(ErrorException $e) {
 				Log::error($e);
 			}
-			// $this->comment('Progressive insert on ' . $table . ': ' . $remaining);
+			$this->comment('Progressive insert on ' . $table . ': ' . $remaining);
 			$remaining -= 100;
 			$step++;
 		} while($remaining > 0);
