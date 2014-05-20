@@ -178,24 +178,20 @@ class VatawareUpdateCommand extends Command {
 		unset($user);
 	}
 
-	function proximity($latitude, $longitude, $range = null, $expects = null) {
-		if(is_null($range)) $range = 20;
+	function proximity($latitude, $longitude, $expects = null, $range = 20) {
 		if(empty($latitude) || empty($longitude)) return null;
 
-		$airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
-			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
-			->orderBy('distance','asc')
-			->get();
+		// $airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
+		// 	->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
+		// 	->orderBy('distance','asc')
+		// 	->get();
 
-		if(!is_null($expects)) {
-			$expected = $airports->first(function($key, $airport) use ($expects) {
-				return ($airport->icao == $expects);
-			});
+		$arrival_apt = Airport::select('lat', 'lon')->where('icao', $expects)->first();
+		$dtg = acos(sin(deg2rad($latitude)) * sin(deg2rad($arrival_apt->lat)) + cos(deg2rad($latitude)) * cos(deg2rad($arrival_apt->lat)) * cos(deg2rad($longitutde) - deg2rad($arrival_apt->lon))) * 6371;
 
-			if(!is_null($expected)) return $expected;
+		if(!is_null($arrival_apt) && ($drg <= $range)) {
+			return $expected;
 		}
-		
-		return $airports->first();
 	}
 
 	
@@ -659,8 +655,8 @@ class VatawareUpdateCommand extends Command {
 			}
 
 			if($this->hasRelocated($atc, $entry) && $atc->facility_id < 6) {
-				$nearby = $this->proximity($entry['latitude'], $entry['longitude']);
-				$atc->airport_id = (is_null($nearby)) ? null : $nearby->id;
+				//$nearby = $this->proximity($entry['latitude'], $entry['longitude']);
+				$atc->airport_id = null; //(is_null($nearby)) ? null : $nearby->id;
 				unset($nearby);
 			}
 
