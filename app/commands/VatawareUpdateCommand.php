@@ -186,7 +186,7 @@ class VatawareUpdateCommand extends Command {
 			$arrival_apt = Airport::select('lat', 'lon')->where('icao', $expects)->first();
 			$dtg = acos(sin(deg2rad($latitude)) * sin(deg2rad($arrival_apt->lat)) + cos(deg2rad($latitude)) * cos(deg2rad($arrival_apt->lat)) * cos(deg2rad($longitutde) - deg2rad($arrival_apt->lon))) * 6371;
 
-			if(!is_null($arrival_apt) && ($drg <= $range)) {
+			if(!is_null($arrival_apt) && ($dtg <= $range)) {
 				return $arrival_apt;
 			} else {
 				return null;
