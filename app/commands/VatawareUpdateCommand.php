@@ -178,24 +178,27 @@ class VatawareUpdateCommand extends Command {
 		unset($user);
 	}
 
-	function proximity($latitude, $longitude, $range = null, $expects = null) {
-		if(is_null($range)) $range = 20;
+	function proximity($latitude, $longitude, $expects = null, $range = 20) {
 		if(empty($latitude) || empty($longitude)) return null;
 
-		$airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
-			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
-			->orderBy('distance','asc')
-			->get();
+		if ($expects) {
 
-		if(!is_null($expects)) {
-			$expected = $airports->first(function($key, $airport) use ($expects) {
-				return ($airport->icao == $expects);
-			});
+			$arrival_apt = Airport::select('lat', 'lon')->where('icao', $expects)->first();
+			$dtg = acos(sin(deg2rad($latitude)) * sin(deg2rad($arrival_apt->lat)) + cos(deg2rad($latitude)) * cos(deg2rad($arrival_apt->lat)) * cos(deg2rad($longitutde) - deg2rad($arrival_apt->lon))) * 6371;
 
-			if(!is_null($expected)) return $expected;
+			if(!is_null($arrival_apt) && ($dtg <= $range)) {
+				return $arrival_apt;
+			} else {
+				return null;
+			}
+		} else {
+			// For controllers or actual proximity
+			$airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
+				->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
+				->orderBy('distance','asc')
+				->get();
+			return $airports->first();
 		}
-		
-		return $airports->first();
 	}
 
 	
@@ -892,7 +895,7 @@ class VatawareUpdateCommand extends Command {
 
 		// $this->comment(print_r(compact('latitude','longitude','altitude','speed'), true));
 
-		$nearby = $this->proximity($latitude, $longitude, null, $flight->arrival_id);
+		$nearby = $this->proximity($latitude, $longitude, $flight->arrival_id);
 		return (!is_null($nearby) && ($this->altitudeRange($altitude, $nearby->elevation) || $nearby->elevation > $altitude) && $speed < 30)
 			? $nearby->icao
 			: false;
