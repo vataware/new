@@ -52,7 +52,7 @@ class IronCacheStore implements StoreInterface {
 	 */
 	public function put($key, $value, $minutes)
 	{
-		if(!is_scalar($value) || !is_array($value)) {
+		if(!is_scalar($value) && !is_array($value)) {
 			$value = serialize($value);
 		}
 
@@ -100,7 +100,7 @@ class IronCacheStore implements StoreInterface {
 	 */
 	public function forever($key, $value)
 	{
-		if(!is_scalar($value) || !is_array($value)) {
+		if(!is_scalar($value) && !is_array($value)) {
 			$value = serialize($value);
 		}
 
