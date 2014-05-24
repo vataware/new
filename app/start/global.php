@@ -53,6 +53,17 @@ App::error(function(Exception $exception, $code)
 		unset($_ENV[$key]);
 		unset($_SERVER[$key]);
 	}
+	return Response::view('errors.unknown', array(), 500);
+});
+
+App::error(function(PDOException $exception, $code)
+{
+	Log::error($exception);
+	foreach($_ENV as $key => $value) {
+		unset($_ENV[$key]);
+		unset($_SERVER[$key]);
+	}
+	return Response::view('errors.database', array(), 500);
 });
 
 App::missing(function($exception)

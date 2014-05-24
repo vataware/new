@@ -13,6 +13,10 @@ body {
 	margin-top: -400px;
 }
 
+body.no-flightmap {
+	margin-top: 0 !important;
+}
+
 .wrapper {
 	min-height: 80%;
 	background-color: white;
