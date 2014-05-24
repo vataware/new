@@ -178,27 +178,28 @@ class VatawareUpdateCommand extends Command {
 		unset($user);
 	}
 
-	function proximity($latitude, $longitude, $range = null, $expects = null) {
-		if(is_null($range)) $range = 20;
+	function proximity($latitude, $longitude, $expects = null, $range = 20) {
 		if(empty($latitude) || empty($longitude)) return null;
 
-		$airports = Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
-			->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
-			->orderBy('distance','asc')
-			->get();
+		if ($expects) {
 
-		if(!is_null($expects)) {
-			$expected = $airports->first(function($key, $airport) use ($expects) {
-				return ($airport->icao == $expects);
-			});
+			$arrival_apt = Airport::select('lat', 'lon')->where('icao', $expects)->first();
+			$dtg = acos(sin(deg2rad($latitude)) * sin(deg2rad($arrival_apt->lat)) + cos(deg2rad($latitude)) * cos(deg2rad($arrival_apt->lat)) * cos(deg2rad($longitutde) - deg2rad($arrival_apt->lon))) * 6371;
 
-			if(!is_null($expected)) return $expected;
+			if(!is_null($arrival_apt) && ($dtg <= $range)) {
+				return $arrival_apt;
+			} else {
+				return null;
+			}
+		} else {
+			// For controllers or actual proximity
+			return Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
+				->whereRaw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 < " . $range)
+				->orderBy('distance','asc')
+				->first();
 		}
-		
-		return $airports->first();
 	}
 
-	
 	protected function altitudeRange($altitude, $base, $range = 20) {
 		return ($altitude >= $base - $range && $altitude <= $base + $range);
 	}
@@ -243,8 +244,8 @@ class VatawareUpdateCommand extends Command {
 	 */
 	protected function pilots() {
 		// $this->error('Pilots: begin');
-		// // $this->error('Processing pilots');
-		// First we will select all flights from the database which 
+		// $this->error('Processing pilots');
+		// First we will select all flights from the database which
 		// have not yet been marked as arrived and are not missing.
 		$database = Flight::where('state','!=','2')->get();
 
@@ -281,7 +282,7 @@ class VatawareUpdateCommand extends Command {
 			'created_at' => Carbon::now(),
 			'updated_at' => Carbon::now()
 		);
-		
+
 		foreach($this->pilots as $entry) {
 			// // $this->line('--- Entry ' . $entry['callsign'] . ' by ' . $entry['cid']);
 			try {
@@ -322,7 +323,7 @@ class VatawareUpdateCommand extends Command {
 				if(!$flight->exists) {
 					$flight->startdate = Carbon::createFromFormat('YmdHis', $entry['time_logon'], 'UTC')->toDateString();
 					$flight->revision = $entry['planned_revision'];
-					
+
 					$callsign = $this->callsign($entry['callsign']);
 					$flight->callsign = $callsign['callsign'];
 					$flight->callsign_type = $callsign['callsign_type'];
@@ -366,7 +367,7 @@ class VatawareUpdateCommand extends Command {
 
 					// Add the position report
 					$this->positionReport($entry, $flight->id);
-				
+
 					if($entry['planned_revision'] > $flight->revision) {
 						// Only allow the departure airport/time to be updated if the
 						// current state is preparing(4) or departing(0). If done after
@@ -463,7 +464,7 @@ class VatawareUpdateCommand extends Command {
 				Log::error($e);
 			}
 		}
-		
+
 		// Insert new flights into the flights table right away
 		$this->progressiveInsert(new Flight, $insert);
 		unset($insert, $default);
@@ -791,12 +792,12 @@ class VatawareUpdateCommand extends Command {
 		// search based on a prefix basis
 		if(!is_null($airline = $this->airline($callsign)))
 			return ['callsign' => $callsign, 'callsign_type' => 1, 'airline_id' => $airline->icao];
-		
+
 		// For private registrations we will return the original
 		// callsign with the hyphens.
 		elseif(!is_null($registration = $this->registration($callsign)))
 			return ['callsign' => $originalCallsign, 'callsign_type' => 2, 'airline_id' => $registration->country_id];
-		
+
 		// If all else fails, callsign type is 0, airline_id is null
 		// and the original callsign will be used.
 		return ['callsign' => $originalCallsign, 'callsign_type' => 0, 'airline_id' => null];
@@ -824,8 +825,8 @@ class VatawareUpdateCommand extends Command {
 	 * @param  string  $icao
 	 * @return string
 	 */
-	protected function airportCountry($icao) {	
-		// We need to return the country code or 
+	protected function airportCountry($icao) {
+		// We need to return the country code or
 		// empty if the airport cannot be found in our database
 
 		$airport = Airport::whereIcao($icao)->first();
@@ -892,7 +893,7 @@ class VatawareUpdateCommand extends Command {
 
 		// $this->comment(print_r(compact('latitude','longitude','altitude','speed'), true));
 
-		$nearby = $this->proximity($latitude, $longitude, null, $flight->arrival_id);
+		$nearby = $this->proximity($latitude, $longitude, $flight->arrival_id);
 		return (!is_null($nearby) && ($this->altitudeRange($altitude, $nearby->elevation) || $nearby->elevation > $altitude) && $speed < 30)
 			? $nearby->icao
 			: false;
@@ -936,14 +937,14 @@ class VatawareUpdateCommand extends Command {
 		$position = new Position;
 
 		$position->flight_id = $flightId;
-		
+
 		$position->lat = $data['latitude'];
 		$position->lon = $data['longitude'];
 		$position->altitude = $data['altitude'];
 		$position->speed = $data['groundspeed'];
 		$position->heading = $data['heading'];
-		// $position->ground_elevation = 
-		
+		// $position->ground_elevation =
+
 		$position->update_id = $this->updateId;
 
 		$this->positions[] = $position->toArray();
@@ -969,7 +970,7 @@ class VatawareUpdateCommand extends Command {
 					'callsign' => $flight->callsign,
 					'vatsim_id' => $flight->vatsim_id,
 					'pilot' => $flight->name,
-					
+
 					// Terminals
 					'departure' => $flight->departure_id,
 					'arrival' => $flight->arrival_id,
