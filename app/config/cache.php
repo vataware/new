@@ -86,4 +86,9 @@ return array(
 
 	'prefix' => 'laravel',
 
+	'iron' => array(
+		'name' => 'vataware',
+		'auth' => 'queue.connections.iron'
+	),
+
 );

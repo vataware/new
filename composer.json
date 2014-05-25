@@ -8,6 +8,8 @@
 		"skymeyer/vatsimphp": "dev-master",
 		"halilim/xml-iterator": "dev-master",
 		"iron-io/iron_mq": "dev-master",
+		"iron-io/iron_cache": "dev-master",
+		"dietervds/laravel4-ironcache": "dev-master",
 		"philf/setting": "dev-master",
 		"anahkiasen/flatten": "dev-master"
 	},

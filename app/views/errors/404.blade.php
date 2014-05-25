@@ -1,8 +1,8 @@
-@extends('layouts.master')
+@extends('layouts.errors')
 
 @section('content')
 <div class="container">
-	<h1>404 Not Found</h1>
-	<p>Sorry, the page you were looking for could not be found.</o>
+	<h1>Captain, we're lost.</h1>
+	<p class="lead"><strong>First Officer:</strong> It seems we're lost, I cannot find this page. We should probably go back to our last known position.</p>
 </div>
 @stop
