@@ -38,8 +38,8 @@
 	@endforeach
 	<div class="row">
 		<div class="col-lg-12" style="text-align: center; margin-bottom:30px;">
-			<h3 id="lowerHeading" style="margin-right: 50px; display:inline-block;">want be a part of the vataware team?</h3>
-			<a href="#" class="sendMessageButton">send us a message</a>
+			<h3 id="lowerHeading" style="margin-right: 50px; display:inline-block;">Interested in our opportunities?</h3>
+			<a href="http://vataware.com/forums/" class="sendMessageButton">check out the forum!</a>
 			</div>
 	</div>
 </div>
