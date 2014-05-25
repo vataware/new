@@ -174,13 +174,13 @@ class VatawareUpdateCommand extends Command {
 		if ($expects) {
 
 			$arrival_apt = Airport::select('lat', 'lon')->where('icao', $expects)->first();
-			$dtg = acos(sin(deg2rad($latitude)) * sin(deg2rad($arrival_apt->lat)) + cos(deg2rad($latitude)) * cos(deg2rad($arrival_apt->lat)) * cos(deg2rad($longitutde) - deg2rad($arrival_apt->lon))) * 6371;
 
-			if(!is_null($arrival_apt) && ($dtg <= $range)) {
-				return $arrival_apt;
-			} else {
-				return null;
+			if(!is_null($arrival_apt)) {
+				$dtg = acos(sin(deg2rad($latitude)) * sin(deg2rad($arrival_apt->lat)) + cos(deg2rad($latitude)) * cos(deg2rad($arrival_apt->lat)) * cos(deg2rad($longitude) - deg2rad($arrival_apt->lon))) * 6371;				
+				if(($dtg <= $range)) return $arrival_apt;
 			}
+
+			return null;
 		} else {
 			// For controllers or actual proximity
 			return Airport::select(DB::raw('*'), DB::raw("acos(sin(radians(`lat`)) * sin(radians(" . $latitude . ")) + cos(radians(`lat`)) * cos(radians(" . $latitude . ")) * cos(radians(`lon`) - radians(" . $longitude . "))) * 6371 AS distance"))
