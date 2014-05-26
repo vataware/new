@@ -17,6 +17,15 @@ Route::get('donations', ['as' => 'donations', 'uses' => 'HomeController@donation
 Route::get('map/api', ['as' => 'map.api', 'uses' => 'HomeController@mapApi']);
 Route::get('map/flight', ['as' => 'map.flight', 'uses' => 'HomeController@mapFlight']);
 
+Route::group(['prefix' => 'user'], function() {
+
+	Route::get('login', ['as' => 'user.login', 'uses' => 'AuthController@login', 'before' => 'guest']);
+	Route::get('logout', ['as' => 'user.logout', 'uses' => 'AuthController@logout', 'before' => 'auth']);
+	Route::get('validate', ['as' => 'user.validate', 'uses' => 'AuthController@validate', 'before' => 'guest']);
+	Route::get('intend', ['as' => 'user.intend', 'uses' => 'AuthController@intend']);
+
+});
+
 // Flights
 Route::get('flight', ['as' => 'flight.index', 'uses' => 'FlightController@index']);
 Route::get('flight/{flight}', ['as' => 'flight.show', 'uses' => 'FlightController@show'])->where('flight','[0-9]+')->after('flatten.flight');
