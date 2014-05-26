@@ -521,7 +521,7 @@ class VatawareUpdateCommand extends Command {
 			if($missing->state == 5) {
 				$missing->state = 2;
 				$missing->save();
-			} elseif(Carbon::now()->diffInMinutes($missing->updated_at) >= 60) {
+			} elseif($missing->missing && Carbon::now()->diffInMinutes($missing->updated_at) >= 60) {
 				$delete[] = $missing->id;
 			} else {
 				if(($missing->state == 1 || $missing->state == 3) && $airport = $this->hasLanded($missing)) {
