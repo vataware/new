@@ -67,7 +67,7 @@
 				</div> --}}
 				<div class="hidden-xs"><a href="{{ URL::route('home') }}" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('pilot.index') }}">Pilots</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('atc.index') }}">ATC</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::to('forums') }}">Forum</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('team') }}">Team</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('donations') }}">Donate</a><br /><br /></div>
 				&copy; 2014 <a href="{{ URL::route('home') }}" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
-				<small>version 1.1-{{ $build }}</small>
+				<small>version 1.2-{{ $build }}</small>
 			</div>
 		</div>
 	</footer>
