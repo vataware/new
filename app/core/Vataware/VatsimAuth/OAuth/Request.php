@@ -1,5 +1,7 @@
 <?php namespace Vataware\VatsimAuth\OAuth;
 
+use AuthException;
+
 class Request {
   protected $parameters;
   protected $http_method;
@@ -158,7 +160,7 @@ class Request {
     foreach ($this->parameters as $k => $v) {
       if (substr($k, 0, 5) != "oauth") continue;
       if (is_array($v)) {
-        throw new Exception('Arrays not supported in headers');
+        throw new AuthException('Arrays not supported in headers');
       }
       $out .= ($first) ? ' ' : ',';
       $out .= Util::urlencode_rfc3986($k) .
