@@ -1,6 +1,6 @@
 <?php namespace Admin;
 
-use BaseController, Airport, AirportChange, Input, Redirect;
+use BaseController, Airport, AirportChange, Input, Redirect, Timeline, Auth;
 
 class AirportController extends BaseController {
 	
@@ -63,7 +63,7 @@ class AirportController extends BaseController {
 	function change(Airport $airport) {
 		$columns = array_keys($this->columns);
 
-		$name = $airpor->icao . ' - ' . $airport->name;
+		$name = $airport->icao . ' - ' . $airport->name;
 
 		foreach($columns as $column) {
 			if(Input::has($column)) {
@@ -77,9 +77,9 @@ class AirportController extends BaseController {
 		}
 
 		if(count($airport->getDirty()) > 0) {
-			$dirty = array();
-			foreach($airport->getDirty() as $field => $value) {
-				$dirty[$this->columns[$field]] = array($airport->getOriginal($field), $value);
+			$dirty = $airport->getDirty();
+			foreach($dirty as $field => &$value) {
+				$value = array($airport->getOriginal($field), $value);
 			}
 
 			$timeline = new Timeline;

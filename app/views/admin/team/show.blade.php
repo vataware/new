@@ -11,7 +11,7 @@
 			<div class="box-header">
 				<h3 class="box-title">Social</h3>
 				<div class="box-tools pull-right">
-					<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#socialModal" rel="tooltip" title="" data-original-title="Edit"><i class="fa fa-pencil"></i></button>
+					<button class="btn btn-primary" data-toggle="modal" data-target="#socialModal" rel="tooltip" title="" data-original-title="Edit"><i class="fa fa-pencil"></i></button>
 				</div>
 			</div>
 			<div class="box-body">
@@ -75,7 +75,10 @@
 	<div class="col-md-8">
 		<div class="box box-success box-solid">
 			<div class="box-header">
-				<h3 class="box-title">Activity</h3>
+				<h3 class="box-title">Recent Activity</h3>
+				<div class="box-tools pull-right">
+					<a href="{{ URL::route('admin.team.activity', $user->id) }}" class="btn btn-success" rel="tooltip" title="" data-original-title="More"><i class="fa fa-plus" style="color: white;"></i></a>
+				</div>
 			</div>
 			<div class="box-body">
 				<div class="row">
@@ -111,12 +114,18 @@
 				<a type="button" class="close" data-dismiss="modal" aria-hidden="true" href="#">×</a>
 				<h4 class="modal-title">Basic info</h4>
 			</div>
-			{{ Form::open(['class' => 'form-horizontal']) }}
+			{{ Form::open(['class' => 'form-horizontal', 'method' => 'PUT', 'role' => 'form', 'url' => URL::route('admin.team.update', $user->id)]) }}
 			<div class="modal-body">
 				<div class="form-group">
 					<label class="col-md-2 control-label">Name</label>
 					<div class="col-md-10">
 						{{ Form::text('name', $user->name, ['class' => 'form-control']) }}
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-2 control-label">First name</label>
+					<div class="col-md-10">
+						{{ Form::text('firstname', $user->firstname, ['class' => 'form-control']) }}
 					</div>
 				</div>
 				<div class="form-group">
@@ -154,7 +163,7 @@
 				<a type="button" class="close" data-dismiss="modal" aria-hidden="true" href="#">×</a>
 				<h4 class="modal-title">Social</h4>
 			</div>
-			{{ Form::open(['class' => 'form-horizontal']) }}
+			{{ Form::open(['class' => 'form-horizontal', 'method' => 'PUT', 'role' => 'form', 'url' => URL::route('admin.team.social', $user->id)]) }}
 			<div class="modal-body">
 				<div class="form-group">
 					<label class="col-md-2 control-label">Facebook</label>

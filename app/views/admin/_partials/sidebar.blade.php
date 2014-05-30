@@ -36,3 +36,8 @@
 		<i class="fa fa-clock-o"></i> <span>Activity</span>
 	</a>
 </li>
+<li>
+	<a href="{{ URL::route('home') }}">
+		<i class="fa fa-reply"></i> <span>Return to Vataware</span>
+	</a>
+</li>

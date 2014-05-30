@@ -74,9 +74,9 @@ class AirlineController extends BaseController {
 		}
 
 		if(count($airline->getDirty()) > 0) {
-			$dirty = array();
-			foreach($airline->getDirty() as $field => $value) {
-				$dirty[$this->columns[$field]] = array($airline->getOriginal($field), $value);
+			$dirty = $airport->getDirty();
+			foreach($dirty as $field => &$value) {
+				$value = array($airline->getOriginal($field), $value);
 			}
 
 			$timeline = new Timeline;

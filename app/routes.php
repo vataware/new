@@ -17,7 +17,7 @@ Route::get('donations',				['as' => 'donations',			'uses' => 'HomeController@don
 Route::get('map/api',				['as' => 'map.api',				'uses' => 'HomeController@mapApi']);
 Route::get('map/flight',			['as' => 'map.flight',			'uses' => 'HomeController@mapFlight']);
 
-Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'before' => 'admin'], function() {
+Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|admin'], function() {
 	Route::get('',					['as' => 'admin.index',			'uses' => 'HomeController@index']);
 	Route::get('activity',			['as' => 'admin.activity',		'uses' => 'HomeController@activity']);
 	Route::get('bugs',				['as' => 'admin.bugs',			'uses' => 'HomeController@bugs']);
@@ -25,6 +25,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'before' => 'admin'],
 	Route::group(['prefix' => 'team'], function() {
 		Route::get('',				['as' => 'admin.team.index',	'uses' => 'TeamController@index']);
 		Route::get('{team}',		['as' => 'admin.team.show',		'uses' => 'TeamController@show']);
+		Route::get('{team}/activity', ['as' => 'admin.team.activity', 'uses' => 'TeamController@timeline']);
+		Route::put('{team}',		['as' => 'admin.team.update',	'uses' => 'TeamController@update']);
+		Route::put('{team}/social',	['as' => 'admin.team.social',	'uses' => 'TeamController@social']);
 	});
 
 	Route::group(['prefix' => 'airport'], function() {

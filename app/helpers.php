@@ -62,6 +62,26 @@ function altitudeColour($altitude, $implode = false, $hex = false) {
 	return $rgb;
 }
 
+View::composer('layouts.admin', function($view) {
+	if(!is_null($team = Auth::user()->team)) {
+		$user = array(
+			'name' => $team->name,
+			'firstname' => !empty($team->firstname) ? $team->firstname : explode(' ', $team->name)[0],
+			'job' => $team->job,
+			'photo' => $team->photo
+		);
+	} else {
+		$team = Auth::user();
+		$user = array(
+			'name' => $team->name,
+			'firstname' => explode(' ', $team->name)[0],
+			'job' => '',
+			'photo' => false
+		);
+	}
+	$view->with('user', $user);
+});
+
 View::composer('admin._partials.sidebar', function($view) {
 	$view->with('airlineRequestCount', count(AirlineChange::groupBy('airline_id')->remember(1)->lists('airline_id')));
 	$view->with('airportRequestCount', count(AirportChange::groupBy('airport_id')->remember(1)->lists('airport_id')));

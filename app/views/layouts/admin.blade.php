@@ -24,7 +24,7 @@
 	<body class="skin-blue">
 		<!-- header logo: style can be found in header.less -->
 		<header class="header">
-			<a href="index.html" class="logo">
+			<a href="{{ URL::route('admin.index') }}" class="logo">
 				<!-- Add the class icon to your logo image or logo icon to add the margining -->
 				Vataware
 			</a>
@@ -227,17 +227,17 @@
 						<li class="dropdown user user-menu">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown">
 								<i class="glyphicon glyphicon-user"></i>
-								<span>{{ Auth::user()->team->name }} <i class="caret"></i></span>
+								<span>{{ $user['name'] }} <i class="caret"></i></span>
 							</a>
 							<ul class="dropdown-menu">
 								<!-- User image -->
 								<li class="user-header bg-light-blue">
-									@if(Auth::user()->team->photo)
-									<img src="{{ Auth::user()->team->photo }}" class="img-circle" alt="User Image" />
+									@if($user['photo'])
+									<img src="{{ $user['photo'] }}" class="img-circle" alt="User Image" />
 									@endif
 									<p>
-										{{ Auth::user()->team->name }}
-										<small>{{ Auth::user()->team->job }}</small>
+										{{ $user['name'] }}
+										<small>{{ $user['job'] }}</small>
 									</p>
 								</li>
 								<!-- Menu Body -->
@@ -274,13 +274,13 @@
 				<section class="sidebar">
 					<!-- Sidebar user panel -->
 					<div class="user-panel">
-						@if(Auth::user()->team->photo)
+						@if($user['photo'])
 						<div class="pull-left image">
-							<img src="{{ Auth::user()->team->photo }}" class="img-circle" alt="User Image" />
+							<img src="{{ $user['photo'] }}" class="img-circle" alt="User Image" />
 						</div>
 						@endif
 						<div class="pull-left info">
-							<p>Hello, {{ Auth::user()->team->firstname }}</p>
+							<p>Hello, {{ $user['firstname'] }}</p>
 
 							<!-- <a href="#"><i class="fa fa-circle text-success"></i> Online</a> -->
 						</div>

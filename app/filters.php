@@ -94,7 +94,12 @@ Route::filter('flatten.atc', function($route, $request, $response) {
 });
 
 Route::filter('admin', function() {
-	if(Auth::guest() || !Auth::user()->isAdmin()) {
+	if(!Auth::user()->isAdmin()) {
+		$timeline = new Timeline;
+		$timeline->type = 'unauthorised-access';
+		$timeline->user_id = Auth::id();
+		$timeline->activity = array('name' => Auth::user()->name);
+		$timeline->save();
 		return App::abort(404);
 	}
 });
