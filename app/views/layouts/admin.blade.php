@@ -322,10 +322,27 @@
 				</section><!-- /.content -->
 			</aside><!-- /.right-side -->
 		</div><!-- ./wrapper -->
+		<div class="modal fade" id="modal-confirm">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title confirm-title">Action confirmation</h4>
+					</div>
+					<div class="modal-body" style="padding-bottom: 0">
+						<p class="confirm-message"></p>
+					</div>
+					<div class="modal-footer">
+						<a class="btn" data-dismiss="modal" aria-hidden="true" href="#">Cancel</a>
+						<a href="#" class="btn btn-primary confirm-button">Confirm</a>
+					</div>
+				</div>
+			</div>
+		</div>
 
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
 		<script src="{{ asset('assets/admin/javascript/bootstrap.min.js') }}" type="text/javascript"></script>
 		<script src="{{ asset('assets/admin/javascript/AdminLTE/app.js') }}" type="text/javascript"></script>
+		<script src="{{ asset('assets/admin/javascript/vataware.js') }}" type="text/javascript"></script>
 		@if(isset($javascripts) && count($javascripts) > 0)
 		@foreach($javascripts as $javascript)
 		<script src="{{ asset($javascript) }}"></script>

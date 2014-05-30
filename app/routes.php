@@ -24,10 +24,14 @@ Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|a
 
 	Route::group(['prefix' => 'team'], function() {
 		Route::get('',				['as' => 'admin.team.index',	'uses' => 'TeamController@index']);
+		Route::get('create',		['as' => 'admin.team.create',	'uses' => 'TeamController@create']);
+		Route::post('',				['as' => 'admin.team.store',	'uses' => 'TeamController@store']);
 		Route::get('{team}',		['as' => 'admin.team.show',		'uses' => 'TeamController@show']);
 		Route::get('{team}/activity', ['as' => 'admin.team.activity', 'uses' => 'TeamController@timeline']);
 		Route::put('{team}',		['as' => 'admin.team.update',	'uses' => 'TeamController@update']);
 		Route::put('{team}/social',	['as' => 'admin.team.social',	'uses' => 'TeamController@social']);
+		Route::delete('{team}',		['as' => 'admin.team.destroy',	'uses' => 'TeamController@destroy']);
+		Route::post('{team}',		['as' => 'admin.team.restore',	'uses' => 'TeamController@restore']);
 	});
 
 	Route::group(['prefix' => 'airport'], function() {
@@ -174,7 +178,7 @@ Route::bind('airline',function($value, $route) {
 });
 
 Route::bind('team',function($value, $route) {
-	$team = Team::find($value);
+	$team = Team::withTrashed()->find($value);
 
 	if(is_null($team))
 		return App::abort(404);

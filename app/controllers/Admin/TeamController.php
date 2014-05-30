@@ -1,15 +1,43 @@
 <?php namespace Admin;
 
-use BaseController, Team, Timeline, Input, Auth, Redirect;
+use BaseController, Team, Timeline, Input, Auth, Redirect, URL;
 
 class TeamController extends BaseController {
 	
 	protected $layout = 'layouts.admin';
 
 	function index() {
-		$teams = Team::orderBy('name')->get();
+		$teams = Team::orderBy('name')->withTrashed()->get();
 
 		$this->autoRender(compact('teams'), 'Team');
+	}
+
+	function create() {
+		$this->autoRender(array(), 'Add Team Member');
+	}
+
+	function store() {
+		$user = new Team;
+
+		$user->name = Input::get('name');
+		$user->firstname = Input::get('firstname');
+		$user->description = Input::get('description');
+		$user->job = Input::get('job');
+		$user->priority = Input::get('priority');
+		$user->vatsim_id = Input::get('vatsim_id');
+
+		$timeline = new Timeline;
+		$timeline->type = 'user-add';
+		$timeline->user_id = Auth::id();
+		$timeline->activity = array(
+			'user' => $user->name,
+			'fields' => $user->toArray()
+		);
+		$timeline->save();
+
+		$user->save();
+
+		return Redirect::route('admin.team.show', $user->id);
 	}
 
 	function show(Team $user) {
@@ -110,7 +138,31 @@ class TeamController extends BaseController {
 	}
 
 	function destroy(Team $user) {
+		$user->delete();
 
+		$timeline = new Timeline;
+		$timeline->type = 'user-delete';
+		$timeline->user_id = Auth::id();
+		$timeline->activity = array(
+			'user' => $user->name,
+		);
+		$timeline->save();
+
+		return URL::route('admin.team.index');
+	}
+
+	function restore(Team $user) {
+		$user->restore();
+
+		$timeline = new Timeline;
+		$timeline->type = 'user-restore';
+		$timeline->user_id = Auth::id();
+		$timeline->activity = array(
+			'user' => $user->name,
+		);
+		$timeline->save();
+
+		return URL::route('admin.team.show', $user->id);
 	}
 
 }
