@@ -30,13 +30,13 @@ body.no-flightmap {
 
 
 
-.btn-primary {
+.btn-vataware {
 	color: #ffffff;
 	background-color: #1cb1c1;
 	border-color: #2c3e50;
 }
 
-.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open .dropdown-toggle.btn-primary {
+.btn-vataware:hover, .btn-vataware:focus, .btn-vataware:active, .btn-vataware.active, .open .dropdown-toggle.btn-vataware {
 	color: #ffffff;
 	background-color: #138995;
 	border-color: #161f29;

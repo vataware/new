@@ -10,7 +10,9 @@ class User extends Eloquent implements UserInterface, RemindableInterface {
 	 *
 	 * @var string
 	 */
-	protected $table = 'users';
+	protected $table = 'pilots';
+	
+	protected $primaryKey = 'vatsim_id';
 
 	/**
 	 * The attributes excluded from the model's JSON form.
@@ -27,6 +29,38 @@ class User extends Eloquent implements UserInterface, RemindableInterface {
 	public function getAuthIdentifier()
 	{
 		return $this->getKey();
+	}
+
+	
+	/**
+	 * Get the token value for the "remember me" session.
+	 *
+	 * @return string
+	 */
+	public function getRememberToken()
+	{
+		return $this->remember_token;
+	}
+
+	/**
+	 * Set the token value for the "remember me" session.
+	 *
+	 * @param  string  $value
+	 * @return void
+	 */
+	public function setRememberToken($value)
+	{
+		$this->remember_token = $value;
+	}
+
+	/**
+	 * Get the column name for the "remember me" token.
+	 *
+	 * @return string
+	 */
+	public function getRememberTokenName()
+	{
+		return 'remember_token';
 	}
 
 	/**

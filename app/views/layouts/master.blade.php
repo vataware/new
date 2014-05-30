@@ -53,6 +53,8 @@
 						<li class="dropdown">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ Auth::user()->name }} <b class="caret"></b></a>
 							<ul class="dropdown-menu">
+								<li><a href="{{ URL::route('user.edit') }}">My Account</a></li>
+								<li class="divider"></li>
 								<li><a href="{{ URL::route('pilot.show', Auth::user()->vatsim_id) }}">Pilot's profile</a></li>
 								<li><a href="{{ URL::route('controller.show', Auth::user()->vatsim_id) }}">Controller's profile</a></li>
 								<li class="divider"></li>

@@ -5,7 +5,7 @@
 			<input type="text" autocomplete="off" name="q" placeholder="Search for pilots, flights, citypairs, airports, and more..." value="{{ Input::get('q') }}" class="homeSearchBox searchField">
 		</div>
 		<div class="col-md-2">
-			<button type="submit" class="btn btn-primary btn-block" style="margin-top: 21px; padding: 15px;">Search</button>
+			<button type="submit" class="btn btn-vataware btn-block" style="margin-top: 21px; padding: 15px;">Search</button>
 		</div>
 		{{ Form::close() }}
 	</div>
