@@ -50,6 +50,9 @@
 						<li><a href="https://www.facebook.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-facebook"></i></a></li>
 						<li><a href="https://www.twitter.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-twitter"></i></a></li>
 						@if(Auth::check())
+						@if(Auth::user()->isAdmin())
+						<li><a href="{{ URL::route('admin.index') }}">Admin</a></li>
+						@endif
 						<li class="dropdown">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ Auth::user()->name }} <b class="caret"></b></a>
 							<ul class="dropdown-menu">

@@ -61,3 +61,9 @@ function altitudeColour($altitude, $implode = false, $hex = false) {
 
 	return $rgb;
 }
+
+View::composer('admin._partials.sidebar', function($view) {
+	$view->with('airlineRequestCount', count(AirlineChange::groupBy('airline_id')->remember(1)->lists('airline_id')));
+	$view->with('airportRequestCount', count(AirportChange::groupBy('airport_id')->remember(1)->lists('airport_id')));
+});
+

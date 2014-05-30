@@ -92,3 +92,9 @@ Route::filter('flatten.atc', function($route, $request, $response) {
 		Flatten::end($response);
 	}
 });
+
+Route::filter('admin', function() {
+	if(Auth::guest() || !Auth::user()->isAdmin()) {
+		return App::abort(404);
+	}
+});

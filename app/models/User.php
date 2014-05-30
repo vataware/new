@@ -83,4 +83,12 @@ class User extends Eloquent implements UserInterface, RemindableInterface {
 		return $this->email;
 	}
 
+	public function team() {
+		return $this->hasOne('Team','vatsim_id','vatsim_id');
+	}
+
+	public function isAdmin() {
+		return ($this->acl == 255);
+	}
+
 }

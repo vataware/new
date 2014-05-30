@@ -17,6 +17,28 @@ Route::get('donations',				['as' => 'donations',			'uses' => 'HomeController@don
 Route::get('map/api',				['as' => 'map.api',				'uses' => 'HomeController@mapApi']);
 Route::get('map/flight',			['as' => 'map.flight',			'uses' => 'HomeController@mapFlight']);
 
+Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'before' => 'admin'], function() {
+	Route::get('',					['as' => 'admin.index',			'uses' => 'HomeController@index']);
+	Route::get('activity',			['as' => 'admin.activity',		'uses' => 'HomeController@activity']);
+	Route::get('bugs',				['as' => 'admin.bugs',			'uses' => 'HomeController@bugs']);
+
+	Route::group(['prefix' => 'team'], function() {
+		Route::get('',				['as' => 'admin.team.index',	'uses' => 'TeamController@index']);
+		Route::get('{team}',		['as' => 'admin.team.show',		'uses' => 'TeamController@show']);
+	});
+
+	Route::group(['prefix' => 'airport'], function() {
+		Route::get('',				['as' => 'admin.airport.index',	'uses' => 'AirportController@index']);
+		Route::get('{airport}',		['as' => 'admin.airport.requests', 'uses' => 'AirportController@requests']);
+		Route::put('{airport}',		['as' => 'admin.airport.change', 'uses' => 'AirportController@change']);
+	});
+
+	Route::group(['prefix' => 'airline'], function() {
+		Route::get('',				['as' => 'admin.airline.index',	'uses' => 'AirlineController@index']);
+		Route::get('{airline}',		['as' => 'admin.airline.requests', 'uses' => 'AirlineController@requests']);
+		Route::put('{airline}', 	['as' => 'admin.airline.change', 'uses' => 'AirlineController@change']);
+	});
+});
 
 // User
 Route::group(['prefix' => 'user'], function() {
@@ -146,6 +168,15 @@ Route::bind('airline',function($value, $route) {
 		return App::abort(404);
 	else
 		return $airline;
+});
+
+Route::bind('team',function($value, $route) {
+	$team = Team::find($value);
+
+	if(is_null($team))
+		return App::abort(404);
+	else
+		return $team;
 });
 
 /*
