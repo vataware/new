@@ -34,7 +34,6 @@ class AirlineController extends BaseController {
 	}
 
 	function requests(Airline $airline) {
-		\Auth::loginUsingId(1169898);
 		$raw = AirlineChange::whereAirlineId($airline->id)->with('user')->get();
 
 		$columns = $this->columns;
