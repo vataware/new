@@ -11,12 +11,19 @@
 		"iron-io/iron_cache": "dev-master",
 		"dietervds/laravel4-ironcache": "dev-master",
 		"philf/setting": "dev-master",
-		"anahkiasen/flatten": "dev-master"
+		"anahkiasen/flatten": "dev-master",
+		"bonroyage/jira": "dev-master"
 	},
 	"require-dev": {
 		"barryvdh/laravel-debugbar": "1.*",
 		"phpunit/phpunit": "3.7.*"
 	},
+	"repositories": [
+		{
+			"type": "vcs",
+			"url":  "git@bitbucket.org:devosburchart/laravel-jira.git"
+		}
+	],
 	"autoload": {
 		"classmap": [
 			"app/commands",

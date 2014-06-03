@@ -20,7 +20,10 @@ Route::get('map/flight',			['as' => 'map.flight',			'uses' => 'HomeController@ma
 Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|admin'], function() {
 	Route::get('',					['as' => 'admin.index',			'uses' => 'HomeController@index']);
 	Route::get('activity',			['as' => 'admin.activity',		'uses' => 'HomeController@activity']);
-	Route::get('bugs',				['as' => 'admin.bugs',			'uses' => 'HomeController@bugs']);
+	
+	Route::get('issues',			['as' => 'admin.issues',		'uses' => 'IssueController@index']);
+	Route::get('issues/progress',	['as' => 'admin.issues.progress', 'uses' => 'IssueController@progress']);
+	Route::get('issues/me',			['as' => 'admin.issues.me',		'uses' => 'IssueController@assignedToMe']);
 
 	Route::group(['prefix' => 'team'], function() {
 		Route::get('',				['as' => 'admin.team.index',	'uses' => 'TeamController@index']);

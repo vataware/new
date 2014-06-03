@@ -51,15 +51,16 @@
 						<tr>
 							<th>Issue</th>
 							<th>Summary</th>
-							<th>Type</th>
+							<th colspan="2"></th>
 						</tr>
 					</thead>
 					<tbody>
 					@foreach($issues as $issue)
 						<tr>
-							<td><img src="{{ $priorities[$issue->priority]->icon }}" title="{{ $priorities[$issue->priority]->name }}" /> {{ $issue->key }}</td>
+							<td><img src="{{ $issue->priority->iconUrl }}" rel="tooltip" data-original-title="{{ $issue->priority->name }}" /> {{ $issue->key }}</td>
 							<td>{{ $issue->summary }}</td>
-							<td><img src="{{ $types[$issue->type]->icon }}" /> {{ $types[$issue->type]->name }}</td>
+							<td><img src="{{ $issue->issuetype->iconUrl }}" rel="tooltip" data-original-title="{{ $issue->issuetype->name }}" /></td>
+							<td><img src="{{ $issue->status->iconUrl }}" rel="tooltip" data-original-title="{{ $issue->status->name }}" /></td>
 						</tr>
 					@endforeach
 					</tbody>

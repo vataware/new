@@ -87,3 +87,12 @@ View::composer('admin._partials.sidebar', function($view) {
 	$view->with('airportRequestCount', count(AirportChange::groupBy('airport_id')->remember(1)->lists('airport_id')));
 });
 
+View::composer('admin._partials.tasks', function($view) {
+	if(!is_null($team = Auth::user()->team) && !is_null($team->jira)) {
+		$tasks = JiraIssue::where('assignee', $team->jira)->where('resolution','Unresolved')->orderBy('priority','desc')->orderBy('updatedDate', 'DESC')->get();
+	} else {
+		$tasks = false;
+	}
+
+	$view->with('tasks', $tasks); 
+});

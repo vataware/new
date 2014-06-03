@@ -1,6 +1,6 @@
 <?php namespace Admin;
 
-use BaseController, Team, Timeline, Input, Auth, Redirect, URL;
+use BaseController, Team, Timeline, Input, Auth, Redirect, URL, JiraIssue;
 
 class TeamController extends BaseController {
 	
@@ -41,18 +41,12 @@ class TeamController extends BaseController {
 	}
 
 	function show(Team $user) {
-		$timelines = Timeline::whereUserId($user->vatsim_id)->orderBy('created_at','desc')->take(5)->get()->groupBy(function($timeline) {
+		$timelines = Timeline::with('user')->whereUserId($user->vatsim_id)->orderBy('created_at','desc')->take(5)->get()->groupBy(function($timeline) {
 			return $timeline->created_at->format('j M. Y');
 		});
 
 		if(!is_null($user->jira)) {
-			$jira = new \Jira\JiraClient('http://tracon.vataware.com:8080');
-			$jira->login('api', '5Eq+T7}K/)N2^Gf');
-			$issues = $jira->issues()->getFromJqlSearch('assignee=' . $user->jira . ' AND resolution = Unresolved ORDER BY updatedDate DESC');
-			if(count($issues) > 0) {
-				$types = $jira->issueTypes()->get();
-				$priorities = $jira->priorities()->get();
-			}
+			$issues = JiraIssue::where('assignee',  $user->jira)->where('resolution','Unresolved')->orderBy('priority','desc')->orderBy('updatedDate', 'DESC')->get();
 		} else {
 			$issues = false;
 		}

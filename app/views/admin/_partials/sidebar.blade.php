@@ -20,17 +20,16 @@
 		<i class="fa fa-users"></i> <span>Team</span>
 	</a>
 </li>
-<!-- <li class="treeview">
+<li class="treeview">
 	<a href="#">
 		<i class="fa fa-bug"></i> <span>Issues</span>
 		<i class="fa fa-angle-left pull-right"></i>
 	</a>
 	<ul class="treeview-menu">
-		<li><a href="pages/examples/invoice.html"><i class="fa fa-user"></i> Assigned to Me</a></li>
-		<li><a href="pages/examples/login.html"><i class="fa fa-folder-open"></i> Projects</a></li>
-		<li><a href="pages/examples/login.html"><i class="fa fa-eye"></i> Watched</a></li>
+		<li><a href="{{ URL::route('admin.issues.me') }}"><i class="fa fa-user"></i> Assigned to Me</a></li>
+		<li><a href="{{ URL::route('admin.issues.progress') }}"><i class="fa fa-truck"></i> In Progress</a></li>
 	</ul>
-</li> -->
+</li>
 <li>
 	<a href="{{ URL::route('admin.activity') }}">
 		<i class="fa fa-clock-o"></i> <span>Activity</span>

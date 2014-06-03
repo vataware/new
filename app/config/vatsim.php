@@ -5,7 +5,7 @@ return array(
 	/*
 	 * The location of the VATSIM OAuth interface
 	 */
-	'base' => '',
+	'base' => $_ENV['OAUTH_HOST'],
 
 	/*
 	 * The consumer key for your organisation (provided by VATSIM)
