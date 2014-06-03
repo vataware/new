@@ -20,6 +20,11 @@
 		<i class="fa fa-users"></i> <span>Team</span>
 	</a>
 </li>
+<li>
+	<a href="{{ URL::route('admin.donation.index') }}">
+		<i class="fa fa-usd"></i> <span>Donations</span>
+	</a>
+</li>
 <li class="treeview">
 	<a href="#">
 		<i class="fa fa-bug"></i> <span>Issues</span>

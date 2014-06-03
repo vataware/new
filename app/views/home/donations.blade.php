@@ -17,8 +17,9 @@
 		</div>
 		<div class="col-md-3">
 			<div class="row providers">
-				<div class="col-xs-12"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Y3CP2QCJCRSVA">paypal</a></div>
-				<div class="col-xs-12"><a href="http://www.patreon.com/user?u=156420">patreon <small>monthly</small></a></div>
+				@foreach($gateways as $gateway)
+				<div class="col-xs-12"><a href="{{ $gateway->link }}">{{ strtolower($gateway->name) }} {{ $gateway->note ? '<small>' . strtolower($gateway->note) . '</small>' : '' }}</a></div>
+				@endforeach
 			</div>
 		</div>
 		<div class="col-md-3">
