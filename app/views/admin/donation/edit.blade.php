@@ -1,9 +1,9 @@
 <div class="modal-dialog">
 	<div class="modal-content">
-		{{ Form::open(['url' => URL::route('admin.donation.store'), 'class' => 'form-horizontal']) }}
+		{{ Form::model($donation, ['url' => URL::route('admin.donation.update', $donation->id), 'class' => 'form-horizontal', 'method' => 'PUT']) }}
 		<div class="modal-header">
 			<a type="button" class="close" data-dismiss="modal" aria-hidden="true" href="#">×</a>
-			<h4 class="modal-title">Add donation</h4>
+			<h4 class="modal-title">Edit donation</h4>
 		</div>
 		<div class="modal-body">
 			<div class="row">
@@ -19,7 +19,7 @@
 			<div class="row">
 				<div class="col-md-12">	
 					<div class="form-group">
-						<label class="col-md-2 control-label" for="vatsim">VATSIM ID</label>
+						<label class="col-md-2 control-label" for="vatsim_id">VATSIM ID</label>
 						<div class="col-md-10">
 							{{ Form::text('vatsim_id', null, ['placeholder' => 'eg. 1169898 (optional)','class' => 'form-control']) }}
 						</div>

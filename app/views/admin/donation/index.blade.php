@@ -17,7 +17,7 @@
 				@foreach($gateways as $gateway)
 				<tr>
 					<td>{{ $gateway->name }}</td>
-					<td class="text-right"><a href="#" class="btn btn-warning btn-flat btn-xs">Edit</a> <a href="#" class="btn btn-danger btn-flat btn-xs">Delete</a></td>
+					<td class="text-right"><a href="#" data-toggle="modal" data-target="#modal" data-remote="{{ URL::route('admin.donation.gateway.edit', $gateway->id) }}" class="btn btn-warning btn-flat btn-xs">Edit</a> <a href="{{ URL::route('admin.donation.gateway.destroy', $gateway->id) }}" class="btn btn-xs btn-flat btn-confirm btn-danger" data-title="Delete Gateway" data-message="Are you sure you want to delete gateway <strong>{{ $gateway->name }}</strong>?<br />This action cannot be undone." data-type="danger" data-confirm="Delete" data-method="DELETE">Delete</a></td>
 				</tr>
 				@endforeach
 			</tbody>
@@ -41,7 +41,7 @@
 				<tr>
 					<td>{{ $donation->name }} <small class="text-muted">{{ $donation->vatsim_id }}</small></td>
 					<td>{{ $donation->amount }}</td>
-					<td class="text-right"><a href="#" class="btn btn-warning btn-flat btn-xs">Edit</a> <a href="#" class="btn btn-danger btn-flat btn-xs">Delete</a></td>
+					<td class="text-right"><a href="#" data-toggle="modal" data-target="#modal" data-remote="{{ URL::route('admin.donation.edit', $donation->id) }}" class="btn btn-warning btn-flat btn-xs">Edit</a> <a href="{{ URL::route('admin.donation.destroy', $donation->id) }}" class="btn btn-xs btn-flat btn-confirm btn-danger" data-title="Delete Donation" data-message="Are you sure you want to delete the donation by <strong>{{ $donation->name }}</strong>?<br />This action cannot be undone." data-type="danger" data-confirm="Delete" data-method="DELETE">Delete</a></td>
 				</tr>
 				@endforeach
 			</tbody>

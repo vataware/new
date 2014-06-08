@@ -1,6 +1,6 @@
 <?php namespace Admin;
 
-use BaseController, Donation, Gateway, Input, Redirect, Messages, Validator;
+use BaseController, Donation, Gateway, Input, Redirect, Messages, Validator, URL;
 
 class DonationController extends BaseController {
 	
@@ -34,7 +34,7 @@ class DonationController extends BaseController {
 		$donation = new Donation;
 		$donation->name = Input::get('name');
 		$donation->amount = Input::get('amount');
-		$donation->vatsim_id = Input::get('vatsim') ?: null;
+		$donation->vatsim_id = Input::get('vatsim_id') ?: null;
 		$donation->save();
 
 		Messages::success('Donation by <strong>' . $donation->name . '</strong> for an amount of <strong>$' . $donation->amount . ' has been added.');
@@ -42,15 +42,37 @@ class DonationController extends BaseController {
 	}
 
 	function edit(Donation $donation) {
-
+		return $this->autoRender(compact('donation'));
 	}
 
 	function update(Donation $donation) {
+		$rules = array(
+			'name' => 'required',
+			'amount' => 'required|numeric|min:0',
+			'vatsim_id' => 'integer',
+		);
 
+		$validator = Validator::make(Input::all(), $rules);
+
+		if($validator->fails()) {
+			Messages::error($validator->messages()->all());
+			return Redirect::route('admin.donation.index');
+		}
+
+		$donation->name = Input::get('name');
+		$donation->amount = Input::get('amount');
+		$donation->vatsim_id = Input::get('vatsim_id') ?: null;
+		$donation->save();
+
+		Messages::success('Donation by <strong>' . $donation->name . '</strong> has been updated.');
+		return Redirect::route('admin.donation.index');
 	}
 
 	function destroy(Donation $donation) {
+		$donation->delete();
 
+		Messages::success('Donation by <strong>' . $donation->name . '</strong> has been deleted.');
+		return URL::route('admin.donation.index');
 	}
 
 	function gatewayCreate() {
@@ -81,14 +103,35 @@ class DonationController extends BaseController {
 	}
 
 	function gatewayEdit(Gateway $gateway) {
-
+		return $this->autoRender(compact('gateway'));
 	}
 
 	function gatewayUpdate(Gateway $gateway) {
+		$rules = array(
+			'name' => 'required',
+			'link' => 'required|url',
+		);
 
+		$validator = Validator::make(Input::all(), $rules);
+
+		if($validator->fails()) {
+			Messages::error($validator->messages()->all());
+			return Redirect::route('admin.donation.index');
+		}
+
+		$gateway->name = Input::get('name');
+		$gateway->link = Input::get('link');
+		$gateway->note = Input::get('note') ?: null;
+		$gateway->save();
+
+		Messages::success('Gateway <strong>' . $gateway->name . '</strong> has been updated.');
+		return Redirect::route('admin.donation.index');
 	}
 
 	function gatewayDestroy(Gateway $gateway) {
+		$gateway->delete();
 
+		Messages::success('Gateway <strong>' . $gateway->name . '</strong> has been deleted.');
+		return URL::route('admin.donation.index');
 	}
 }
