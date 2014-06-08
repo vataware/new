@@ -41,9 +41,13 @@ Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|a
 		Route::get('',				['as' => 'admin.donation.index',	'uses' => 'DonationController@index']);
 		Route::get('create',		['as' => 'admin.donation.create',	'uses' => 'DonationController@create']);
 		Route::post('',				['as' => 'admin.donation.store',	'uses' => 'DonationController@store']);
+		Route::get('{donation}',	['as' => 'admin.donation.edit',		'uses' => 'DonationController@edit']);
+		Route::put('{donation}',	['as' => 'admin.donation.update',	'uses' => 'DonationController@update']);
 
 		Route::get('gateway/create', ['as' => 'admin.donation.gateway.create', 'uses' => 'DonationController@gatewayCreate']);
 		Route::post('gateway',		['as' => 'admin.donation.gateway.store', 'uses' => 'DonationController@gatewayStore']);
+		Route::get('gateway/{gateway}', ['as' => 'admin.donation.gateway.edit', 'uses' => 'DonationController@gatewayEdit']);
+		Route::put('gateway/{gateway}', ['as' => 'admin.donation.gateway.update', 'uses' => 'DonationController@gatewayUpdate']);
 	});
 
 	Route::group(['prefix' => 'airport'], function() {
@@ -138,7 +142,7 @@ Route::get('citypair/{departure}-{arrival}',['as' => 'citypair',	'uses' => 'Flig
 |
 */
 
-Route::bind('flight',function($value, $route) {
+Route::bind('flight',function($value) {
 	$flight = Flight::with(['aircraft','departure','arrival','pilot','departureCountry','arrivalCountry','airline','positions' => function($positions) {
 		$positions->join('updates','positions.update_id','=','updates.id');
 		$positions->select('positions.*', DB::raw('updates.timestamp AS time'));
@@ -152,7 +156,7 @@ Route::bind('flight',function($value, $route) {
 	}
 });
 
-Route::bind('atc',function($value, $route) {
+Route::bind('atc',function($value) {
 	$atc = ATC::with('pilot')->find($value);
 
 	if(is_null($atc) || $value == 0) {
@@ -162,7 +166,7 @@ Route::bind('atc',function($value, $route) {
 	}
 });
 
-Route::bind('pilot',function($value, $route) {
+Route::bind('pilot',function($value) {
 	$pilot = Pilot::whereVatsimId($value)->first();
 
 	if(is_null($pilot) || $value == 0)
@@ -171,7 +175,7 @@ Route::bind('pilot',function($value, $route) {
 		return $pilot;
 });
 
-Route::bind('airport',function($value, $route) {
+Route::bind('airport',function($value) {
 	$airport = Airport::whereIcao($value)->first();
 
 	if(is_null($airport))
@@ -180,7 +184,7 @@ Route::bind('airport',function($value, $route) {
 		return $airport;
 });
 
-Route::bind('airline',function($value, $route) {
+Route::bind('airline',function($value) {
 	$airline = Airline::whereIcao($value)->first();
 
 	if(is_null($airline))
@@ -189,13 +193,31 @@ Route::bind('airline',function($value, $route) {
 		return $airline;
 });
 
-Route::bind('team',function($value, $route) {
+Route::bind('team',function($value) {
 	$team = Team::withTrashed()->find($value);
 
 	if(is_null($team))
 		return App::abort(404);
 	else
 		return $team;
+});
+
+Route::bind('donation',function($value) {
+	$donation = Donation::find($value);
+
+	if(is_null($donation))
+		return App::abort(404);
+	else
+		return $donation;
+});
+
+Route::bind('gateway',function($value) {
+	$gateway = Gateway::find($value);
+
+	if(is_null($gateway))
+		return App::abort(404);
+	else
+		return $gateway;
 });
 
 /*
