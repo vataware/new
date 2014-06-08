@@ -43,11 +43,13 @@ Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|a
 		Route::post('',				['as' => 'admin.donation.store',	'uses' => 'DonationController@store']);
 		Route::get('{donation}',	['as' => 'admin.donation.edit',		'uses' => 'DonationController@edit']);
 		Route::put('{donation}',	['as' => 'admin.donation.update',	'uses' => 'DonationController@update']);
+		Route::delete('{donation}',	['as' => 'admin.donation.destroy',	'uses' => 'DonationController@destroy']);
 
 		Route::get('gateway/create', ['as' => 'admin.donation.gateway.create', 'uses' => 'DonationController@gatewayCreate']);
 		Route::post('gateway',		['as' => 'admin.donation.gateway.store', 'uses' => 'DonationController@gatewayStore']);
 		Route::get('gateway/{gateway}', ['as' => 'admin.donation.gateway.edit', 'uses' => 'DonationController@gatewayEdit']);
 		Route::put('gateway/{gateway}', ['as' => 'admin.donation.gateway.update', 'uses' => 'DonationController@gatewayUpdate']);
+		Route::delete('gateway/{gateway}', ['as' => 'admin.donation.gateway.destroy', 'uses' => 'DonationController@gatewayDestroy']);
 	});
 
 	Route::group(['prefix' => 'airport'], function() {

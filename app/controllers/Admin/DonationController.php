@@ -1,6 +1,6 @@
 <?php namespace Admin;
 
-use BaseController, Donation, Gateway, Input, Redirect, Messages, Validator;
+use BaseController, Donation, Gateway, Input, Redirect, Messages, Validator, URL;
 
 class DonationController extends BaseController {
 	
@@ -69,7 +69,10 @@ class DonationController extends BaseController {
 	}
 
 	function destroy(Donation $donation) {
+		$donation->delete();
 
+		Messages::success('Donation by <strong>' . $donation->name . '</strong> has been deleted.');
+		return URL::route('admin.donation.index');
 	}
 
 	function gatewayCreate() {
@@ -126,6 +129,9 @@ class DonationController extends BaseController {
 	}
 
 	function gatewayDestroy(Gateway $gateway) {
+		$gateway->delete();
 
+		Messages::success('Gateway <strong>' . $gateway->name . '</strong> has been deleted.');
+		return URL::route('admin.donation.index');
 	}
 }
