@@ -33,8 +33,6 @@
 		<div class="vataware-map-stats">PILOTS<span class="hidden-inline-xs"> ONLINE</span>: <span style="color:#138995;">{{ $statsPilots }}</span>&nbsp; &nbsp; ATC<span class="hidden-inline-xs"> ONLINE</span>: <span style="color:#138995;">{{ $statsAtc }}</span></div>
 	</div>
 	<section class="wrapper">
-		{{-- Temporarily hide leader navigation --}}
-		@if(false)
 		<div class="navbar navbar-default navbar-leader">
 			<div class="container">
 				<div class="navbar-header visible-xs">
@@ -43,33 +41,38 @@
 				<div class="navbar-collapse collapse" id="navbar-main">
 
 					<ul class="nav navbar-nav">
-						<li>
-							<a href="#"><i class="fa fa-user"></i> Pilot Login</a>
-						</li>
-						<li>
-							<a href="#"><i class="fa fa-users"></i> Airline Login</a>
-						</li>
-						<li>
-							<a href="#"><i class="fa fa-file-o"></i> Not a member? <span style="color:#18bc9c;">Register</span></a>
-						</li>
-
+						<li><a href="{{ URL::to('http://help.vataware.com/') }}"><i class="fa fa-question-circle"></i> Support</a></li>
+						<li><a href="{{ URL::route('donations') }}"><i class="fa fa-usd"></i> Donate</a></li>
+						<li><a href="{{ URL::to('http://forums.vataware.com/') }}"><i class="fa fa-comments"></i> Forums</a></li>
 					</ul>
 
 					<ul class="nav navbar-nav navbar-right">
-						<li><a href="http://builtwithbootstrap.com/">Hello, <span style="color:#18bc9c;">Liam!</span></a></li>
-						<li><a href="https://www.facebook.com/vataware" target="_blank" style="font-size:24px;"><i class="fa fa-facebook"></i></a></li>
-						<li><a href="https://www.twitter.com/vataware" target="_blank" style="font-size:24px;"><i class="fa fa-twitter"></i></a></li>
+						<li><a href="https://www.facebook.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-facebook"></i></a></li>
+						<li><a href="https://www.twitter.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-twitter"></i></a></li>
+						@if(Auth::check())
+						@if(Auth::user()->isAdmin())
+						<li><a href="{{ URL::route('admin.index') }}">Admin</a></li>
+						@endif
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ Auth::user()->name }} <b class="caret"></b></a>
+							<ul class="dropdown-menu">
+								<li><a href="{{ URL::route('user.edit') }}">My Account</a></li>
+								<li class="divider"></li>
+								<li><a href="{{ URL::route('pilot.show', Auth::user()->vatsim_id) }}">Pilot's profile</a></li>
+								<li><a href="{{ URL::route('controller.show', Auth::user()->vatsim_id) }}">Controller's profile</a></li>
+								<li class="divider"></li>
+								<li><a href="{{ URL::route('user.logout') }}">Logout</a></li>
+							</ul>
+						</li>
+						@else
+						<li><a href="{{ URL::route('user.login') }}">Sign in with VATSIM ID</a></li>
+						@endif
 					</ul>
 
 				</div>
 			</div>
 		</div>
-		@endif
-		<div class="navbar navbar-default navbar-leader">
-			<div class="container">
-				<div style="color: white; text-align: center; margin-top: 10px;"><strong>Did you know?</strong> You can scroll up for the live map</div>
-			</div>
-		</div>
+
 		<nav class="navbar navbar-vataware" role="navigation">
 			<div class="container">
 				<!-- Brand and toggle get grouped for better mobile display -->
@@ -123,7 +126,7 @@
 				</div> --}}
 				<div class="hidden-xs"><a href="{{ URL::route('home') }}" class="footerActive">Home</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('pilot.index') }}">Pilots</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('atc.index') }}">ATC</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::to('forums') }}">Forum</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('team') }}">Team</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<a href="{{ URL::route('donations') }}">Donate</a><br /><br /></div>
 				&copy; 2014 <a href="{{ URL::route('home') }}" style="color:white; font-weight:bold;">vataware</a> All rights reserved.<br />
-				<small>version 1.1-{{ $build }}</small>
+				<small>version 1.2-{{ $build }}</small>
 			</div>
 		</div>
 	</footer>

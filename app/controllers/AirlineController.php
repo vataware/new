@@ -80,4 +80,22 @@ class AirlineController extends BaseController {
 		$this->autoRender(compact('airline','historicFlights','pilots','aircraft','activeFlights'), $airline->icao . ' - ' . $airline->name);
 	}
 
+	function edit(Airline $airline) {
+		return $this->autoRender(compact('airline'));
+	}
+
+	function update(Airline $airline) {
+		Diff::compare($airline, Input::all(), function($key, $value, $model) {
+			$change = new AirlineChange;
+			$change->airline_id = $model->id;
+			$change->user_id = Auth::id();
+			$change->key = $key;
+			$change->value = $value;
+			$change->save();
+		});
+
+		Messages::success('Thank you for your submission. We will be evaluating your feedback soon.');
+		return Redirect::route('airline.show', $airline->icao);
+	}
+
 }

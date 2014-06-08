@@ -29,8 +29,8 @@ class FlightController extends BaseController {
 	function citypair($departureId, $arrivalId) {
 		$routes = Flight::select('id','route', DB::raw('COUNT(route) AS count'))->whereDepartureId($departureId)->whereArrivalId($arrivalId)->where('route','!=','')->whereState(2)->groupBy('route')->orderBy('count','desc')->get();
 		
-		$departure = Airport::find($departureId);
-		$arrival = Airport::find($arrivalId);
+		$departure = Airport::whereIcao($departureId)->first();
+		$arrival = Airport::whereIcao($arrivalId)->first();
 
 		$this->autoRender(compact('departure','arrival','routes','airports','departureId','arrivalId'), 'Routes for ' . $departureId . ' - ' . $arrivalId);
 	}

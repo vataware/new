@@ -24,8 +24,14 @@ abstract class BaseController extends Controller {
 
 		if(!is_null($this->layout))
 		{
-			if(!is_null($title))
-				$this->layout->title = $title;
+			if(!is_null($title)) {
+				if(is_array($title)):
+					$this->layout->title = $title[0];
+					$this->layout->subtitle = $title[1];
+				else:
+					$this->layout->title = $title;
+				endif;
+			}
 
 			$this->layout->content = $view;
 		}

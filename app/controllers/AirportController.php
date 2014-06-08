@@ -29,4 +29,23 @@ class AirportController extends BaseController {
 		$this->autoRender(compact('airport','departures','arrivals','metar','taf'), $airport->icao . ' - ' . $airport->name);
 	}
 
+	function edit(Airport $airport) {
+		$countries = Country::orderBy('country')->lists('country','id');
+		return $this->autoRender(compact('airport','countries'));
+	}
+
+	function update(Airport $airport) {
+		Diff::compare($airport, Input::all(), function($key, $value, $model) {
+			$change = new AirportChange;
+			$change->airport_id = $model->id;
+			$change->user_id = Auth::id();
+			$change->key = $key;
+			$change->value = $value;
+			$change->save();
+		});
+
+		Messages::success('Thank you for your submission. We will be evaluating your feedback soon.');
+		return Redirect::route('airport.show', $airport->icao);
+	}
+
 }
