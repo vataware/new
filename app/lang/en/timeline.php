@@ -33,4 +33,16 @@ return array(
 		'elevation' => 'Elevation',
 	),
 
+	'donation' => array(
+		'name' => 'Name',
+		'vatsim_id' => 'VATSIM ID',
+		'amount' => 'Amount (USD)',
+	),
+
+	'donation-gateway' => array(
+		'name' => 'Name',
+		'link' => 'Link',
+		'note' => 'Note',
+	),
+
 );
