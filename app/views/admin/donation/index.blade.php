@@ -10,7 +10,7 @@
 					<th></th>
 				</tr>
 				<tr class="success">
-					<td colspan="100%" class="text-center"><a href="#">new gateway +</a></td>
+					<td colspan="100%" class="text-center"><a href="#" data-toggle="modal" data-target="#modal" data-remote="{{ URL::route('admin.donation.gateway.create') }}">new gateway +</a></td>
 				</tr>
 			</thead>
 			<tbody>
@@ -33,7 +33,7 @@
 					<th></th>
 				</tr>
 				<tr class="success">
-					<td colspan="100%" class="text-center"><a href="#">new donation +</a></td>
+					<td colspan="100%" class="text-center"><a href="#" data-toggle="modal" data-target="#modal" data-remote="{{ URL::route('admin.donation.create') }}">new donation +</a></td>
 				</tr>
 			</thead>
 			<tbody>
@@ -48,5 +48,10 @@
 		</table>
 	</div>
 </div>
-
+<div class="modal fade" id="modal" data-backdrop="static" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
+</div>
 @stop

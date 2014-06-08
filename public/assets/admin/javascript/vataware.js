@@ -1,4 +1,11 @@
 $(document).ready(function() {
+	$('body').on('hidden.bs.modal', '.modal', function () {
+		$(this).removeData('bs.modal');
+		if($(this).data('reset-loading')) {
+			$(this).find('.modal-content').html('<div class="modal-body"><p>Loading...</p></div>');
+		}
+	});
+	
 	$('body').on('click', 'a[href]:not(.btn-confirm)', function(e) {
 		if($(this).data('method') !== undefined && $(this).data('method') !== 'GET') {
 			e.preventDefault();

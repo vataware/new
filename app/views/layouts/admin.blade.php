@@ -139,7 +139,8 @@
 
 				<!-- Main content -->
 				<section class="content">
-				@yield('content')
+					{{ Messages::get() }}
+					@yield('content')
 				</section><!-- /.content -->
 			</aside><!-- /.right-side -->
 		</div><!-- ./wrapper -->

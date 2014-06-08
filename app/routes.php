@@ -39,6 +39,11 @@ Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|a
 
 	Route::group(['prefix' => 'donations'], function() {
 		Route::get('',				['as' => 'admin.donation.index',	'uses' => 'DonationController@index']);
+		Route::get('create',		['as' => 'admin.donation.create',	'uses' => 'DonationController@create']);
+		Route::post('',				['as' => 'admin.donation.store',	'uses' => 'DonationController@store']);
+
+		Route::get('gateway/create', ['as' => 'admin.donation.gateway.create', 'uses' => 'DonationController@gatewayCreate']);
+		Route::post('gateway',		['as' => 'admin.donation.gateway.store', 'uses' => 'DonationController@gatewayStore']);
 	});
 
 	Route::group(['prefix' => 'airport'], function() {
