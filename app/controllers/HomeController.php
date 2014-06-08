@@ -26,7 +26,7 @@ class HomeController extends BaseController {
 	}
 
 	function donations() {
-		$donations = Donation::orderBy('amount','desc')->lists('name');
+		$donations = Donation::where('amount','>=','10')->orderBy('amount','desc')->lists('name');
 		$gateways = Gateway::orderBy('name')->get();
 
 		$this->stylesheet('assets/stylesheets/donations.css');

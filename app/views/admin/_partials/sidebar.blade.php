@@ -33,7 +33,7 @@
 	<ul class="treeview-menu">
 		<li><a href="{{ URL::route('admin.issues.me') }}"><i class="fa fa-user"></i> Assigned to Me</a></li>
 		<li><a href="{{ URL::route('admin.issues') }}"><i class="fa fa-truck"></i> In Progress</a></li>
-		<li><a href="{{ URL::route('admin.issues.open') }}"><i class="fa fa-truck"></i> Open Issues</a></li>
+		<li><a href="{{ URL::route('admin.issues.open') }}"><i class="fa fa-puzzle-piece"></i> Open Issues</a></li>
 	</ul>
 </li>
 <li>
