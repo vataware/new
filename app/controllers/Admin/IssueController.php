@@ -7,10 +7,6 @@ class IssueController extends BaseController {
 	protected $layout = 'layouts.admin';
 
 	function index() {
-
-	}
-
-	function progress() {
 		$priorities = JiraIssue::where('status', '3')->orderBy('priority','desc')->orderBy('updatedDate', 'DESC')->get()->groupBy('priority_id');
 		
 		$colours = array();
@@ -30,16 +26,24 @@ class IssueController extends BaseController {
 		}
 
 		$priorities = JiraIssue::where('assignee',$team->jira)->where('resolution','Unresolved')->orderBy('priority','desc')->orderBy('updatedDate', 'DESC')->get()->groupBy('priority_id');
-		
+	
 		$colours = array();
 		foreach(Jira::caller('priority') as $colour) {
 			$colours[$colour->id] = $colour;
 		}
 
-		// echo '<pre>';
-		// dd($priorities);
+		$this->autoRender(compact('priorities','colours'), 'Assigned to Me');
+	}
 
-		$this->render('admin.issue.progress', compact('priorities','colours'), 'Assigned to Me');
+	function open() {
+		$priorities = JiraIssue::where('resolution', 'Unresolved')->orderBy('priority','desc')->orderBy('updatedDate', 'DESC')->get()->groupBy('priority_id');
+
+		$colours = array();
+		foreach(Jira::caller('priority') as $colour) {
+			$colours[$colour->id] = $colour;
+		}
+
+		$this->render('admin.issue.index', compact('priorities','colours'), 'Open Issues');
 	}
 
 }

@@ -22,8 +22,8 @@ Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|a
 	Route::get('activity',			['as' => 'admin.activity',		'uses' => 'HomeController@activity']);
 	
 	Route::get('issues',			['as' => 'admin.issues',		'uses' => 'IssueController@index']);
-	Route::get('issues/progress',	['as' => 'admin.issues.progress', 'uses' => 'IssueController@progress']);
 	Route::get('issues/me',			['as' => 'admin.issues.me',		'uses' => 'IssueController@assignedToMe']);
+	Route::get('issues/open',		['as' => 'admin.issues.open',	'uses' => 'IssueController@open']);
 
 	Route::group(['prefix' => 'team'], function() {
 		Route::get('',				['as' => 'admin.team.index',	'uses' => 'TeamController@index']);
