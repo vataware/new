@@ -10,6 +10,42 @@ class AirlineController extends BaseController {
 		$this->autoRender(compact('airlines'), 'Airlines');
 	}
 
+	function store() {
+		$rules = array(
+			'icao' => 'alpha|required',
+			'name' => 'required',
+			'radio' => '',
+			'website' => 'url',
+		);
+
+		$validator = Validator::make(Input::all(), $rules);
+
+		if($validator->fails()) {
+			Messages::error($validator->messages()->all());
+			return Redirect::back()->withInput();
+		}
+
+		if(is_null($airline = Airline::whereIcao(Input::get('icao'))->whereNew(true)->first())) {
+			$airline = new Airline;
+			$airline->icao = Input::get('icao');
+			$airline->name = Input::get('name');
+			$airline->new = true;
+			$airline->save();
+		}
+
+		Diff::compare($airline, Input::all(), function($key, $value, $model) {
+			$change = new AirlineChange;
+			$change->airline_id = $model->id;
+			$change->user_id = Auth::id();
+			$change->key = $key;
+			$change->value = $value;
+			$change->save();
+		}, ['name', 'radio', 'website']);
+
+		Messages::success('Thank you for your submission. We will check whether all information is correct and soon this airline might be available.');
+		return Redirect::back();
+	}
+
 	function show(Airline $airline) {
 		$activeFlights = $airline->flights()
 			->whereIn('state',[0, 1, 3, 4])
@@ -85,9 +121,9 @@ class AirlineController extends BaseController {
 	}
 
 	function update(Airline $airline) {
-		Diff::compare($airline, Input::all(), function($key, $value, $model) {
+		Diff::compare($airline, Input::all(), function($key, $value, $airline) {
 			$change = new AirlineChange;
-			$change->airline_id = $model->id;
+			$change->airline_id = $airline->id;
 			$change->user_id = Auth::id();
 			$change->key = $key;
 			$change->value = $value;

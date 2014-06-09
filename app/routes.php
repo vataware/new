@@ -52,13 +52,13 @@ Route::group(['prefix' => 'cockpit', 'namespace' => 'Admin', 'before' => 'auth|a
 		Route::delete('gateway/{gateway}', ['as' => 'admin.donation.gateway.destroy', 'uses' => 'DonationController@gatewayDestroy']);
 	});
 
-	Route::group(['prefix' => 'airport'], function() {
+	Route::group(['prefix' => 'airport', 'admin'], function() {
 		Route::get('',				['as' => 'admin.airport.index',	'uses' => 'AirportController@index']);
 		Route::get('{airport}',		['as' => 'admin.airport.requests', 'uses' => 'AirportController@requests']);
 		Route::put('{airport}',		['as' => 'admin.airport.change', 'uses' => 'AirportController@change']);
 	});
 
-	Route::group(['prefix' => 'airline'], function() {
+	Route::group(['prefix' => 'airline', 'admin'], function() {
 		Route::get('',				['as' => 'admin.airline.index',	'uses' => 'AirlineController@index']);
 		Route::get('{airline}',		['as' => 'admin.airline.requests', 'uses' => 'AirlineController@requests']);
 		Route::put('{airline}', 	['as' => 'admin.airline.change', 'uses' => 'AirlineController@change']);
@@ -115,6 +115,7 @@ Route::group(['prefix' => 'controller'], function() {
 Route::pattern('airport','[A-Z0-9]{3,4}');
 Route::group(['prefix' => 'airport'], function() {
 	Route::get('',					['as' => 'airport.index',		'uses' => 'AirportController@index']);
+	Route::post('',					['as' => 'airport.store',		'uses' => 'AirportController@store']);	
 	Route::get('{airport}',			['as' => 'airport.show',		'uses' => 'AirportController@show']);
 	Route::get('{airport}/edit',	['as' => 'airport.edit',		'uses' => 'AirportController@edit']);
 	Route::put('{airport}',			['as' => 'airport.update',		'uses' => 'AirportController@update']);
@@ -123,6 +124,7 @@ Route::group(['prefix' => 'airport'], function() {
 Route::pattern('airline','[A-Z0-9]+');
 Route::group(['prefix' => 'airline'], function() {
 	Route::get('',					['as' => 'airline.index',		'uses' => 'AirlineController@index']);
+	Route::post('',					['as' => 'airline.store',		'uses' => 'AirlineController@store']);
 	Route::get('{airline}',			['as' => 'airline.show',		'uses' => 'AirlineController@show']);
 	Route::get('{airline}/edit',	['as' => 'airline.edit',		'uses' => 'AirlineController@edit']);
 	Route::put('{airline}',			['as' => 'airline.update',		'uses' => 'AirlineController@update']);
@@ -177,20 +179,26 @@ Route::bind('pilot',function($value) {
 		return $pilot;
 });
 
-Route::bind('airport',function($value) {
-	$airport = Airport::whereIcao($value)->first();
+Route::bind('airport',function($value, $route) {
+	$admin = in_array('admin', $route->getAction());
+	$airport = Airport::whereIcao($value);
+	if(!$admin) $airport->whereNew(false);
+	$airport = $airport->first();
 
 	if(is_null($airport))
-		return App::abort(404);
+		return App::abort(404, 'airport');
 	else
 		return $airport;
 });
 
-Route::bind('airline',function($value) {
-	$airline = Airline::whereIcao($value)->first();
+Route::bind('airline',function($value, $route) {
+	$admin = in_array('admin', $route->getAction());
+	$airline = Airline::whereIcao($value);
+	if(!$admin) $airline = $airline->whereNew(false);
+	$airline = $airline->first();
 
 	if(is_null($airline))
-		return App::abort(404);
+		return App::abort(404, 'airline');
 	else
 		return $airline;
 });

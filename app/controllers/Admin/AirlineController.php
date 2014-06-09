@@ -18,19 +18,29 @@ class AirlineController extends BaseController {
 
 		$changes = AirlineChange::with('airline')->get();
 		$airlineChanges = array();
+		$airlineAdditions = array();
 		foreach($changes as $change) {
-			if(!in_array($change->airline_id, $airlineChanges)) {
-				$airlineChanges[$change->airline_id]['airline'] = $change->airline;
-				$airlineChanges[$change->airline_id]['fields'][] = $columns[$change->key]; 
-			} elseif(!in_array($change->key, $airlineChanges[$change->airline_id]['fields'])) {
-				$airlineChanges[$change->airline_id]['fields'][] = $columns[$change->key];
+			if(!$change->airline->new) {
+				if(!in_array($change->airline_id, $airlineChanges)) {
+					$airlineChanges[$change->airline_id]['airline'] = $change->airline;
+					$airlineChanges[$change->airline_id]['fields'][] = $columns[$change->key]; 
+				} elseif(!in_array($change->key, $airlineChanges[$change->airline_id]['fields'])) {
+					$airlineChanges[$change->airline_id]['fields'][] = $columns[$change->key];
+				}
+			} else {
+				if(!in_array($change->airline_id, $airlineAdditions)) {
+					$airlineAdditions[$change->airline_id]['airline'] = $change->airline;
+					$airlineAdditions[$change->airline_id]['fields'][] = $columns[$change->key]; 
+				} elseif(!in_array($change->key, $airlineAdditions[$change->airline_id]['fields'])) {
+					$airlineAdditions[$change->airline_id]['fields'][] = $columns[$change->key];
+				}
 			}
 		}
 
 		$this->stylesheet('assets/admin/stylesheets/datatables/dataTables.bootstrap.css');
 		$this->javascript('assets/admin/javascript/plugins/datatables/jquery.dataTables.js');
 		$this->javascript('assets/admin/javascript/plugins/datatables/dataTables.bootstrap.js');
-		$this->autoRender(compact('airlineChanges','columns'), 'Airlines');
+		$this->autoRender(compact('airlineChanges','airlineAdditions','columns'), 'Airlines');
 	}
 
 	function requests(Airline $airline) {
@@ -73,7 +83,7 @@ class AirlineController extends BaseController {
 		}
 
 		if(count($airline->getDirty()) > 0) {
-			$dirty = $airport->getDirty();
+			$dirty = $airline->getDirty();
 			foreach($dirty as $field => &$value) {
 				$value = array($airline->getOriginal($field), $value);
 			}
@@ -87,7 +97,7 @@ class AirlineController extends BaseController {
 			);
 			$timeline->save();
 		}
-
+		$airline->new = false;
 		$airline->save();
 
 		return Redirect::route('admin.airline.requests', $airline->icao);

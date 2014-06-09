@@ -22,19 +22,29 @@ class AirportController extends BaseController {
 
 		$changes = AirportChange::with('airport')->get();
 		$airportChanges = array();
+		$airportAdditions = array();
 		foreach($changes as $change) {
-			if(!in_array($change->airport_id, $airportChanges)) {
-				$airportChanges[$change->airport_id]['airport'] = $change->airport;
-				$airportChanges[$change->airport_id]['fields'][] = $columns[$change->key]; 
-			} elseif(!in_array($change->key, $airportChanges[$change->airport_id]['fields'])) {
-				$airportChanges[$change->airport_id]['fields'][] = $columns[$change->key];
+			if(!$change->airport->new) {
+				if(!in_array($change->airport_id, $airportChanges)) {
+					$airportChanges[$change->airport_id]['airport'] = $change->airport;
+					$airportChanges[$change->airport_id]['fields'][] = $columns[$change->key]; 
+				} elseif(!in_array($change->key, $airportChanges[$change->airport_id]['fields'])) {
+					$airportChanges[$change->airport_id]['fields'][] = $columns[$change->key];
+				}
+			} else {
+				if(!in_array($change->airport_id, $airportAdditions)) {
+					$airportAdditions[$change->airport_id]['airport'] = $change->airport;
+					$airportAdditions[$change->airport_id]['fields'][] = $columns[$change->key]; 
+				} elseif(!in_array($change->key, $airportAdditions[$change->airport_id]['fields'])) {
+					$airportAdditions[$change->airport_id]['fields'][] = $columns[$change->key];
+				}
 			}
 		}
 
 		$this->stylesheet('assets/admin/stylesheets/datatables/dataTables.bootstrap.css');
 		$this->javascript('assets/admin/javascript/plugins/datatables/jquery.dataTables.js');
 		$this->javascript('assets/admin/javascript/plugins/datatables/dataTables.bootstrap.js');
-		$this->autoRender(compact('airportChanges','columns'), 'Airports');
+		$this->autoRender(compact('airportChanges','airportAdditions','columns'), 'Airports');
 	}
 
 	function requests(Airport $airport) {
@@ -92,6 +102,7 @@ class AirportController extends BaseController {
 			$timeline->save();
 		}
 
+		$airport->new = false;
 		$airport->save();
 
 		return Redirect::route('admin.airport.requests', $airport->icao);

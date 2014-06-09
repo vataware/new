@@ -48,8 +48,9 @@ abstract class BaseController extends Controller {
      */
 	public function autoRender()
 	{
-		$name = trim(Route::current()->getActionName(),'\\');
-		list($namespace,$method) = explode('@',$name);
+		list(, $caller) = debug_backtrace(false);
+		$namespace = trim($caller['class'],'\\');
+		$method = $caller['function'];
 		if(ends_with($namespace,'Controller'))
 		{
 			$namespaces = explode('\\',strtolower(substr($namespace,0,-10)));

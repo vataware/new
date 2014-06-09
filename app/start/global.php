@@ -70,8 +70,13 @@ if(!Config::get('app.debug')) {
 }
 
 App::missing(function($exception)
-{
-	return Response::view('errors.404', array(), 404);
+{	
+	try {
+		$response = App::make('Errors\NotFoundController')->callAction($exception->getMessage(), [Route::current()->parameters()]);
+		return Response::make($response, 404);
+	} catch(Exception $e) {
+		return Response::view('errors.404', array(), 404);
+	}
 });
 
 /*
