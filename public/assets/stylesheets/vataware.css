@@ -10,11 +10,6 @@ body {
 	font-size: 15px;
 	-webkit-font-smoothing: antialiased;
 	color: #2c3e50;
-	margin-top: -400px;
-}
-
-body.no-flightmap {
-	margin-top: 0 !important;
 }
 
 .wrapper {
@@ -133,7 +128,6 @@ body.no-flightmap {
 
 .vataware-map-container {
 	width:100%;
-	min-height:400px;
 	padding:0;
 	margin:0;
 	position: relative;

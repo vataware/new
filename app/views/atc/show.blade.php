@@ -95,7 +95,10 @@
 @if(!is_null($controller->sector) || $controller->visual_range > 0)
 <script type="text/javascript">
 	function initialize() {
-		var map = new google.maps.Map(document.getElementById("map"), { styles: googleMapStyles, streetViewControl: false });
+		var map = new google.maps.Map(document.getElementById("map"), {
+			@if($mapstyle != 'google')styles: googleMapStyles.{{ $mapstyle }},
+			@endifstreetViewControl: false
+		});
 
 		@if(!is_null($controller->sector))
 		var bounds = new google.maps.LatLngBounds();

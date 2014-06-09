@@ -27,7 +27,7 @@
 	@endforeach
 	@endif
 </head>
-<body class="no-flightmap">
+<body>
 	<section class="wrapper">
 		<nav class="navbar navbar-vataware" role="navigation">
 			<div class="container">

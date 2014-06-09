@@ -28,90 +28,92 @@
 	@endif
 </head>
 <body>
-	<div class="vataware-map-container">
+	<div class="vataware-map-container" id="vataware-map">
 		<div id="flightRadar" class="vataware-map"></div>
 		<div class="vataware-map-stats">PILOTS<span class="hidden-inline-xs"> ONLINE</span>: <span style="color:#138995;">{{ $statsPilots }}</span>&nbsp; &nbsp; ATC<span class="hidden-inline-xs"> ONLINE</span>: <span style="color:#138995;">{{ $statsAtc }}</span></div>
 	</div>
 	<section class="wrapper">
-		<div class="navbar navbar-default navbar-leader">
-			<div class="container">
-				<div class="navbar-header visible-xs">
-					<a href="#" class="navbar-brand"><i class="fa fa-user"></i> Pilot Login</a> | <a href="#" class="navbar-brand"><i class="fa fa-users"></i> Airline Login</a> <a href="#" class="navbar-brand"><i class="fa fa-file-o"></i> Register</a>
-				</div>
-				<div class="navbar-collapse collapse" id="navbar-main">
+		<header id="header">
+			<div class="navbar navbar-default navbar-leader" id="navbar-leader">
+				<div class="container">
+					<div class="navbar-header visible-xs">
+						<a href="#" class="navbar-brand"><i class="fa fa-user"></i> Pilot Login</a> | <a href="#" class="navbar-brand"><i class="fa fa-users"></i> Airline Login</a> <a href="#" class="navbar-brand"><i class="fa fa-file-o"></i> Register</a>
+					</div>
+					<div class="navbar-collapse collapse" id="navbar-main">
 
-					<ul class="nav navbar-nav">
-						<li><a href="{{ URL::to('http://help.vataware.com/') }}"><i class="fa fa-question-circle"></i> Support</a></li>
-						<li><a href="{{ URL::route('donations') }}"><i class="fa fa-usd"></i> Donate</a></li>
-						<li><a href="{{ URL::to('http://forums.vataware.com/') }}"><i class="fa fa-comments"></i> Forums</a></li>
-					</ul>
+						<ul class="nav navbar-nav">
+							<li><a href="{{ URL::to('http://help.vataware.com/') }}"><i class="fa fa-question-circle"></i> Support</a></li>
+							<li><a href="{{ URL::route('donations') }}"><i class="fa fa-usd"></i> Donate</a></li>
+							<li><a href="{{ URL::to('http://forums.vataware.com/') }}"><i class="fa fa-comments"></i> Forums</a></li>
+						</ul>
 
-					<ul class="nav navbar-nav navbar-right">
-						<li><a href="https://www.facebook.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-facebook"></i></a></li>
-						<li><a href="https://www.twitter.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-twitter"></i></a></li>
-						@if(Auth::check())
-						@if(Auth::user()->isAdmin())
-						<li><a href="{{ URL::route('admin.index') }}">Admin</a></li>
-						@endif
-						<li class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ Auth::user()->name }} <b class="caret"></b></a>
-							<ul class="dropdown-menu">
-								<li><a href="{{ URL::route('user.edit') }}">My Account</a></li>
-								<li class="divider"></li>
-								<li><a href="{{ URL::route('pilot.show', Auth::user()->vatsim_id) }}">Pilot's profile</a></li>
-								<li><a href="{{ URL::route('controller.show', Auth::user()->vatsim_id) }}">Controller's profile</a></li>
-								<li class="divider"></li>
-								<li><a href="{{ URL::route('user.logout') }}">Logout</a></li>
-							</ul>
-						</li>
-						@else
-						<li><a href="{{ URL::route('user.login') }}">Sign in with VATSIM ID</a></li>
-						@endif
-					</ul>
+						<ul class="nav navbar-nav navbar-right">
+							<li><a href="https://www.facebook.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-facebook"></i></a></li>
+							<li><a href="https://www.twitter.com/vataware" target="_blank" style="font-size:20px;"><i class="fa fa-twitter"></i></a></li>
+							@if(Auth::check())
+							@if(Auth::user()->isAdmin())
+							<li><a href="{{ URL::route('admin.index') }}">Admin</a></li>
+							@endif
+							<li class="dropdown">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ Auth::user()->name }} <b class="caret"></b></a>
+								<ul class="dropdown-menu">
+									<li><a href="{{ URL::route('user.edit') }}">My Account</a></li>
+									<li class="divider"></li>
+									<li><a href="{{ URL::route('pilot.show', Auth::user()->vatsim_id) }}">Pilot's profile</a></li>
+									<li><a href="{{ URL::route('controller.show', Auth::user()->vatsim_id) }}">Controller's profile</a></li>
+									<li class="divider"></li>
+									<li><a href="{{ URL::route('user.logout') }}">Logout</a></li>
+								</ul>
+							</li>
+							@else
+							<li><a href="{{ URL::route('user.login') }}">Sign in with VATSIM ID</a></li>
+							@endif
+						</ul>
 
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<nav class="navbar navbar-vataware" role="navigation">
-			<div class="container">
-				<!-- Brand and toggle get grouped for better mobile display -->
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#vataware-navbar-collapse">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="{{ URL::route('home') }}">vataware</a>
-				</div>
+			<nav class="navbar navbar-vataware" id="navbar-menu" role="navigation">
+				<div class="container">
+					<!-- Brand and toggle get grouped for better mobile display -->
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#vataware-navbar-collapse">
+							<span class="sr-only">Toggle navigation</span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+						</button>
+						<a class="navbar-brand" href="{{ URL::route('home') }}">vataware</a>
+					</div>
 
-				<!-- Collect the nav links, forms, and other content for toggling -->
-				<div class="collapse navbar-collapse" id="vataware-navbar-collapse">
-					<ul class="nav navbar-nav navbar-right">
-						<li><a href="{{ URL::route('home') }}" class="active">Home</a></li>
-						@if(false)
-						<li><a href="#">News</a></li>
-						<li class="dropdown">
-							<a class="dropdown-toggle" data-toggle="dropdown" href="#" id="themes"><i class="fa fa-angle-down" style="color:#18bc9c;"></i> Services</a>
-							<ul class="dropdown-menu" aria-labelledby="themes">
-								<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Route Finder</a></li>
-								<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Weather Centre</a></li>
-								<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Resources</a></li>
-							</ul>
-						</li>
-						@endif
-						<li><a href="{{ URL::route('flight.index') }}">Flights</a></li>
-						<li><a href="{{ URL::route('pilot.index') }}">Pilots</a></li>
-						<li><a href="{{ URL::route('atc.index') }}">ATC</a></li>
-						<li><a href="{{ URL::to('forums') }}">Forum</a></li>
-						<li class="visible-xs"><a href="{{ URL::route('donations') }}">Donations</a></li>
-						<li class="visible-xs"><a href="{{ URL::route('team') }}">Team</a></li>
-						<li class="hidden-xs"><a class="nohover" href="{{ URL::route('donations') }}"><img style="margin-top: -7px;" height="30" src="{{ asset('assets/images/donate.png') }}" alt="Donate" /></a></li>
-					</ul>
-				</div><!-- /.navbar-collapse -->
-			</div><!-- /.container-fluid -->
-		</nav>
+					<!-- Collect the nav links, forms, and other content for toggling -->
+					<div class="collapse navbar-collapse" id="vataware-navbar-collapse">
+						<ul class="nav navbar-nav navbar-right">
+							<li><a href="{{ URL::route('home') }}" class="active">Home</a></li>
+							@if(false)
+							<li><a href="#">News</a></li>
+							<li class="dropdown">
+								<a class="dropdown-toggle" data-toggle="dropdown" href="#" id="themes"><i class="fa fa-angle-down" style="color:#18bc9c;"></i> Services</a>
+								<ul class="dropdown-menu" aria-labelledby="themes">
+									<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Route Finder</a></li>
+									<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Weather Centre</a></li>
+									<li><a href="#"><i class="fa fa-angle-right"></i>&nbsp; Resources</a></li>
+								</ul>
+							</li>
+							@endif
+							<li><a href="{{ URL::route('flight.index') }}">Flights</a></li>
+							<li><a href="{{ URL::route('pilot.index') }}">Pilots</a></li>
+							<li><a href="{{ URL::route('atc.index') }}">ATC</a></li>
+							<li><a href="{{ URL::to('forums') }}">Forum</a></li>
+							<li class="visible-xs"><a href="{{ URL::route('donations') }}">Donations</a></li>
+							<li class="visible-xs"><a href="{{ URL::route('team') }}">Team</a></li>
+							<li class="hidden-xs"><a class="nohover" href="{{ URL::route('donations') }}"><img style="margin-top: -7px;" height="30" src="{{ asset('assets/images/donate.png') }}" alt="Donate" /></a></li>
+						</ul>
+					</div><!-- /.navbar-collapse -->
+				</div><!-- /.container-fluid -->
+			</nav>
+		</header>
 		@include('search.bar')
 		<div class="container">
 			{{ Messages::get() }}
@@ -156,7 +158,14 @@
 	@endif
 	<script type="text/javascript">
 		function globalMap() {
-			var map = new google.maps.Map(document.getElementById("flightRadar"), { styles: googleMapStyles, zoom: {{ Session::has('map.zoom') ? Session::get('map.zoom') : 2 }}, center: new google.maps.LatLng({{ Session::has('map.coordinates') ? Session::get('map.coordinates') : '30, 0' }}), streetViewControl: false, minZoom: 2, maxZoom: 14 });
+			var map = new google.maps.Map(document.getElementById("flightRadar"), {
+				@if($mapstyle != 'google')styles: googleMapStyles.{{ $mapstyle }},
+				@endifzoom: {{ Session::has('map.zoom') ? Session::get('map.zoom') : 2 }},
+				center: new google.maps.LatLng({{ Session::has('map.coordinates') ? Session::get('map.coordinates') : '30, 0' }}),
+				streetViewControl: false,
+				minZoom: 2,
+				maxZoom: 14
+			});
 
 			var flights = [];
 			var polylines = [];
@@ -207,7 +216,7 @@
 				});
 			};
 
-			google.maps.event.addListener(map, 'idle', function() {
+			google.maps.event.addListenerOnce(map, 'idle', function() {
 				bounds = map.getBounds();
 				updateMap(1);
 			});
@@ -215,17 +224,19 @@
 			setInterval(updateMap, 60000);
 
 			google.maps.event.addDomListener(window, 'scroll', function() {
-				if($(window).scrollTop() <= 0) {
+				if($(window).scrollTop() <= 0 && isVisible($('header'))) {
 					map.setOptions({ scrollwheel: true });
-					$('body').css('overflow','hidden');
 				} else {
 					map.setOptions({ scrollwheel: false });
-					$('body').css('overflow','scroll');
+				}
+			});
+
+			google.maps.event.addDomListener(window, 'resize', function() {
+				if(!isVisible($('header'))) {
+					map.setOptions({ scrollwheel: false });
 				}
 			});
 		}
-
-		google.maps.event.addDomListener(window, 'load', globalMap);
 	</script>
 	@yield('javascript')
 </body>

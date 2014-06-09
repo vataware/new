@@ -24,6 +24,12 @@
 			</div>
 		</div>
 		<div class="form-group">
+			{{ Form::label('anonymous', 'Map Style', ['class' => 'col-sm-3 control-label']) }}
+			<div class="col-sm-9">
+				{{ Form::select('map', $maps, $user->map, ['class' => 'form-control']) }}
+			</div>
+		</div>
+		<div class="form-group">
 			<div class="col-sm-offset-3 col-sm-9">
 				{{ Form::submit('Save preferences', ['class' => 'btn btn-success']) }}
 			</div>

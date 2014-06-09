@@ -1,9 +1,11 @@
 // (c) vataware. all rights reserved.
 
-var googleMapStyles = [{featureType:"transit.station.airport",stylers:[{visibility:"on"},{hue:"#2c3e50"},{saturation:10},{gamma:0.3}]},{featureType:"landscape",stylers:[{color:"#2c5a71"}]},{featureType:"water",stylers:[{color:"#2c3e50"}]},{featureType:"road",stylers:[{visibility:"off"}]},{featureType:"administrative.country",elementType:"geometry",stylers:[{visibility:"on"},{color:"#ffffff"},{weight:0.5}]},{featureType:"administrative.country",elementType:"labels",stylers:[{visibility:"on"},{color:"#FFFFFF"},{weight:0.1}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"administrative.province",stylers:[{visibility:"off"}]},{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"poi",stylers:[{visibility:"off"}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"on"},{weight:0.1},{color:"#dddddd"}]},{featureType:"transit.line",stylers:[{visibility:"off"}]}];
+var googleMapStyles = {
+	blue: [{featureType:"transit.station.airport",stylers:[{visibility:"on"},{hue:"#2c3e50"},{saturation:10},{gamma:0.3}]},{featureType:"landscape",stylers:[{color:"#2c5a71"}]},{featureType:"water",stylers:[{color:"#2c3e50"}]},{featureType:"road",stylers:[{visibility:"off"}]},{featureType:"administrative.country",elementType:"geometry",stylers:[{visibility:"on"},{color:"#ffffff"},{weight:0.5}]},{featureType:"administrative.country",elementType:"labels",stylers:[{visibility:"on"},{color:"#FFFFFF"},{weight:0.1}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"administrative.province",stylers:[{visibility:"off"}]},{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"poi",stylers:[{visibility:"off"}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"on"},{weight:0.1},{color:"#dddddd"}]},{featureType:"transit.line",stylers:[{visibility:"off"}]}]
+};
 
 function getMapHeight() {
-	return Math.max(400, ($(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
+	return Math.max(400, ($(window).height()-$('header').outerHeight()));
 }
 
 function isVisible(elem) {
@@ -16,18 +18,8 @@ function isVisible(elem) {
 	return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
-$(window).load(function() {
-	$('body').css('margin-top', '0px');
-	$('.vataware-map-container').height(getMapHeight());
-	$(window).scrollTop(Math.max(400, $(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
-	if($(document).height() - $('.vataware-map-container').height() < $(window).height()) {
-		$('footer').outerHeight("+=" + Math.max(0, $('.vataware-map-container').height() - $(window).scrollTop()));
-	}
-	$(window).scrollTop(Math.max(400, $(window).height()-$('.navbar-leader').outerHeight()-$('.navbar-vataware').outerHeight()));
-});
-
-$(document).ready(function() {
-	$(window).scroll(function() {
+$('body').on('mousewheel', function(e) {
+	if($('body').hasClass('map-loaded')) {
 		if($(window).scrollTop() === 0) {
 			$('.vataware-map-container').hover(function() {
 				$('body').css('overflow','hidden');
@@ -40,8 +32,19 @@ $(document).ready(function() {
 		} else {
 			$('body').css('overflow','scroll');
 		}
-	});
+	} else if($(window).scrollTop() <= 0 && e.originalEvent.wheelDeltaY > 0) {
+		$('.vataware-map-container').animate({
+			height: getMapHeight()
+		}, {
+			done: function() {
+				globalMap();
+			}
+		});
+		$('body').addClass('map-loaded');
+	}
+});
 
+$(document).ready(function() {
 	$('tbody.rowlink').rowlink();
 
 	$('#search .searchField').popover({
@@ -54,9 +57,6 @@ $(document).ready(function() {
 	});
 });
 
-if($(window).scrollTop() < $('.vataware-map-container').height()) {
-	$(window).on('beforeunload', function() { $(window).scrollTop(getMapHeight()); });
-}
 $(window).resize(function() { $('.vataware-map-container').height(getMapHeight()); });
 
 function createPieChart(element, data, legend) {

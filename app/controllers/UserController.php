@@ -4,15 +4,24 @@ class UserController extends BaseController {
 	
 	protected $layout = 'layouts.master';
 
+	protected $maps = array(
+		null => 'Default (Vataware Blue)',
+		'google' => 'Standard Google Maps',
+		'blue' => 'Vataware Blue',
+	);
+
 	function edit() {
 		$user = Auth::user();
 
-		$this->autoRender(compact('user'), 'My Account');
+		$maps = $this->maps;
+
+		$this->autoRender(compact('user','maps'), 'My Account');
 	}
 
 	function update() {
 		$rules = array(
-			'anonymous' => 'in:0,1'
+			'anonymous' => 'in:0,1',
+			'map' => 'in:' . implode(',', array_keys($this->maps)),
 		);
 
 		$validator = Validator::make(Input::all(), $rules);
@@ -24,6 +33,7 @@ class UserController extends BaseController {
 
 		$user = Auth::user();
 		$user->anonymous = Input::get('anonymous');
+		$user->map = Input::get('map') ?: null;
 		$user->save();
 
 		Messages::success('Your account has been updated.');

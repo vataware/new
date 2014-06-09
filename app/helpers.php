@@ -1,10 +1,5 @@
 <?php
 
-$build = substr(File::get(base_path() . '/.git/' . trim(substr(File::get(base_path() . '/.git/HEAD'), 5))),0,7);
-View::share('build', $build);
-View::share('statsPilots', Cache::get('vatsim.pilots'));
-View::share('statsAtc', Cache::get('vatsim.atc'));
-
 function flag($code) {
 	return asset('assets/images/flags/' . $code . '.png');
 }
@@ -80,6 +75,16 @@ View::composer('layouts.admin', function($view) {
 		);
 	}
 	$view->with('user', $user);
+});
+
+View::composer(['layouts.master', 'layouts.errors'], function($view) {
+	$view->with('build', substr(File::get(base_path() . '/.git/' . trim(substr(File::get(base_path() . '/.git/HEAD'), 5))),0,7));
+	$view->with('statsPilots', Cache::get('vatsim.pilots'));
+	$view->with('statsAtc', Cache::get('vatsim.atc'));
+});
+
+View::composer(['layouts.master','flight.show','atc.show'], function($view) {
+	$view->with('mapstyle', Auth::guest() || is_null(Auth::user()->map) ? 'blue' : Auth::user()->map);
 });
 
 View::composer('admin._partials.sidebar', function($view) {
