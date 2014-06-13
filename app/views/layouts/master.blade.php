@@ -45,6 +45,7 @@
 							<li><a href="{{ URL::to('http://help.vataware.com/') }}"><i class="fa fa-question-circle"></i> Support</a></li>
 							<li><a href="{{ URL::route('donations') }}"><i class="fa fa-usd"></i> Donate</a></li>
 							<li><a href="{{ URL::to('http://forums.vataware.com/') }}"><i class="fa fa-comments"></i> Forums</a></li>
+							<li><a href="#" id="map-link"><i class="fa fa-map-marker"></i> Map</a></li>
 						</ul>
 
 						<ul class="nav navbar-nav navbar-right">

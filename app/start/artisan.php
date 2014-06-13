@@ -12,4 +12,5 @@
 */
 
 Artisan::add(new VatawareUpdateCommand);
+Artisan::add(new VatawareNavdataCommand);
 Artisan::add(new FlattenClearCommand);

@@ -1,4 +1,5 @@
 // (c) vataware. all rights reserved.
+var isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0));
 
 var googleMapStyles = {
 	blue: [{featureType:"transit.station.airport",stylers:[{visibility:"on"},{hue:"#2c3e50"},{saturation:10},{gamma:0.3}]},{featureType:"landscape",stylers:[{color:"#2c5a71"}]},{featureType:"water",stylers:[{color:"#2c3e50"}]},{featureType:"road",stylers:[{visibility:"off"}]},{featureType:"administrative.country",elementType:"geometry",stylers:[{visibility:"on"},{color:"#ffffff"},{weight:0.5}]},{featureType:"administrative.country",elementType:"labels",stylers:[{visibility:"on"},{color:"#FFFFFF"},{weight:0.1}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"administrative.province",stylers:[{visibility:"off"}]},{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"poi",stylers:[{visibility:"off"}]},{featureType:"administrative.locality",elementType:"labels",stylers:[{visibility:"on"},{weight:0.1},{color:"#dddddd"}]},{featureType:"transit.line",stylers:[{visibility:"off"}]}]
@@ -18,33 +19,54 @@ function isVisible(elem) {
 	return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
-$('body').on('mousewheel', function(e) {
-	if($('body').hasClass('map-loaded')) {
-		if($(window).scrollTop() === 0) {
-			$('.vataware-map-container').hover(function() {
-				$('body').css('overflow','hidden');
-			}, function() {
+if(!isTouch) {
+	$('body').on('mousewheel', function(e) {
+		if($('body').hasClass('map-loaded')) {
+			if($(window).scrollTop() === 0) {
+				$('.vataware-map-container').hover(function() {
+					$('body').css('overflow','hidden');
+				}, function() {
+					$('body').css('overflow','scroll');
+				});
+				$(':not(.vataware-map-container)').mouseover(function() {
+					$('body').css('overflow','scroll');
+				});
+			} else {
 				$('body').css('overflow','scroll');
-			});
-			$(':not(.vataware-map-container)').mouseover(function() {
-				$('body').css('overflow','scroll');
-			});
-		} else {
-			$('body').css('overflow','scroll');
-		}
-	} else if($(window).scrollTop() <= 0 && e.originalEvent.wheelDeltaY > 0) {
-		$('.vataware-map-container').animate({
-			height: getMapHeight()
-		}, {
-			done: function() {
-				globalMap();
 			}
-		});
-		$('body').addClass('map-loaded');
-	}
-});
+		} else if($(window).scrollTop() <= 0 && e.originalEvent.wheelDeltaY > 0) {
+			loadMap();
+		}
+	});
+}
+
+function loadMap() {
+	$('.vataware-map-container').animate({
+		height: getMapHeight()
+	}, {
+		done: function() {
+			globalMap();
+			if($(document).height() - $('.vataware-map-container').height() < $(window).height())
+				$('footer').outerHeight("+=" + Math.max(0, $(window).height() - ($(document).height() - $('.vataware-map-container').height())));
+		}
+	});
+
+	$('body').addClass('map-loaded');
+}
 
 $(document).ready(function() {
+	$('#map-link').click(function() {
+		if($('body').hasClass('map-loaded')) {
+			if($(window).scrollTop() === 0) {
+				$('html, body').animate({ scrollTop: getMapHeight() });
+			} else {
+				$('html, body').animate({ scrollTop: '0px' });
+			}
+		} else {
+			loadMap();
+		}
+	});
+
 	$('tbody.rowlink').rowlink();
 
 	$('#search .searchField').popover({

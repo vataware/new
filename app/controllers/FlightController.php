@@ -1,5 +1,7 @@
 <?php
 
+use Vataware\FlightPlan\FlightPlan;
+
 class FlightController extends BaseController {
 	
 	protected $layout = 'layouts.master';
@@ -12,7 +14,7 @@ class FlightController extends BaseController {
 
 	function show(Flight $flight) {
 		if($flight->missing) {
-			Messages::error('This flight has been missing for ' . Carbon::now()->diffInMinutes($flight->positions->last()->updated_at) . ' minutes. It will be deleted if it has been missing for 1 hour.')->one();
+			Messages::error('This flight has been missing for ' . Carbon::now()->diffInMinutes($flight->updated_at) . ' minutes. It will be deleted if it has been missing for 1 hour.')->one();
 		}
 
 		if($flight->pilot->getOriginal('updated_at') == '0000-00-00 00:00:00') {
@@ -21,9 +23,16 @@ class FlightController extends BaseController {
 			$flight->pilot->save();
 		}
 
+		$flightplan = new FlightPlan($flight->route, $flight->departure->lat, $flight->departure->lon);
+
+		if(empty($flight->route_parsed)) {
+			$flight->route_parsed = $flightplan->toString();
+			$flight->save();
+		}
+
 		$flight->miles = $flight->distance * 0.54;
 
-		$this->autoRender(compact('flight'), $flight->callsign);
+		$this->autoRender(compact('flight','flightplan'), $flight->callsign);
 	}
 
 	function citypair($departureId, $arrivalId) {

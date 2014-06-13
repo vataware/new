@@ -147,6 +147,9 @@ class VatawareUpdateCommand extends Command {
 	}
 
 	function vatsimUser($vatsimId, $rating = false) {
+		if(empty($vatsimId))
+			return;
+
 		$user = Pilot::whereVatsimId($vatsimId)->first();
 
 		if(is_null($user) || $rating === true) {
@@ -267,8 +270,8 @@ class VatawareUpdateCommand extends Command {
 			'departure_id' => '',
 			'arrival_id' => '',
 			'state' => '4',
-			'departure_time' => '',
-			'arrival_time' => '',
+			'departure_time' => null,
+			'arrival_time' => null,
 			'departure_country_id' => '',
 			'arrival_country_id' => '',
 			'created_at' => Carbon::now(),
@@ -333,8 +336,12 @@ class VatawareUpdateCommand extends Command {
 					$this->vatsimUser($entry['cid']);
 
 					try {
-						if($entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && strlen($entry['planned_deptime']) >= 3 && !empty($entry['planned_deptime']))
-							$flight->departure_time = Carbon::createFromFormat('Y-m-d G:i',  $flight->startdate . ' ' . (strlen($entry['planned_deptime']) >= 3 ? substr($entry['planned_deptime'], 0, -2) : '0') . ':' . substr($entry['planned_deptime'], -2), 'UTC');
+						if($entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && !empty($entry['planned_deptime'])) {
+							$date = $flight->startdate;
+							list($hour, $minute) = str_split(str_pad($entry['planned_deptime'], 4, '0', STR_PAD_LEFT), 2);
+
+							$flight->departure_time = Carbon::createFromFormat('Y-m-d H:i',  $date . ' ' . $hour . ':' . $minute, 'UTC');	
+						}
 					} catch(InvalidArgumentException $e) {
 						Log::warning($entry['planned_deptime']);
 						Log::warning($e);
@@ -355,23 +362,18 @@ class VatawareUpdateCommand extends Command {
 					// Add the position report
 					$this->positionReport($entry, $flight->id);
 
-					if($entry['planned_revision'] > $flight->revision) {
-						// Only allow the departure airport/time to be updated if the
-						// current state is preparing(4) or departing(0). If done after
-						// that it's technically too late since they have already departed.
-						if(in_array($flight->state, [0, 4])) {
-							$flight->departure_id = $entry['planned_depairport'];
-							if($entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && !empty($entry['planned_deptime']))
-								$flight->departure_time = Carbon::createFromFormat('Y-m-d G:i',  $flight->startdate . ' ' . (strlen($entry['planned_deptime']) >= 3 ? substr($entry['planned_deptime'], 0, -2) : '0') . ':' . substr($entry['planned_deptime'], -2), 'UTC');
-						}
+					// Only allow the departure airport/time to be updated if the
+					// current state is preparing(4) or departing(0). If done after
+					// that it's technically too late since they have already departed.
+					if(in_array($flight->state, [0, 4]) && $entry['planned_deptime'] > 0 && $entry['planned_deptime'] < 2359 && !empty($entry['planned_deptime'])) {
+						$date = $flight->startdate;
+						list($hour, $minute) = str_split(str_pad($entry['planned_deptime'], 4, '0', STR_PAD_LEFT), 2);
 
-
-						// Similar to the departure airport, the arrival airport can only
-						// be updated prior to arrival. That is, when the current state is
-						// preparing(4), departing(0) or airborne(1).
-						if(in_array($flight->state, [0, 1, 4]))
-							$flight->arrival_id = $entry['planned_destairport'];
+						$flight->departure_time = Carbon::createFromFormat('Y-m-d H:i',  $date . ' ' . $hour . ':' . $minute, 'UTC');
 					}
+
+					$flight->departure_id = $entry['planned_depairport'];
+					$flight->arrival_id = $entry['planned_destairport'];
 				}
 
 				// Update the arrival time to always be the planned flight time
@@ -387,6 +389,7 @@ class VatawareUpdateCommand extends Command {
 				if(($flight->state == 4 || $flight->state == 0) && $this->hasTakenOff($flight, $entry)) {
 					$flight->state = 1;
 					$flight->departure_time = $this->updateDate;
+					$flight->arrival_time = Carbon::instance($flight->departure_time)->addHours($entry['planned_hrsenroute'])->addMinutes($entry['planned_minenroute']);
 				}
 
 				// Flight is preparing and plane has moved
@@ -422,13 +425,16 @@ class VatawareUpdateCommand extends Command {
 				$flight->departure_country_id = $this->airportCountry($flight->departure_id);
 				$flight->arrival_country_id = $this->airportCountry($flight->arrival_id);
 
+				$flight->aircraft_code = $entry['planned_aircraft'];
+				$flight->aircraft_id = $this->aircraft($entry['planned_aircraft']);
+
 				// Skip this record if the callsign is empty
 				if(empty($flight->callsign))
 					continue;
 
 				// Add flight to update array
 				elseif($flight->exists) {
-					$update[$flight->id] = array_except($flight->toArray(), array('startdate','callsign','callsign_type','airline_id','vatsim_id','aircraft_code','aircraft_id','created_at','updated_at','deleted_at'));
+					$update[$flight->id] = array_except($flight->toArray(), array('startdate','callsign','callsign_type','airline_id','vatsim_id','route_parsed','created_at','updated_at','deleted_at'));
 					$database->forget($flightKey);
 				}
 				// Add flight to insert array, also set the created_at
@@ -463,6 +469,8 @@ class VatawareUpdateCommand extends Command {
 			`flighttype` char(1) COLLATE utf8_unicode_ci NOT NULL DEFAULT 'I',
 			`state` tinyint(4) NOT NULL,
 			`missing` tinyint(1) NOT NULL DEFAULT '0',
+			`aircraft_code` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+			`aircraft_id` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
 			`departure_time` datetime DEFAULT NULL,
 			`arrival_time` datetime DEFAULT NULL,
 			`duration` smallint(6) NOT NULL DEFAULT '0',
@@ -493,6 +501,8 @@ class VatawareUpdateCommand extends Command {
 			dest.flighttype = src.flighttype,
 			dest.state = src.state,
 			dest.missing = 0,
+			dest.aircraft_code = src.aircraft_code,
+			dest.aircraft_id = src.aircraft_id,
 			dest.departure_time = src.departure_time,
 			dest.arrival_time = src.arrival_time,
 			dest.duration = src.duration,
@@ -622,12 +632,12 @@ class VatawareUpdateCommand extends Command {
 
 			if($this->hasRelocated($atc, $entry) && $atc->facility_id < 6) {
 				$nearby = $this->proximity($entry['latitude'], $entry['longitude']);
-				$atc->airport_id = (is_null($nearby)) ? null : $nearby->id;
+				$atc->airport_id = (is_null($nearby)) ? null : $nearby->icao;
 				unset($nearby);
 			}
 
 			// Skip this record if the callsign is empty
-			if(empty($atc->callsign))
+			if(empty($atc->callsign) || !$atc->vatsim_id)
 				continue;
 
 			// Add atc to update array
@@ -669,7 +679,9 @@ class VatawareUpdateCommand extends Command {
 		});
 
 		foreach($missings as $missing) {
-			if(Carbon::now()->diffInMinutes($missing->time) >= 10) {
+			if(empty($missing->callsign) || !$missing->vatsim_id) {
+				$missing->delete();
+			} elseif(Carbon::now()->diffInMinutes($missing->time) >= 10) {
 				$missing->end = $missing->time;
 				try {
 					$missing->duration = $this->duration($missing->start, $missing->end);

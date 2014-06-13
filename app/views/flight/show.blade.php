@@ -133,7 +133,7 @@
 			</table>
 		</div>
 		<div class="col-md-6">
-			<h3>Route Points</h3>
+			<h3>Route Points <small>// beta</small></h3>
 			<table class="table table-striped table-condensed">
 				<thead>
 					<tr>
@@ -145,6 +145,15 @@
 					</tr>
 				</thead>
 				<tbody>
+					@foreach($flightplan->toArray() as $i => $part)
+					<tr>
+						<td><small>{{ $i + 1 }}</small></td>
+						<td>{{ $part['ident'] }}</td>
+						<td>{{ $part['type'] }}</td>
+						<td>{{ $part['airway'] }}</td>
+						<td>{{ $part['name'] }}<br /><small>{{ $part['freq'] }}</small></td>
+					</tr>
+					@endforeach
 				</tbody>
 			</table>
 		</div>
@@ -174,19 +183,46 @@
 
 		@if(in_array($flight->state, [1, 3]))
 		var currentPosition = new google.maps.Marker({ position: new google.maps.LatLng({{ $flight->last_lat }}, {{ $flight->last_lon }}), map: map, icon: {
-				url: '{{ asset('assets/images/enroute/' . $flight->last_heading . '.png')}}',
+				url: '{{ asset('assets/images/enroute/' . $flight->last_heading . '.png') }}',
 				anchor: new google.maps.Point(23,23),
 			}
 		});
 		@endif
 
 		var flightPlanCoordinates = [{{ $flight->mapsPositions }}];
+		var flightRouteCoordinates = [
+		@if(!is_null($flight->departure))
+		new google.maps.LatLng({{ $flight->departure->lat }}, {{ $flight->departure->lon }}), 
+		@endif
+		{{ $flightplan->map() }}
+		@if(!is_null($flight->arrival))
+		, new google.maps.LatLng({{ $flight->arrival->lat }}, {{ $flight->arrival->lon }})
+		@endif
+		];
 		var flightPlanColours = ['{{ implode("','", $flight->mapsColours) }}'];
+
+		@foreach($flightplan->get() as $marker)
+		var routePosition = new google.maps.LatLng({{ $marker->lat }}, {{ $marker->lon }});
+		var routeMarker = new google.maps.Marker({ position: routePosition, map: map, icon: {
+			url: '{{ asset('assets/images/markers/' . $marker->icon . '.png') }}',
+			anchor: new google.maps.Point({{ $marker->anchor }}),
+		}});
+		@endforeach
 
 		for (var i = 0; i < flightPlanCoordinates.length - 1; i++) {
 			var flightPath = new google.maps.Polyline({
 				path: [flightPlanCoordinates[i], flightPlanCoordinates[i+1]],
 				strokeColor: flightPlanColours[i],
+				strokeOpacity: 1.0,
+				strokeWeight: 3,
+				map: map
+			});
+		}
+
+		for (var i = 0; i < flightRouteCoordinates.length - 1; i++) {
+			var flightRoute = new google.maps.Polyline({
+				path: [flightRouteCoordinates[i], flightRouteCoordinates[i+1]],
+				strokeColor: '#000000',
 				strokeOpacity: 1.0,
 				strokeWeight: 3,
 				map: map

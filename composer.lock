@@ -709,16 +709,16 @@
         },
         {
             "name": "monolog/monolog",
-            "version": "1.9.1",
+            "version": "1.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/monolog.git",
-                "reference": "65026b610f8c19e61d7242f600530677b0466aac"
+                "reference": "25b16e801979098cb2f120e697bfce454b18bf23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/65026b610f8c19e61d7242f600530677b0466aac",
-                "reference": "65026b610f8c19e61d7242f600530677b0466aac",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/25b16e801979098cb2f120e697bfce454b18bf23",
+                "reference": "25b16e801979098cb2f120e697bfce454b18bf23",
                 "shasum": ""
             },
             "require": {
@@ -746,7 +746,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.9.x-dev"
+                    "dev-master": "1.10.x-dev"
                 }
             },
             "autoload": {
@@ -773,7 +773,7 @@
                 "logging",
                 "psr-3"
             ],
-            "time": "2014-04-24 13:29:03"
+            "time": "2014-06-04 16:30:04"
         },
         {
             "name": "nesbot/carbon",
@@ -922,12 +922,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Phil-F/Setting.git",
-                "reference": "62e1f66223a15b1087db696f4228bd2cc6aeb8bc"
+                "reference": "2fb49cfe1d67f5e9f0edd0d5e54edbdd9f260b09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Phil-F/Setting/zipball/62e1f66223a15b1087db696f4228bd2cc6aeb8bc",
-                "reference": "62e1f66223a15b1087db696f4228bd2cc6aeb8bc",
+                "url": "https://api.github.com/repos/Phil-F/Setting/zipball/2fb49cfe1d67f5e9f0edd0d5e54edbdd9f260b09",
+                "reference": "2fb49cfe1d67f5e9f0edd0d5e54edbdd9f260b09",
                 "shasum": ""
             },
             "require": {
@@ -958,7 +958,7 @@
                 "config",
                 "laravel"
             ],
-            "time": "2014-04-15 17:38:25"
+            "time": "2014-06-09 14:26:18"
         },
         {
             "name": "phpseclib/phpseclib",
