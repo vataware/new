@@ -23,7 +23,7 @@ class FlightController extends BaseController {
 			$flight->pilot->save();
 		}
 
-		$flightplan = new FlightPlan($flight->route, $flight->departure->lat, $flight->departure->lon);
+		$flightplan = new FlightPlan($flight->route, $flight->departure->lat, $flight->departure->lon, $flight->departure_id, $flight->arrival_id);
 
 		if(empty($flight->route_parsed)) {
 			$flight->route_parsed = $flightplan->toString();
@@ -32,6 +32,9 @@ class FlightController extends BaseController {
 
 		$flight->miles = $flight->distance * 0.54;
 
+		$this->javascript('assets/javascript/jquery.flot.min.js');
+		$this->javascript('assets/javascript/jquery.flot.time.min.js');
+		$this->stylesheet('assets/stylesheets/flightplan.css');
 		$this->autoRender(compact('flight','flightplan'), $flight->callsign);
 	}
 

@@ -13,7 +13,9 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-use Vataware\FlightPlan\Navdata;
+use Vataware\FlightPlan\Airway;
+use Vataware\FlightPlan\DepApp;
+use Vataware\FlightPlan\Waypoint;
 
 class VatawareNavdataCommand extends Command {
 
@@ -30,6 +32,8 @@ class VatawareNavdataCommand extends Command {
 	 * @var string
 	 */
 	protected $description = 'Load Navdata';
+
+	protected $navs = array();
 
 	/**
 	 * Create a new command instance.
@@ -48,8 +52,9 @@ class VatawareNavdataCommand extends Command {
 	 */
 	public function fire()
 	{
+		$this->XPlane();
 		$this->FSBuild();
-		$this->FAA();
+		// $this->FAA();
 	}
 
 	/**
@@ -82,7 +87,7 @@ class VatawareNavdataCommand extends Command {
 		# Setup the inserts into chunks of 1000
 		$chunksOrig = 250;
 
-		Navdata::truncate();
+		Airway::truncate();
 
 		$total = 0;
 		$list = array();
@@ -96,20 +101,14 @@ class VatawareNavdataCommand extends Command {
 				continue;
 			}
 
-			list ($airway, $seq, $ident, $lat, $lon, $airway_type, $type) = $line;
-			
-			if($type == 'F' || $type == 'B') {
-				$type = 5;
-			} else {
-				$type = 3;
-			}
+			list ($airway, $seq, $ident, /* lat */, /* lon */, $airway_type) = $line;
 						
-			$list[] = compact('ident','airway','airway_type','seq','lat','lon','type');
+			$list[] = compact('ident','airway','airway_type','seq');
 
 			$total++;
 
 			if($total == $chunks) {
-				Navdata::insert($list);
+				Airway::insert($list);
 				$this->line('Inserted batch (' . $chunks . ')');
 				$list = array();
 
@@ -117,7 +116,7 @@ class VatawareNavdataCommand extends Command {
 			}
 		}
 		
-		Navdata::insert($list);
+		Airway::insert($list);
 		$this->line('Inserted batch (' . $chunks . ')');
 
 		fclose($handle);
@@ -143,93 +142,27 @@ class VatawareNavdataCommand extends Command {
 
 			$lat = $this->coordinatesFSBuild($lat);
 			$lon = $this->coordinatesFSBuild($lon);
+
+			if(isset($this->navs[$ident])) {
+				$latRange = $this->coordinateRange($lat);
+				$lonRange = $this->coordinateRange($lon);
+
+				foreach($this->navs[$ident] as $existing) {
+					if($latRange[0] >= $existing['lat'] && $latRange[1] <= $existing['lat'] && $lonRange[0] >= $existing['lon'] && $existing['lon'] <= $lonRange[1]) {
+						continue 2;
+					}
+				}
+			}
 				
 			$name = ucwords(strtolower(str_replace('_', ' ', $name)));
 
-			$type = 3;
+			$type = 'V';
+			$freq *= 100;
 			
-			$res = Navdata::whereIdent($ident)->first();
-			if(!is_null($res)) {
-				
-				if(in_array($ident, $updated_list)) {
-					continue;
-				} else {
-					$updated_list[] = $ident;
-				}
-
-				$query = Navdata::whereIdent($ident)->whereBetween('lat',$this->coordinateRange($lat))->whereBetween('lon',$this->coordinateRange($lon))->update(array(
-					'name' => $name,
-					'freq' => $freq
-				));
-
-				$updated++;
-				continue;
-			} else { 
-				$list[] = compact('ident','name','lat','lon','freq','type');
-			}
+			$list[] = compact('ident','name','lat','lon','freq','type');
 			
 			if($total == $chunks) {
-				Navdata::insert($list);
-				$this->line('Inserted batch (' . $chunks . ')');
-				$list = array();
-
-				$chunks += $chunksOrig;
-			}
-			
-			$total ++;
-		}
-
-		Navdata::insert($list);
-		$this->line('Inserted batch (' . $chunks . ')');
-		fclose($handle);
-
-		$this->line($total . ' VORs added, ' . $updated . ' updated');
-		$this->line('Loading NDBs...');
-
-		// Add NDBs
-
-		$total = 0;
-		$chunks = $chunksOrig;
-		$list = array();
-
-		$handle = fopen($this->option('fsbuild') . '/fsb_ndb.txt', 'r');
-		while ($lineinfo = fscanf($handle, "%s %s %s %s %s\n"))  {
-			
-			if($lineinfo[0][0] == ';') {
-				continue;
-			}
-			
-			list ($ident, $name, $lat, $lon, $type) = $lineinfo;
-				
-			$lat = $this->coordinatesFSBuild($lat);
-			$lon = $this->coordinatesFSBuild($lon);
-			
-			$name = strtoupper($name);
-			
-			$type = 2;
-			
-			$res = Navdata::whereIdent($ident)->first();
-			if(!is_null($res)) {
-				if(in_array($ident, $updated_list)) {
-					continue;
-				} else {
-					$updated_list[] = $ident;
-				}
-
-				Navdata::whereIdent($ident)->update(array(
-					'name' => $name,
-					'lat' => $lat,
-					'lon' => $lon,
-				));
-								
-				$updated++;
-				continue;
-			} else { 
-				$list[] = compact('ident','name','lat','lon','type');
-			}
-			
-			if($total == $chunks) {
-				Navdata::insert($list);
+				Waypoint::insert($list);
 				$this->line('Inserted batch (' . $chunks . ')');
 				$list = array();
 
@@ -239,12 +172,139 @@ class VatawareNavdataCommand extends Command {
 			$total++;
 		}
 
-		Navdata::insert($list);
+		Waypoint::insert($list);
+		$this->line('Inserted batch (' . $chunks . ')');
+		fclose($handle);
+
+		$this->line($total . ' VORs added, ' . $updated . ' updated');
+		
+		$this->line('Loading NDBs...');
+
+		// Add NDBs
+
+		$total = 0;
+		$chunks = $chunksOrig;
+		$list = array();
+
+		$handle = fopen($this->option('fsbuild') . '/fsb_ndb.txt', 'r');
+		while ($lineinfo = fscanf($handle, "%s %s %s %s %s %s\n"))  {
+			
+			if($lineinfo[0][0] == ';') {
+				continue;
+			}
+			
+			list ($ident, $name, $lat, $lon, $type, $freq) = $lineinfo;
+				
+			$lat = $this->coordinatesFSBuild($lat);
+			$lon = $this->coordinatesFSBuild($lon);
+
+			if(isset($this->navs[$ident])) {
+				$latRange = $this->coordinateRange($lat);
+				$lonRange = $this->coordinateRange($lon);
+
+				foreach($this->navs[$ident] as $existing) {
+					if($latRange[0] >= $existing['lat'] && $latRange[1] <= $existing['lat'] && $lonRange[0] >= $existing['lon'] && $existing['lon'] <= $lonRange[1]) {
+						continue 2;
+					}
+				}
+			}
+			
+			$name = ucwords(strtolower(str_replace('_', ' ', $name)));
+			
+			$type = 'N';
+			$list[] = compact('ident','name','lat','lon','type','freq');
+			
+			if($total == $chunks) {
+				Waypoint::insert($list);
+				$this->line('Inserted batch (' . $chunks . ')');
+				$list = array();
+
+				$chunks += $chunksOrig;
+			}
+			
+			$total++;
+		}
+
+		Waypoint::insert($list);
 		$this->line('Inserted batch (' . $chunks . ')');
 
 		fclose($handle);
 
 		$this->line($total . ' NDBs added, ' . $updated . ' updated');
+
+		$this->line('Loading SIDs...');
+		$handle = fopen($this->option('fsbuild') . '/fsb_sids.txt', 'r');
+		$currentAirport = null;
+		$data = array();
+		$total = 0;
+
+		fscanfe($handle, '%s %s %s %s\n', function($lineinfo) use (&$data, &$currentAirport, &$total) {
+			if($lineinfo[0][0] == ';' || $lineinfo[0][0] == '*' || is_null($lineinfo)) {
+				return;
+			} elseif($lineinfo[0][0] == '[') {
+				$currentAirport = substr($lineinfo[0], 1, -1);
+			} elseif($lineinfo[0] == 'T') {
+				$total++;
+				$data[$currentAirport . ':' . $lineinfo[1]] = array('airport' => $currentAirport, 'ident' => $lineinfo[1], 'runway' => $lineinfo[3], 'waypoints' => array());
+			} else {
+				$data[$currentAirport . ':' . $lineinfo[0]]['waypoints'][] = $lineinfo[1];
+			}
+		});
+
+		foreach($data as $sid) {
+			if(!array_key_exists('ident', $sid)) continue;
+
+			$wpt = new DepApp;
+			$wpt->ident = $sid['ident'];
+			$wpt->airport_id = $sid['airport'];
+			$wpt->runway = $sid['runway'];
+			$wpt->route = implode(' ', $sid['waypoints']);
+			$wpt->type = 'D';
+			$sids[] = $wpt->toArray();
+		}
+
+		$this->line($total . ' SIDs added');
+
+		fclose($handle);
+
+		progressiveInsert(new DepApp, $sids);
+
+		$this->line('Loading STARs...');
+		$handle = fopen($this->option('fsbuild') . '/fsb_stars.txt', 'r');
+		$currentAirport = null;
+		$data = array();
+		$total = 0;
+
+		fscanfe($handle, '%s %s %s %s\n', function($lineinfo) use (&$data, &$currentAirport, &$total) {
+			if($lineinfo[0][0] == ';' || $lineinfo[0][0] == '*' || is_null($lineinfo)) {
+				return;
+			} elseif($lineinfo[0][0] == '[') {
+				$currentAirport = substr($lineinfo[0], 1, -1);
+			} elseif($lineinfo[0] == 'T') {
+				$total++;
+				$data[$currentAirport . ':' . $lineinfo[1]] = array('airport' => $currentAirport, 'ident' => $lineinfo[1], 'runway' => $lineinfo[3], 'waypoints' => array());
+			} else {
+				$data[$currentAirport . ':' . $lineinfo[0]]['waypoints'][] = $lineinfo[1];
+			}
+		});
+
+		foreach($data as $star) {
+			if(!array_key_exists('ident', $star)) continue;
+
+			$wpt = new DepApp;
+			$wpt->ident = $star['ident'];
+			$wpt->airport_id = $star['airport'];
+			$wpt->runway = $star['runway'];
+			$wpt->route = implode(' ', $star['waypoints']);
+			$wpt->type = 'A';
+			$stars[] = $wpt->toArray();
+		}
+
+		$this->line($total . ' STARs added');
+
+		fclose($handle);
+
+		progressiveInsert(new DepApp, $stars);
 	}
 
 	/**
@@ -357,115 +417,104 @@ class VatawareNavdataCommand extends Command {
 	}
 
 	function XPlane() {
-		$fp = fopen('xplane/Resources/default data/earth_awy.dat', 'r');
+		Waypoint::truncate();
 
-		$list ='SELECT * FROM phpvms_navdata
-				WHERE `lat`=0 OR `lng`=0';
-
-		$list = Navdata::whereLat(0)->orWhereLng(0)->get();
-
-		$missing = array();	
-		foreach($list as $row) {
-			$missing[$row->name] = array();
-		}
-
-		$airways = array();
-		$total=0;
+		$handle = fopen($this->option('xplane') . '/earth_fix.dat', 'r');
 		$skip = 0;
-		while($line = fgets($fp)) {
+		$chunksOrig = 250;
+		$total = 0;
+		$chunks = $chunksOrig;
+		$list = array();
+		while($line = fgets($handle)) {
+
 			if($skip < 3) {
 				$skip ++;
 				continue;
 			}
 
-			list($entry_name, $entry_lat, $entry_lng, $exit_name, $exit_lat, $exit_lng, 
-					$hi_lo, $base, $top, $name) = explode(' ', $line);
+			$line = explode(' ', trim(preg_replace('/\s+/', ' ',$line)));
+		
+			if(count($line) < 3) continue;
+		
+			list($lat, $lon, $name) = $line;
 
-			$entry_name = trim($entry_name);
-			if(array_key_exists($entry_name, $missing)) {
-				$missing[$entry_name] = array(
-					'lat' => $entry_lat,
-					'lng' => $entry_lng,
-					'source' => 'awy',
-				);
+			$name = trim($name);
 
-				$total++;
-			}	
+			$list[] = array(
+				'ident' => $name,
+				'lat' => $lat,
+				'lon' => $lon,
+				'type' => 'F',
+			);
+
+			if($total == $chunks) {
+				Waypoint::insert($list);
+				$this->line('Inserted batch (' . $chunks . ')');
+				$list = array();
+
+				$chunks += $chunksOrig;
+			}
+			
+			$total++;
 		}
 
-		// Next check the fixes
-		fclose($fp);
+		Waypoint::insert($list);
+		$this->line('Inserted batch (' . $chunks . ')');
 
-		$fp = fopen($this->option('xplane') . '/Resources/default data/earth_fix.dat', 'r');
+		$this->line('Loaded fixes: ' . $total);
+
+		fclose($handle);
+
+		$handle = fopen($this->option('xplane') . '/earth_nav.dat', 'r');
 		$skip = 0;
-		while($line = fgets($fp)) {
+		$chunksOrig = 250;
+		$total = 0;
+		$chunks = $chunksOrig;
+		$list = array();
+		while($line = fgets($handle)) {
 
-			# Skip the first three lines
 			if($skip < 3) {
 				$skip ++;
 				continue;
 			}
 
-			list($lat, $lng, $name) = explode(' ', $line);
+			$line = explode(' ', trim(preg_replace('/\s+/', ' ',$line)));
+		
+			if(count($line) < 3)
+				continue;
+		
+			list($type, $lat, $lon, /* 3 */, $freq, /* 5 */, /* 6 */, $ident) = $line;
+			$name = ucwords(strtolower(implode(' ', array_slice($line, 8, -1))));
 
-			$name = trim($name);
-			if(array_key_exists($name, $missing)) {
-				$missing[$name] = array(
-					'lat' => $lat,
-					'lng' => $lng,
-					'source' => 'fix',
-				);
-
-				$total++;
-			}
-		}
-
-		fclose($fp);
-
-		$fp = fopen($this->option('xplane') . '/Resources/default data/earth_nav.dat', 'r');
-		$skip = 0;
-		while ($fix_info = fscanf($fp, "%s %s %s %s %s %s %s %s %s %s %s\n"))  {
-
-			if($fix_info[0] == '2') {
-				$type = 2;
-				$lat = $fix_info[1];
-				$lng = $fix_info[2];
-				$freq = $fix_info[4];
-				$name = $fix_info[7];
-				$title = $fix_info[8];
-				$total_ndb ++;
-			} elseif($fix_info[0] == '3') {
-				$type = 3;
-				$lat = $fix_info[1];
-				$lng = $fix_info[2];
-				$freq = $fix_info[4];
-				$name = $fix_info[7];
-				$title = $fix_info[8];
-				$total_vor ++;
-			}
-
-			$name = trim($name);
-
-			if(empty($lat) || empty($lng))
+			if(!in_array($type, [2, 3]))
 				continue;
 
-			if(array_key_exists($name, $missing)) {
+			$this->navs[$ident][] = $new[] = array(
+				'ident' => $ident,
+				'name' => $name,
+				'lat' => $lat,
+				'lon' => $lon,
+				'freq' => $freq,
+				'type' => ($type == 2) ? 'N' : 'V',
+			);
 
-				$missing[$name] = array(
-					'lat' => $lat,
-					'lng' => $lng,
-					'source' => 'nav',
-				);
+			if($total == $chunks) {
+				Waypoint::insert($list);
+				$this->line('Inserted batch (' . $chunks . ')');
+				$list = array();
 
-				$total++;
+				$chunks += $chunksOrig;
 			}
+			
+			$total++;
 		}
 
-		fclose($fp);
+		Waypoint::insert($list);
+		$this->line('Inserted batch (' . $chunks . ')');
 
-		print_r($missing);
+		$this->line('Loaded VOR and NDB: ' . $total);
 
-		echo "Total: ".count($missing).", updated {$total}\n";
+		fclose($handle);
 	}
 
 	function coordinateRange($coordinate) {

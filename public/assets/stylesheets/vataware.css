@@ -37,7 +37,7 @@ body {
 	border-color: #161f29;
 }
 
-.active
+a.active
 {
 	color: rgb(60, 138, 151);
 }

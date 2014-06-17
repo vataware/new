@@ -1,21 +1,21 @@
 <?php namespace Vataware\FlightPlan;
 
-class Navdata extends \Eloquent {
+class Waypoint extends \Eloquent {
 	
-	protected $table = 'navdata';
+	protected $table = 'navdata_waypoints';
 	public $timestamps = false;
 
 	function getTypeAttribute($value) {
 		switch($value) {
-			case 2:
+			case 'N':
 				return 'NDB';
-			case 3:
+			case 'V':
 				return 'VOR';
-			case 4:
+			case 'D':
 				return 'DME';
-			case 5:
+			case 'F':
 				return 'FIX';
-			case 6:
+			case 'T':
 				return 'TRACK';
 			default:
 				return $value;
@@ -24,24 +24,31 @@ class Navdata extends \Eloquent {
 
 	function getIconAttribute() {
 		switch($this->getOriginal('type')) {
-			case 2:
-			case 3:
-			case 4:
+			case 'N':
+			case 'V':
+			case 'D':
 				return 'vor';
-			case 5:
+			case 'F':
 				return 'fix';
 		}
 	}
 
 	function getAnchorAttribute() {
 		switch($this->getOriginal('type')) {
-			case 2:
-			case 3:
-			case 4:
+			case 'N':
+			case 'V':
+			case 'D':
 				return '10,10';
-			case 5:
+			case 'F':
 				return '6,7.5';
 		}
+	}
+
+	function getFreqAttribute($value) {
+		if($this->getOriginal('type') == 'V') {
+			return number_format($value/100, 2);
+		}
+		return $value;
 	}
 
 }

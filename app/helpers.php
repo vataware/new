@@ -57,6 +57,63 @@ function altitudeColour($altitude, $implode = false, $hex = false) {
 	return $rgb;
 }
 
+function fscanfe($handle, $format, Closure $callback) {
+	$filename = stream_get_meta_data($handle)['uri'];
+	$filesize = filesize($filename);
+
+	do {
+		$lineinfo = fscanf($handle, $format);
+		call_user_func_array($callback, array($lineinfo));
+	} while(ftell($handle) != $filesize);
+}
+
+function progressiveInsert($table, $data) {
+	if(is_scalar($table)) $model = DB::table($table);
+	else {
+		$model = $table;
+		$table = get_class($model);
+	}
+
+	$remaining = count($data);
+	$step = 0;
+	do {
+		try {
+			$model->insert(array_slice($data, 100 * $step, 100));
+		} catch(Exception $e) {
+			Log::error($e);
+		}
+		$remaining -= 100;
+		$step++;
+	} while($remaining > 0);
+
+	unset($remaining, $data, $step);
+}
+
+function sentenceSplitter($str, $length, $offset = 0, $default = null) {
+	$words = explode(' ', $str);
+
+	$current = 0;
+	$output = '';
+
+	foreach($words as $word) {
+		$wordLength = strlen($word) + 1;
+
+		if($current + $wordLength <= $offset) {
+			$current += $wordLength;
+			continue;
+		} elseif(strlen($output) + $wordLength <= $length) {
+			if(($current + $wordLength) >= $offset)
+				$output .= $word . ' ';
+
+			$current += $wordLength;
+		} else {
+			break;
+		}
+	}
+
+	return (strlen($output) > 0) ? trim($output) : $default;
+}
+
 View::composer('layouts.admin', function($view) {
 	if(!is_null($team = Auth::user()->team)) {
 		$user = array(

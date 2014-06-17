@@ -53,6 +53,7 @@ class VatawareUpdateCommand extends Command {
 	protected $registrations = null;
 
 	protected $positions = array();
+	protected $elevations = array();
 
 	/**
 	 * Execute the console command.
@@ -240,6 +241,8 @@ class VatawareUpdateCommand extends Command {
 	 * @return void
 	 */
 	protected function pilots() {
+		$this->elevations();
+
 		// First we will select all flights from the database which
 		// have not yet been marked as arrived and are not missing.
 		$database = Flight::where('state','!=','2')->get();
@@ -690,8 +693,8 @@ class VatawareUpdateCommand extends Command {
 				}
 				$missing->missing = false;
 
-				$missing->pilot->counter_atc++;
-				$missing->pilot->duration_atc += $missing->duration;
+				$missing->pilot->counter_atc = $missing->pilot->counter_atc + 1;
+				$missing->pilot->duration_atc = $missing->pilot->duration_atc + $missing->duration;
 				$missing->pilot->save();
 			} elseif(!$missing->missing) {
 				$missing->missing = true;
@@ -897,13 +900,47 @@ class VatawareUpdateCommand extends Command {
 		$position->altitude = $data['altitude'];
 		$position->speed = $data['groundspeed'];
 		$position->heading = $data['heading'];
-		// $position->ground_elevation =
+
+		$options = array('flags' => FILTER_FLAG_ALLOW_FRACTION);
+		$lat = number_format(filter_var($data['latitude'], FILTER_SANITIZE_NUMBER_FLOAT, $options),5);
+		$lon = number_format(filter_var($data['longitude'], FILTER_SANITIZE_NUMBER_FLOAT, $options),5);
+
+		$elevation = $this->elevations[$lat . ',' . $lon];
+		$position->ground_elevation = ($elevation < 0 && $position->altitude > 0) ? 0 : $elevation;
 
 		$position->update_id = $this->updateId;
 
 		$this->positions[] = $position->toArray();
 
 		unset($position, $data, $flightId);
+	}
+
+	protected function elevations() {
+		$options = array('flags' => FILTER_FLAG_ALLOW_FRACTION);
+
+		$chunks = array_chunk(array_map(function($pilot) use ($options) {
+			try {
+				$lat = number_format(filter_var($pilot['latitude'], FILTER_SANITIZE_NUMBER_FLOAT, $options),5);
+				$lon = number_format(filter_var($pilot['longitude'], FILTER_SANITIZE_NUMBER_FLOAT, $options),5);
+			} catch(ErrorException $e) {
+				Log::error($e);
+				Log::debug($pilot['latitude']);
+				Log::debug($pilot['longitude']);
+				$lat = 0;
+				$lon = 0;
+			}
+			return $lat . ',' . $lon;
+		}, $this->pilots), 90);
+		
+		$elevations = array();
+		foreach($chunks as $coordinates) {
+			$contents = json_decode(file_get_contents('http://maps.googleapis.com/maps/api/elevation/json?locations=' . implode('|', $coordinates)));
+			foreach($contents->results as $content) {
+				$elevations[number_format($content->location->lat,5) . ',' . number_format($content->location->lng,5)] = $content->elevation;
+			}
+		}
+
+		$this->elevations = $elevations;
 	}
 
 	/**

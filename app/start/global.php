@@ -57,14 +57,17 @@ App::error(function(Exception $exception, $code)
 
 if(!Config::get('app.debug')) {
 	App::error(function(Exception $exception, $code) {
+		Log::error($exception);
 		return Response::view('errors.unknown', array(), 500);
 	});
 
 	App::error(function(PDOException $exception, $code) {
+		Log::error($exception);
 		return Response::view('errors.database', array(), 500);
 	});
 
 	App::error(function(AuthException $exception, $code) {
+		Log::error($exception);
 		return Response::view('errors.authentication', array(), 500);
 	});
 }

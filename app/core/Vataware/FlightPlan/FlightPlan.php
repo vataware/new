@@ -1,20 +1,43 @@
 <?php namespace Vataware\FlightPlan;
 
+use Airport;
+
 class FlightPlan
 {
 	protected $waypoints;
 
-	public function __construct($route = '', $fromlat, $fromlng)
+	public function __construct($route = '', $fromlat, $fromlng, $departure = null, $arrival = null)
 	{
 		if(strlen($route) === 0)
 			return array();
 
 		// Remove multiple whitespaces, SID and STAR and replace dots with spaces
 		$route = preg_replace('/\s+/', ' ',$route);
-		$route = str_replace(array('SID','STAR'), '', $route);
+		$route = str_replace(array('SID','STAR','+'), '', $route);
 		$route = str_replace('.', ' ', $route);
 		
-		$navpoints = explode(' ', $route);
+		$navpoints = explode(' ', trim($route));
+
+		$sid = explode('/', $navpoints[0])[0];
+		$star = explode('/', last($navpoints))[0];
+		$depapps = $this->depapps($sid, $star, $departure, $arrival);
+		$sidstar = array();
+		if(isset($depapps[$sid])) {
+			$route = $depapps[$sid] . substr($route, strlen($sid));
+			$sids = array_map(function($val) use ($sid) {
+				return $sid;
+			}, array_flip(explode(' ', $depapps[$sid])));
+			$sidstar = $sids;
+		}
+		if(isset($depapps[$star])) {
+			$route = substr($route, 0, -strlen($star)) . $depapps[$star];
+			$stars = array_map(function($val) use ($star) {
+				return $star;
+			}, array_flip(explode(' ', $depapps[$star])));
+			$sidstar = array_merge($sidstar, $stars);
+		}
+
+		$navpoints = explode(' ', trim($route));
 		$navpoints = array_map(array($this, 'clean'), $navpoints);
 		
 		$allpoints = array();
@@ -23,7 +46,7 @@ class FlightPlan
 		
 		for($i = 0; $i < $total; $i++) {
 			$ident = $navpoints[$i];
-			if(isset($airways[$ident])) {
+			if($i > 0 && isset($airways[$ident])) {
 				$entryName = $navpoints[$i-1];
 				$entry = $this->getPointIndex($entryName, $airways[$ident]);
 
@@ -42,85 +65,84 @@ class FlightPlan
 					if($entry < $exit) $points = array_slice($airways[$ident], $entry, $exit - $entry);
 					else $points = array_reverse(array_slice($airways[$ident], $exit, $entry - $exit));
 
-					foreach($points as $point)
-						$allpoints[$point->ident] = $point;
-
+					foreach($points as $point) {
+						if(isset($sidstar[$point->ident])) {
+							$point->airway = $sidstar[$point->ident];
+						}
+						$allpoints[$point->ident] = $point->waypoints;
+					}
 				} else {
 					$point = $airways[$ident][$entry];
-					$allpoints[$point->ident] = $point;
+					$allpoints[$point->ident] = $point->waypoints;
 				}
 				
-				$allpoints[$exitName] = $airways[$ident][$exit];
+				$allpoints[$exitName] = $airways[$ident][$exit]->waypoints;
 			} else {
 				if(isset($allpoints[$navpoints[$i]])) {
 					continue;
 				}
 				
-				if(str_contains($navpoints[$i], '/')) {
-					$ident = $navpoints[$i];
-					$idents = explode('/', $ident);
-					
-					preg_match('/^([0-9]+)([A-Za-z]+)/', $idents[0], $matches);
-				
-					$lat = $matches[2] . $matches[1][0] . $matches[1][1] . '.' . $matches[1][2] . $matches[1][3];
-					
-					preg_match('/^([0-9]+)([A-Za-z]+)/', $idents[1], $matches);
-					if($matches == 0)
-						continue;
+				$ident = $navpoints[$i];
 
-					$lon = $matches[2] . $matches[1][0] . $matches[1][1] . $matches[1][2] . '.' . $matches[1][3];
+				$atlanticRoute = preg_match('/([A-Z0-9a-z]+)\/(?:[N|F|M]\d+)+/', $ident, $matches);
+				if($atlanticRoute) {
+					$ident = $matches[1];
+				}
+
+				$coordinates = preg_match('/(\d{1,3})([N|S])(\d{1,3})([E|W])/', $this->shortCoordinate($ident), $matches);
+				
+				if($coordinates) {
+					$lat = $matches[1] * (($matches[2] == 'N') ? 1 : -1);
+					$lon = $matches[3] * (($matches[4] == 'E') ? 1 : -1);
 					
-					$coords = $this->get_coordinates($lat . ' ' . $lon);
-					
-					if(in_array("", $coords)) {
-						unset($allpoints[$navpoints[$i]]);
-						continue;
-					}
-					
-					$point = new Navdata;
+					$point = new Waypoint;
 					$point->ident = $ident;
 					$point->name = $ident;
-					$point->lat = $coords[0];
-					$point->lon = $coords[1];
-					$point->type = 6;
+					$point->lat = $lat;
+					$point->lon = $lon;
+					$point->type = 'T';
 					$point->save();
 					
 					$allpoints[$navpoints[$i]] = $point;
-				} else {
-					$allpoints[$ident] = $ident;
-					$list[] = $ident;
+					continue;
 				}
+				
+				$allpoints[$ident] = $ident;
+				$list[] = $ident;
 			}
 		}
-		
+
 		$details = $this->getNavDetails($list);
-		
+
 		foreach($allpoints as $name => &$point) {
-			if(array_key_exists($name, $details)) {
+			if($details->offsetExists($name)) {
 				$point = $details[$name];
 			}
 
-			if(is_string($point)) {
+			if(!is_array($point) && !$point instanceof \Illuminate\Database\Eloquent\Collection && !$point instanceof Waypoint) {
 				unset($allpoints[$name]);
 				continue;
 			}
-			
-			if(!is_array($point)) {
-				continue;
-			}
-			
+
 			$count = count($point);
-			
-			if($count == 1) {
+			if($point instanceof Waypoint) {
+
+			} elseif($count == 0) {
+				unset($allpoints[$name]);
+				continue;
+			} elseif($count == 1) {
 				$point = $point[0];
+				if(isset($sidstar[$point->ident])) {
+					$point->airway = $sidstar[$point->ident];
+				}
 			} elseif($count > 1) {
 				$lowest = $point[0];
 				$lowest_distance = $this->distanceBetweenPoints($fromlat, $fromlng, $lowest->lat, $lowest->lon);
-				$lowest = 0;
 				
 				foreach($point as $index => $p) {
-					$distance = $this->distanceBetweenPoints($fromlat, $fromlng, $p->lat, $p->lon);
 					
+					$distance = $this->distanceBetweenPoints($fromlat, $fromlng, $p->lat, $p->lon);
+
 					if($distance < $lowest_distance) {
 						$lowest = $p;
 						$lowest_distance = $distance;
@@ -128,8 +150,11 @@ class FlightPlan
 				}
 				
 				$point = $lowest;
+				if(isset($sidstar[$point->ident])) {
+					$point->airway = $sidstar[$point->ident];
+				}
 			}
-			
+
 			$fromlat = $point->lat;
 			$fromlng = $point->lon;
 		}
@@ -159,11 +184,20 @@ class FlightPlan
 		return $new;
 	}
 
-	public function map() {
+	public function map(Airport $departure = null, Airport $arrival = null) {
 		$positions = array();
 
+		if(!is_null($departure)) {
+			$positions[] = 'new google.maps.LatLng(' . $departure->lat . ', ' . $departure->lon . ')';
+		}
+
 		foreach($this->waypoints as $data) {
-			$positions[] = 'new google.maps.LatLng(' . $data->lat . ', ' . $data->lon . ')';
+			if($data instanceof Waypoint)
+				$positions[] = 'new google.maps.LatLng(' . $data->lat . ', ' . $data->lon . ')';
+		}
+
+		if(!is_null($arrival)) {
+			$positions[] = 'new google.maps.LatLng(' . $arrival->lat . ', ' . $arrival->lon . ')';
 		}
 
 		return implode(',', $positions);
@@ -179,11 +213,24 @@ class FlightPlan
 	
 	protected function clean($ident) {
 		$ident = strtoupper(trim($ident));
-		return (str_contains($ident, '/')) ? explode('/', $ident)[0] : $ident;
+		return $ident;
+		//return (str_contains($ident, '/')) ? explode('/', $ident)[0] : $ident;
 	}
 	
 	protected function airways($waypoints) {
-		return Navdata::whereIn('airway', $waypoints)->orderBy('seq')->get()->groupBy('airway');
+		return Airway::whereIn('airway', $waypoints)->orderBy('seq')->get()->groupBy('airway');
+	}
+
+	protected function depapps($sid, $star, $departure, $arrival) {
+		return DepApp::where(function($dep) use ($sid, $departure) {
+			$dep->whereIdent($sid);
+			$dep->whereType('D');
+			if(!is_null($departure)) $dep->whereAirportId($departure);
+		})->orWhere(function($arr) use ($star, $arrival) {
+			$arr->whereIdent($star);
+			$arr->whereType('A');
+			if(!is_null($arrival)) $arr->whereAirportId($arrival);
+		})->lists('route','ident');
 	}
 	
 	protected function getPointIndex($point_name, $list) {
@@ -211,7 +258,7 @@ class FlightPlan
 			$in_clause = explode(' ', $navpoints);
 		}
 		
-		$results = Navdata::whereIn('ident', $in_clause)->groupBy('lat')->get();
+		return Waypoint::whereIn('ident', $in_clause)->get()->groupBy('ident');
 		
 		if(!$results) {
 			return array();
@@ -245,6 +292,7 @@ class FlightPlan
 
 	protected function coordinates($string) {
 		preg_match('/^([A-Za-z])(\d*).(\d*.\d*).([A-Za-z])(\d*).(\d*.\d*)/', $string, $matches);
+
 		list(, $latDirection, $latDegrees, $latMinutes, $lonDirection, $lonDegrees, $lonMinutes) = $matches;
 		
 		$latDegrees += $latMinutes / 60;
@@ -256,5 +304,35 @@ class FlightPlan
 			$lonDegrees *= -1;
 		
 		return [$latDegrees, $lonDegrees];
+	}
+
+	protected function shortCoordinate($ident) {
+		$shortCoord = preg_match('/^(?:(?:(\d{2})([N|E|S|W])(\d{2}))|(?:(\d{2})(\d{2})([N|E|S|W])))$/', $ident, $matches);
+
+		if(!$shortCoord) {
+			return $ident;
+		}
+
+		$matches = array_values(array_filter($matches));
+
+		$lat = $matches[1];
+		if(is_numeric($matches[2])) {
+			$lon = $matches[2];
+			$dir = $matches[3];
+		} else {
+			$lon = $matches[2] + 100;
+			$dir = $matches[3];
+		}
+
+		switch($dir) {
+			case 'N':
+				return $lat . 'N' . $lon . 'W';
+			case 'E':
+				return $lat . 'N' . $lon . 'E';
+			case 'S':
+				return $lat . 'S' . $lon . 'W';
+			case 'W':
+				return $lat . 'S' . $lon . 'E';
+		}
 	}
 }
