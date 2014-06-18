@@ -16,10 +16,12 @@ class Sector extends Eloquent {
 
 	function getPolygonAttribute() {
 		$polygon = array();
-		foreach($this->segments as $segment) {
-			$polygon[] = 'new google.maps.LatLng(' . $segment->lat . ',' . $segment->lon .')';
+		if($this->segments->count() > 0) {
+			foreach($this->segments as $segment) {
+				$polygon[] = 'new google.maps.LatLng(' . $segment->lat . ',' . $segment->lon .')';
+			}
+			$polygon[] = $polygon[0];
 		}
-		$polygon[] = $polygon[0];
 		return '[' . implode(",",$polygon) . ']';
 	}
 

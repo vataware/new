@@ -35,7 +35,7 @@ App::after(function($request, $response)
 
 Route::filter('auth', function()
 {
-	if (Auth::guest()) return Redirect::guest('login');
+	if (Auth::guest()) return Redirect::guest(URL::route('user.login'));
 });
 
 
@@ -90,5 +90,16 @@ Route::filter('flatten.atc', function($route, $request, $response) {
 	$atc = $route->getParameter('atc');
 	if(!is_null($atc->end) && $atc->processed && $atc->pilot->processing == 1) {
 		Flatten::end($response);
+	}
+});
+
+Route::filter('admin', function() {
+	if(!Auth::user()->isAdmin()) {
+		$timeline = new Timeline;
+		$timeline->type = 'unauthorised-access';
+		$timeline->user_id = Auth::id();
+		$timeline->activity = array('name' => Auth::user()->name);
+		$timeline->save();
+		return App::abort(404);
 	}
 });

@@ -74,6 +74,18 @@
 			@endforeach
 		</tbody>
 	</table>
+	<hr />
+	@if(Auth::check())
+	<p><strong>Spotted incorrect airline information?</strong> <a href="#" data-target="#airlineModal" data-remote="{{ URL::route('airline.edit', $airline->icao) }}" data-toggle="modal">Report it here!</a></p>
+	@else
+	<p><strong>Spotted incorrect airline information?</strong> <a href="{{ URL::route('user.intend', ['vataware_callback' => URL::current()]) }}">Please login with your VATSIM ID.</a></p>
+	@endif
+</div>
+<div class="modal fade" id="airlineModal" data-backdrop="static" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		</div>
+	</div>
 </div>
 @stop
 @section('javascript')

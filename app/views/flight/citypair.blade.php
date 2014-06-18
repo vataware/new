@@ -13,11 +13,11 @@
 		<div class="col-md-3 hidden-xs hidden-sm">
 			<h4 class="section-header">Departure airport</h4>
 			<strong><img src="{{ flag($departure->country_id) }}">&nbsp;{{ $departure->name }}</strong><br />
-			{{ $departure->city ? $departure->city . ', ' : '' }}{{ $departure->country->country }}
+			{{ $departure->city ? $departure->city . ', ' : '' }}{{ $departure->country ? $departure->country->country : $departure->country_id }}
 			<hr />
 			<h4 class="section-header">Arrival airport</h4>
 			<strong><img src="{{ flag($arrival->country_id) }}">&nbsp;{{ $arrival->name }}</strong><br />
-			{{ $arrival->city ? $arrival->city . ', ' : '' }}{{ $arrival->country->country }}
+			{{ $arrival->city ? $arrival->city . ', ' : '' }}{{ $arrival->country ? $arrival->country->country : $arrival->country_id }}
 		</div>
 		<div class="col-md-9">
 			<table class="table table-striped table-hover">
