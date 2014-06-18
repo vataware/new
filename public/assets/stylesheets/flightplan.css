@@ -1,0 +1,117 @@
+#flightplan-container {
+	border: 3px solid black;
+	background-color: #d2d2d2;
+}
+
+.flightplan-field {
+	background-color: white;
+}
+
+.flightplan-monospace {
+	font-family: monospace;
+	font-weight: bold;
+}
+
+.flightplan-spacing {
+	letter-spacing: 13px;
+	padding-right: 0;
+}
+
+#flightplan-title {
+	text-transform: uppercase;
+	font-size: 24px;
+	font-weight: bold;
+	text-align: center;
+	border-bottom: 1px solid black;
+}
+
+#flightplan-section1 {
+	border-bottom: 3px solid black;
+	padding-top: 7px;
+}
+
+#flightplan-priority {
+	width: 20%;
+	float: left;
+	padding-left: 5px;
+}
+
+#flightplan-messagetype {
+	width: 30%;
+	float: left;
+	padding-left: 5px;
+}
+
+#flightplan-aircraftidentification {
+	width: 30%;
+	float: left;
+}
+
+#flightplan-flightrules {
+	width: 25%;
+	float: left;
+}
+
+#flightplan-flighttype {
+	float: right;
+	margin-right: 30px;
+}
+
+#flightplan-addressee {
+	width: 80%;
+	float: left;
+}
+
+.flightplan-section2-row {
+	padding-top: 10px;
+	margin-bottom: 20px;
+}
+
+#flightplan-number {
+	width: 20%;
+	float: left;
+	padding-left: 5px;
+}
+
+#flightplan-aircrafttype {
+	width: 30%;
+	float: left;
+}
+
+#flightplan-turbulence {
+	width: 25%;
+	float: left;
+}
+
+#flightplan-equipment {
+	float: right;
+	margin-right: 30px;
+}
+
+#flightplan-departure, #flightplan-arrival, #flightplan-alternate, #flightplan-alternate2 {
+	width: 28%;
+	float: left;
+	text-align: center;
+}
+
+#flightplan-departuretime, #flightplan-totaleet {
+	width: 16%;
+	float: left;
+}
+
+#flightplan-cruisingspeed {
+	width: 20%;
+	float: left;
+	padding-left: 5px;
+}
+
+#flightplan-flightlevel {
+	width: 20%;
+	float: left;
+	text-align: center;
+}
+
+#flightplan-route {
+	width: 60%;
+	float: left;
+}

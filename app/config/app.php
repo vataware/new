@@ -109,6 +109,8 @@ return array(
 
 		'DeVosBurchart\Messages\MessagesServiceProvider',
 		'Vataware\Flatten\FlattenServiceProvider',
+		'Vataware\IronCache\IronCacheServiceProvider',
+		'DeVosBurchart\Jira\JiraServiceProvider',
 	),
 
 	/*
@@ -178,6 +180,8 @@ return array(
 		'Messages'        => 'DeVosBurchart\Messages\Facades\Messages',
 		'Carbon'          => 'Carbon\Carbon',
 		'Flatten'         => 'Flatten\Facades\Flatten',
+		'Jira'            => 'DeVosBurchart\Jira\Facades\Jira',
+		'JiraIssue'       => 'DeVosBurchart\Jira\Issue',
 	),
 
 );

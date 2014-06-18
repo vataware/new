@@ -3,7 +3,7 @@
 class Airport extends Eloquent {
 
 	protected $table = 'airports';
-	public $timestamps = true;
+	public $timestamps = false;
 	protected $softDelete = false;
 
 	public function country()
