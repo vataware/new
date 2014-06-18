@@ -533,7 +533,14 @@ class VatawareUpdateCommand extends Command {
 		foreach($database as $missing) {
 			if($missing->state == 5) {
 				$missing->state = 2;
+				$missing->missing = 0;
+				$missing->duration = $this->duration($missing->departure_time, $missing->arrival_time);
 				$missing->save();
+
+				$missing->pilot->counter++;
+				$missing->pilot->distance += $missing->distance;
+				$missing->pilot->duration += $missing->duration;
+				$missing->pilot->save();
 			} elseif($missing->missing && Carbon::now()->diffInMinutes($missing->updated_at) >= 60) {
 				$delete[] = $missing->id;
 			} else {

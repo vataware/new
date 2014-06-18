@@ -112,6 +112,16 @@ class Flight extends Eloquent {
 		return $positions;
 	}
 
+	public function getTurbulenceAttribute() {
+		preg_match('/([A-Z])\/.*/', $this->aircraft_code, $matches);
+		return isset($matches[1]) ? $matches[1] : null;
+	}
+
+	public function getEquipmentAttribute() {
+		preg_match('/(?:[A-Z]\/)[A-Z0-9a-z]+\/([A-Z])/', $this->aircraft_code, $matches);
+		return isset($matches[1]) ? $matches[1] : null;
+	}
+
 	public function lastPosition()
 	{
 		return $this->hasOne('Position')->orderBy('id','desc');

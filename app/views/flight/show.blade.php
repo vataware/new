@@ -218,11 +218,11 @@
 						</div>
 						<div id="flightplan-turbulence">
 							WAKE TURBULENCE CAT<br />
-							<span><span class="display: inline-block;"><strong><big>/</big></strong></span> <span style="border: 1px solid black; display: inline-block; padding: 3px 10px; text-align: center; margin-left: 10px;" class="flightplan-monospace flightplan-field">{{ substr_count($flight->aircraft_code, '/') == 2 ? substr($flight->aircraft_code, 0, 1) : '&nbsp;' }}</span></span>
+							<span><span class="display: inline-block;"><strong><big>/</big></strong></span> <span style="border: 1px solid black; display: inline-block; padding: 3px 10px; text-align: center; margin-left: 10px;" class="flightplan-monospace flightplan-field">{{ $flight->turbulence ?: '&nbsp;' }}</span></span>
 						</div>
 						<div id="flightplan-equipment">
 							10. EQUIPMENT<br />
-							<span style="float: right;"><span><span class="display: inline-block;"><strong>&mdash;</strong></span> <span style="border: 1px solid black; display: inline-block; padding: 3px 10px; text-align: center;" class="flightplan-monospace flightplan-spacing flightplan-field">{{ substr_count($flight->aircraft_code, '/') == 2 ? substr($flight->aircraft_code, -1) : '&nbsp;' }}</span><span style="display: inline-block; margin-left: 20px;"><big>&lt;&lt; =</big></span></span>
+							<span style="float: right;"><span><span class="display: inline-block;"><strong>&mdash;</strong></span> <span style="border: 1px solid black; display: inline-block; padding: 3px 10px; text-align: center;" class="flightplan-monospace flightplan-spacing flightplan-field">{{ $flight->equipment ?: '&nbsp;' }}</span><span style="display: inline-block; margin-left: 20px;"><big>&lt;&lt; =</big></span></span>
 						</div>
 					</div>
 					<div class="flightplan-section2-row clearfix">
@@ -385,8 +385,39 @@
 				alignTicksWithAxis: 1,
 				position: "right",
 			} ],
-			legend: { position: "nw" }
+			legend: { position: "nw" },
+			series: {
+				lines: { show: true },
+				points: { show: true }
+			},
+			grid: { hoverable: true }
 		});
+
+		var regex = /^([^\(\)]+)\(([^\(\)]+)\)$/;
+		var now = new Date();
+
+		$("#profile").bind("plothover", function (event, pos, item) {
+			if (item) {
+				x = item.datapoint[0];
+				y = item.datapoint[1].toFixed(0);
+				label = item.series.label.match(regex);
+				date = new Date(x + (now.getTimezoneOffset() * 60000));
+				$("#tooltip").html(label[1].trim() + ": " + y + " " + label[2].trim() + " at " + date.getHours() + ':' + date.getMinutes())
+					.css({top: item.pageY+5, left: item.pageX+5})
+					.fadeIn(200);
+			} else {
+				$("#tooltip").hide();
+			}
+		});
+
+		$("<div id='tooltip'></div>").css({
+			position: "absolute",
+			display: "none",
+			border: "1px solid #fdd",
+			padding: "2px",
+			"background-color": "#fee",
+			opacity: 0.80
+		}).appendTo("body");
 	});
 
 	</script>
