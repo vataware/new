@@ -1,4 +1,4 @@
-@extends('layouts.errors')
+@extends('layouts.master')
 
 @section('content')
 <div class="container">

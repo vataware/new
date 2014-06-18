@@ -1,10 +1,5 @@
 <?php
 
-$build = substr(File::get(base_path() . '/.git/' . trim(substr(File::get(base_path() . '/.git/HEAD'), 5))),0,7);
-View::share('build', $build);
-View::share('statsPilots', Cache::get('vatsim.pilots'));
-View::share('statsAtc', Cache::get('vatsim.atc'));
-
 function flag($code) {
 	return asset('assets/images/flags/' . $code . '.png');
 }
@@ -61,3 +56,105 @@ function altitudeColour($altitude, $implode = false, $hex = false) {
 
 	return $rgb;
 }
+
+function fscanfe($handle, $format, Closure $callback) {
+	$filename = stream_get_meta_data($handle)['uri'];
+	$filesize = filesize($filename);
+
+	do {
+		$lineinfo = fscanf($handle, $format);
+		call_user_func_array($callback, array($lineinfo));
+	} while(ftell($handle) != $filesize);
+}
+
+function progressiveInsert($table, $data) {
+	if(is_scalar($table)) $model = DB::table($table);
+	else {
+		$model = $table;
+		$table = get_class($model);
+	}
+
+	$remaining = count($data);
+	$step = 0;
+	do {
+		try {
+			$model->insert(array_slice($data, 100 * $step, 100));
+		} catch(Exception $e) {
+			Log::error($e);
+		}
+		$remaining -= 100;
+		$step++;
+	} while($remaining > 0);
+
+	unset($remaining, $data, $step);
+}
+
+function sentenceSplitter($str, $length, $offset = 0, $default = null) {
+	$words = explode(' ', $str);
+
+	$current = 0;
+	$output = '';
+
+	foreach($words as $word) {
+		$wordLength = strlen($word) + 1;
+
+		if($current + $wordLength <= $offset) {
+			$current += $wordLength;
+			continue;
+		} elseif(strlen($output) + $wordLength <= $length) {
+			if(($current + $wordLength) >= $offset)
+				$output .= $word . ' ';
+
+			$current += $wordLength;
+		} else {
+			break;
+		}
+	}
+
+	return (strlen($output) > 0) ? trim($output) : $default;
+}
+
+View::composer('layouts.admin', function($view) {
+	if(!is_null($team = Auth::user()->team)) {
+		$user = array(
+			'name' => $team->name,
+			'firstname' => !empty($team->firstname) ? $team->firstname : explode(' ', $team->name)[0],
+			'job' => $team->job,
+			'photo' => $team->photo
+		);
+	} else {
+		$team = Auth::user();
+		$user = array(
+			'name' => $team->name,
+			'firstname' => explode(' ', $team->name)[0],
+			'job' => '',
+			'photo' => false
+		);
+	}
+	$view->with('user', $user);
+});
+
+View::composer(['layouts.master', 'layouts.errors'], function($view) {
+	$view->with('build', substr(File::get(base_path() . '/.git/' . trim(substr(File::get(base_path() . '/.git/HEAD'), 5))),0,7));
+	$view->with('statsPilots', Cache::get('vatsim.pilots'));
+	$view->with('statsAtc', Cache::get('vatsim.atc'));
+});
+
+View::composer(['layouts.master','flight.show','atc.show'], function($view) {
+	$view->with('mapstyle', Auth::guest() || is_null(Auth::user()->map) ? 'blue' : Auth::user()->map);
+});
+
+View::composer('admin._partials.sidebar', function($view) {
+	$view->with('airlineRequestCount', count(AirlineChange::groupBy('airline_id')->remember(1)->lists('airline_id')));
+	$view->with('airportRequestCount', count(AirportChange::groupBy('airport_id')->remember(1)->lists('airport_id')));
+});
+
+View::composer('admin._partials.tasks', function($view) {
+	if(!is_null($team = Auth::user()->team) && !is_null($team->jira)) {
+		$tasks = JiraIssue::where('assignee', $team->jira)->where('resolution','Unresolved')->orderBy('priority','desc')->orderBy('updatedDate', 'DESC')->get();
+	} else {
+		$tasks = false;
+	}
+
+	$view->with('tasks', $tasks); 
+});

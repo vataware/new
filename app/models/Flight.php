@@ -72,6 +72,36 @@ class Flight extends Eloquent {
 		return implode(",", $positions);
 	}
 
+	public function getProfileElevationsAttribute() {
+		$positions = [];
+
+		foreach($this->positions as $position) {
+			$positions[] = '[' . $position->time->format('U')*1000 . ',' . $position->ground_elevation . ']';
+		}
+
+		return implode(",", $positions);
+	}
+
+	public function getProfileAltitudeAttribute() {
+		$positions = [];
+
+		foreach($this->positions as $position) {
+			$positions[] = '[' . $position->time->format('U')*1000 . ',' . $position->altitude . ']';
+		}
+
+		return implode(",", $positions);
+	}
+
+	public function getProfileSpeedAttribute() {
+		$positions = [];
+
+		foreach($this->positions as $position) {
+			$positions[] = '[' . $position->time->format('U')*1000 . ',' . $position->speed . ']';
+		}
+
+		return implode(",", $positions);
+	}
+
 	public function getMapsColoursAttribute() {
 		$positions = [];
 
@@ -80,6 +110,16 @@ class Flight extends Eloquent {
 		}
 
 		return $positions;
+	}
+
+	public function getTurbulenceAttribute() {
+		preg_match('/([A-Z])\/.*/', $this->aircraft_code, $matches);
+		return isset($matches[1]) ? $matches[1] : null;
+	}
+
+	public function getEquipmentAttribute() {
+		preg_match('/(?:[A-Z]\/)[A-Z0-9a-z]+\/([A-Z])/', $this->aircraft_code, $matches);
+		return isset($matches[1]) ? $matches[1] : null;
 	}
 
 	public function lastPosition()
@@ -133,6 +173,15 @@ class Flight extends Eloquent {
 		$minutes = $this->arrival_time->diffInMinutes($this->departure_time);
 		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
 		return $hours . 'h ' . str_pad($minutes,2,'0',STR_PAD_LEFT) . 'm';
+	}
+
+	public function getTotalEETAttribute() {
+		if(is_null($this->arrival_time)) return $this->traveled_time;
+
+		$hours = $this->arrival_time->diffInHours($this->departure_time);
+		$minutes = $this->arrival_time->diffInMinutes($this->departure_time);
+		$minutes = $minutes - $hours * Carbon::MINUTES_PER_HOUR;
+		return str_pad($hours,2,'0',STR_PAD_LEFT) . str_pad($minutes,2,'0',STR_PAD_LEFT);
 	}
 
 	public function getTraveledTimeAttribute() {

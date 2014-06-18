@@ -55,7 +55,7 @@ class Search {
 		$departure = strtoupper($matches[1]);
 		$arrival = strtoupper($matches[2]);
 
-		if(!is_null(Airport::find($departure)) && !is_null(Airport::find($arrival))) {
+		if(!is_null(Airport::whereIcao($departure)->first()) && !is_null(Airport::whereIcao($arrival)->first())) {
 			return Redirect::route('citypair', array('departure' => $departure, 'arrival' => $arrival));
 		}
 

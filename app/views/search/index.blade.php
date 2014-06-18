@@ -28,9 +28,9 @@
 					@endif
 				<td>{{ $flight->aircraft_id }}</td>
 				<td>{{ $flight->pilot->name }}</td>
-				<td><img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->id or '' }} {{ $flight->departure->city or ''}}
+				<td><img src="{{ asset('assets/images/flags/' . $flight->departure_country_id . '.png') }}"> {{ $flight->departure->icao or '' }} {{ $flight->departure->city or ''}}
 				</td>
-				<td><img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->id or '' }} {{ $flight->arrival->city or '' }}
+				<td><img src="{{ asset('assets/images/flags/' . $flight->arrival_country_id . '.png') }}"> {{ $flight->arrival->icao or '' }} {{ $flight->arrival->city or '' }}
 				<td>{{ ($flight->state == 0) ? '<em>Departing</em>' : $flight->total_time }}</td>
 			</tr>
 			@endforeach

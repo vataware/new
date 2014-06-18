@@ -3,6 +3,7 @@
 class Team extends Eloquent {
 	
 	protected $table = 'team';
+	protected $softDelete = true;
 
 	function getMediaAttribute() {
 		$media = [];
@@ -16,6 +17,13 @@ class Team extends Eloquent {
 			$media[] = '<a href="https://twitter.com/' . $this->twitter . '">twitter</a>';
 
 		return implode(' &bull; ', $media);
+	}
+
+	function getPhotoAttribute() {
+		if(File::exists(public_path() . '/assets/images/team/' . Str::slug($this->name) . '.jpg')) {
+			return asset('assets/images/team/' . Str::slug($this->name) . '.jpg');
+		}
+		return false;
 	}
 
 }
